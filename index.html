@@ -53,11 +53,11 @@ header{background:var(--sur);border-bottom:1px solid var(--bdr);padding:0 16px;d
 /* 콘텐츠 */
 .content{flex:1;overflow-y:auto}
 .content::-webkit-scrollbar{width:3px}.content::-webkit-scrollbar-thumb{background:var(--bdr);border-radius:3px}
-.ci{padding:20px 24px 80px;max-width:600px;margin:0 auto;width:100%;box-sizing:border-box}
+.ci{padding:40px 24px 80px;max-width:600px;margin:0 auto;width:100%;box-sizing:border-box}
 .tab-panel{display:none}.tab-panel.active{display:block}
 
 /* 카드/테이블 공통 */
-.tc{background:var(--sur);border:1px solid var(--bdr);border-radius:10px;overflow:hidden;margin-bottom:12px}
+.tc{background:var(--sur);border:1px solid var(--bdr);border-radius:10px;overflow:hidden}
 .tc-h{display:flex;align-items:center;padding:12px 16px;border-bottom:1px solid var(--bdr);gap:8px}
 .tc-t{font-size:13px;font-weight:600;flex:1}
 .tbl-wrap{overflow-x:auto}
@@ -68,6 +68,7 @@ tr:last-child td{border-bottom:none}
 tr.dash-row{cursor:pointer;transition:background .15s}
 tr.dash-row:hover td{background:rgba(59,130,246,.06)}
 tr.dash-row:hover .dash-val{color:var(--acc2)}
+tr.dash-row:hover .nm{color:var(--acc2)}
 
 /* 토글 행 */
 .tr-main{cursor:pointer}
@@ -84,18 +85,20 @@ tr.dash-row:hover .dash-val{color:var(--acc2)}
 .detail-list{display:flex;flex-direction:column;padding:0 16px}
 .detail-row{display:flex;justify-content:space-between;align-items:flex-start;padding:8px 0;border-bottom:1px solid rgba(42,42,53,.35);gap:12px}
 .detail-row:last-child{border-bottom:none}
-.detail-k{font-size:10px;font-weight:700;color:var(--txt3);text-transform:uppercase;letter-spacing:0;flex-shrink:0;padding-top:3px;min-width:90px}
-.detail-v{font-size:12px;font-weight:500;color:var(--txt);cursor:pointer;padding:2px 7px;border-radius:5px;transition:all .15s;word-break:break-all;text-align:right}
+.detail-k{font-size:10px;font-weight:700;color:var(--txt3);text-transform:uppercase;letter-spacing:0;flex-shrink:0;padding-top:3px;min-width:80px}
+.detail-v{font-size:12px;font-weight:600;color:var(--txt);cursor:pointer;padding:2px 7px;border-radius:5px;transition:all .15s;word-break:break-all;text-align:right}
 .detail-v:hover{background:rgba(59,130,246,.12);color:var(--acc2)}
 .detail-v.copied{background:rgba(52,211,153,.12);color:var(--grn)}
 /* 담당자 섹션 */
 .detail-contact-list{padding:0 16px;display:flex;flex-direction:column;gap:0}
-.detail-contact-item{padding:8px 0;border-bottom:1px solid rgba(42,42,53,.25);display:flex;flex-direction:column;gap:4px}
+.detail-contact-item{padding:8px 0;border-bottom:1px solid rgba(42,42,53,.25);display:flex;flex-direction:row;align-items:center;justify-content:space-between;gap:12px}
 .detail-contact-item:last-child{border-bottom:none}
-.detail-contact-name{font-size:12px;font-weight:700;color:var(--txt);cursor:pointer;display:inline-block;padding:1px 5px;border-radius:4px;transition:all .15s}
+.detail-contact-name{font-size:12px;font-weight:600;color:var(--txt);cursor:pointer;display:inline-block;padding:1px 5px;border-radius:4px;transition:all .15s}
 .detail-contact-name:hover{background:rgba(59,130,246,.12);color:var(--acc2)}
 .detail-contact-name.copied{background:rgba(52,211,153,.12);color:var(--grn)}
 .detail-contact-email{font-size:11px;color:var(--acc2);cursor:pointer;display:inline-block;padding:1px 5px;border-radius:4px;transition:all .15s}
+.detail-contact-tel{font-size:11px;color:var(--txt2);display:inline-block;padding:1px 5px;border-radius:4px;transition:all .15s}
+.detail-contact-tel:hover{background:rgba(59,130,246,.12);color:var(--acc2)}
 .detail-contact-email:hover{background:rgba(59,130,246,.1)}
 .detail-contact-email.copied{background:rgba(52,211,153,.12);color:var(--grn)}
 
@@ -108,11 +111,12 @@ tr.dash-row:hover .dash-val{color:var(--acc2)}
 
 /* 태그 */
 .tag{display:inline-flex;align-items:center;padding:2px 7px;border-radius:4px;font-size:10px;font-weight:600;white-space:nowrap}
+.bank-tag{display:inline-flex;align-items:center;padding:2px 7px;border-radius:4px;font-size:11px;font-weight:600;background:var(--sur2);color:var(--txt2);white-space:nowrap;cursor:default;user-select:none}
 .t-b{background:rgba(59,130,246,.15);color:var(--acc2)}
 .t-g{background:rgba(251,191,36,.12);color:var(--gold)}
 .t-t{background:rgba(34,211,238,.12);color:var(--teal)}
 .t-x{background:var(--sur2);color:var(--txt2)}
-.nm{font-weight:600;font-size:13px}
+.nm{font-weight:600;font-size:13px;white-space:nowrap}
 
 /* 검색/필터 */
 .srch{display:flex;align-items:center;gap:6px;background:var(--sur2);border:1px solid var(--bdr);border-radius:8px;padding:0 12px;height:36px;flex:1}
@@ -190,10 +194,10 @@ select.fi option{background:var(--sur2)}
 .mc-v:hover{background:rgba(59,130,246,.12);color:var(--acc2)}
 .mc-v.copied{background:rgba(52,211,153,.12);color:var(--grn)}
 .mc-section{font-size:10px;color:var(--txt3);text-transform:uppercase;font-weight:700;padding:12px 0 6px;border-bottom:1px solid var(--bdr);margin-bottom:0}
-.mc-contact{padding:8px 0;border-bottom:1px solid rgba(42,42,53,.25)}
+.mc-contact{padding:8px 0;border-bottom:1px solid rgba(42,42,53,.25);display:flex;align-items:center;justify-content:space-between;gap:12px}
 .mc-contact:last-child{border-bottom:none}
 .mc-contact-label{font-size:10px;font-weight:700;color:var(--txt3);text-transform:uppercase;letter-spacing:0;padding-top:3px;flex-shrink:0;min-width:48px}
-.mc-contact-right{display:flex;flex-direction:column;align-items:flex-start;gap:2px}
+.mc-contact-right{display:flex;flex-direction:row;align-items:center;gap:8px}
 .mc-contact-name{font-size:12px;font-weight:600;cursor:pointer;padding:1px 5px;border-radius:3px}
 .mc-contact-name:hover{background:rgba(59,130,246,.1);color:var(--acc2)}
 .mc-contact-email{font-size:11px;color:var(--acc2);cursor:pointer;padding:1px 5px;border-radius:3px}
@@ -211,12 +215,10 @@ select.fi option{background:var(--sur2)}
 /* 소속사 박스 */
 .rate-agency-box{background:var(--sur);border:1px solid var(--bdr);border-radius:12px;margin-bottom:12px;overflow:hidden}
 .rate-agency-label{font-size:10px;font-weight:700;color:var(--txt3);text-transform:uppercase;padding:12px 16px 8px}
-.rate-agency-wrap{overflow-x:auto;scrollbar-width:none;padding:0 12px 12px}
-.rate-agency-wrap::-webkit-scrollbar{display:none}
-.rate-agency-tabs{display:flex;gap:4px;min-width:max-content}
-.rate-agency-btn{padding:6px 13px;border-radius:7px;font-size:12px;font-weight:500;cursor:pointer;color:var(--txt3);background:var(--sur2);border:1px solid var(--bdr);font-family:'Asta Sans',sans-serif;transition:all .15s;white-space:nowrap}
-.rate-agency-btn:hover{color:var(--txt);border-color:#6b7280}
-.rate-agency-btn.on{background:var(--acc);color:#fff;border-color:var(--acc);font-weight:700}
+.rate-agency-wrap{padding:0 16px 14px}
+.rate-agency-select{width:100%;background:var(--sur2);border:1px solid var(--bdr);border-radius:8px;padding:9px 12px;color:var(--txt);font-size:13px;font-family:'Asta Sans',sans-serif;outline:none;cursor:pointer;transition:border-color .2s;appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%238888a0' d='M6 8L1 3h10z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px}
+.rate-agency-select:focus{border-color:var(--acc)}
+.rate-agency-select option{background:var(--sur2);color:var(--txt)}
 /* 리터쳐 박스 */
 .rate-litter-box{background:var(--sur);border:1px solid var(--bdr);border-radius:12px;margin-bottom:12px;overflow:hidden}
 .rate-litter-label{font-size:10px;font-weight:700;color:var(--txt3);text-transform:uppercase;padding:12px 16px 8px;display:flex;align-items:center;justify-content:space-between}
@@ -276,7 +278,8 @@ select.fi option{background:var(--sur2)}
       <div class="tab active" data-tab="dash" id="tab-btn-dash">대시보드</div>
       <div class="tab" data-tab="agencies">거래처</div>
       <div class="tab" data-tab="litt">리터쳐</div>
-      <div class="tab" data-tab="rates" id="tab-btn-rates">단가표</div>
+      <div class="tab" data-tab="rates-bill" id="tab-btn-rates-bill">청구단가</div>
+      <div class="tab" data-tab="rates-pay" id="tab-btn-rates-pay">지급단가</div>
     </div>
   </div>
   <div class="content">
@@ -285,17 +288,17 @@ select.fi option{background:var(--sur2)}
       <!-- 대시보드 -->
       <div id="tab-dash" class="tab-panel active">
         <div class="stats">
-          <div class="sc a"><div class="sc-l">거래처</div><div class="sc-v" id="s-ag">0</div><div class="sc-s">소속사</div></div>
-          <div class="sc t"><div class="sc-l">리터쳐</div><div class="sc-v" id="s-lt">0</div><div class="sc-s">등록</div></div>
+          <div class="sc a"><div class="sc-l">거래처</div><div class="sc-v" id="s-ag">0</div></div>
+          <div class="sc t"><div class="sc-l">리터쳐</div><div class="sc-v" id="s-lt">0</div></div>
         </div>
-        <div style="display:grid;gap:12px">
+        <div style="display:grid;gap:12px;margin-top:0">
           <div class="tc">
             <div class="tc-h"><span class="tc-t">리터쳐 현황</span><button class="btn btn-g" style="height:26px;font-size:11px" id="dash-lt-btn" onclick="toggleDashAll('lt')">전체 리스트 보기 →</button></div>
-            <table style="table-layout:fixed;width:100%"><thead><tr><th style="width:120px">이름</th><th style="width:160px">주민/사업자번호</th><th>은행·계좌</th></tr></thead><tbody id="d-lt"></tbody></table>
+            <table style="table-layout:fixed;width:100%"><thead><tr><th style="width:160px;white-space:nowrap">이름</th><th style="width:170px">주민/사업자번호</th><th>은행·계좌</th></tr></thead><tbody id="d-lt"></tbody></table>
           </div>
           <div class="tc">
             <div class="tc-h"><span class="tc-t">거래처 현황</span><button class="btn btn-g" style="height:26px;font-size:11px" id="dash-ag-btn" onclick="toggleDashAll('ag')">전체 리스트 보기 →</button></div>
-            <table style="table-layout:fixed;width:100%"><thead><tr><th style="width:120px">거래처명</th><th style="width:160px">대표명</th><th>사업자번호</th></tr></thead><tbody id="d-ag"></tbody></table>
+            <table style="table-layout:fixed;width:100%"><thead><tr><th style="width:160px;white-space:nowrap">거래처명</th><th style="width:170px">대표명</th><th>사업자번호</th></tr></thead><tbody id="d-ag"></tbody></table>
           </div>
         </div>
       </div>
@@ -327,23 +330,39 @@ select.fi option{background:var(--sur2)}
         <div class="pg" style="padding:4px 0"><span class="pg-info" id="pi-lt-m"></span><div class="pg-btns" id="pb-lt-m"></div></div>
       </div>
 
-      <!-- 단가표 -->
-      <div id="tab-rates" class="tab-panel">
-        <!-- 소속사 박스 -->
+      <!-- 청구단가 탭 -->
+      <div id="tab-rates-bill" class="tab-panel">
         <div class="rate-agency-box">
           <div class="rate-agency-label">소속사</div>
           <div class="rate-agency-wrap">
-            <div class="rate-agency-tabs" id="rate-tabs"></div>
+            <select class="rate-agency-select" id="rate-select-bill" onchange="switchRateSelect(this.value,'bill')"></select>
           </div>
         </div>
-        <!-- 리터쳐 박스 -->
+        <div class="rate-table-box">
+          <div class="tbl-wrap">
+            <table>
+              <thead><tr><th style="text-align:left">항목</th><th style="text-align:right">청구단가</th></tr></thead>
+              <tbody id="tb-rt-bill"></tbody>
+            </table>
+          </div>
+          <div class="pg"><span class="pg-info" id="pi-rt-bill"></span><div class="pg-btns" id="pb-rt-bill"></div></div>
+        </div>
+      </div>
+
+      <!-- 지급단가 탭 -->
+      <div id="tab-rates-pay" class="tab-panel">
+        <div class="rate-agency-box">
+          <div class="rate-agency-label">소속사</div>
+          <div class="rate-agency-wrap">
+            <select class="rate-agency-select" id="rate-select-pay" onchange="switchRateSelect(this.value,'pay')"></select>
+          </div>
+        </div>
         <div class="rate-litter-box">
           <div class="rate-litter-label">
             <span>리터쳐</span>
             <button class="btn btn-g" id="btn-edit-rate" style="display:none;height:24px;font-size:10px;padding:0 10px" onclick="openRateEditMo()">수수료 편집</button>
           </div>
           <div class="rate-litter-wrap">
-            <button class="rate-litter-btn" data-litter="기본단가" onclick="switchLitter('기본단가',this)">기본단가만</button>
             <button class="rate-litter-btn" data-litter="all" onclick="switchLitter('all',this)">전체</button>
             <button class="rate-litter-btn" data-litter="김현수" onclick="switchLitter('김현수',this)">김현수</button>
             <button class="rate-litter-btn" data-litter="박현아" onclick="switchLitter('박현아',this)">박현아</button>
@@ -354,15 +373,14 @@ select.fi option{background:var(--sur2)}
             <button class="rate-litter-btn" data-litter="기타" onclick="switchLitter('기타',this)">기타</button>
           </div>
         </div>
-        <!-- 단가 테이블 (항상 표시) -->
         <div class="rate-table-box">
           <div class="tbl-wrap">
-            <table id="rate-table-pc">
-              <thead id="rate-thead-pc"></thead>
-              <tbody id="tb-rt"></tbody>
+            <table id="rate-table-pay">
+              <thead id="rate-thead-pay"></thead>
+              <tbody id="tb-rt-pay"></tbody>
             </table>
           </div>
-          <div class="pg"><span class="pg-info" id="pi-rt"></span><div class="pg-btns" id="pb-rt"></div></div>
+          <div class="pg"><span class="pg-info" id="pi-rt-pay"></span><div class="pg-btns" id="pb-rt-pay"></div></div>
         </div>
       </div>
 
@@ -465,7 +483,8 @@ function applyRoleUI() {
   var c = isAdmin ? ['rgba(59,130,246,.12)','var(--acc2)'] : ['rgba(167,139,250,.12)','var(--purple)'];
   document.getElementById('role-tag').innerHTML = '<span style="display:inline-flex;align-items:center;padding:2px 8px;border-radius:5px;font-size:10px;font-weight:700;background:'+c[0]+';color:'+c[1]+'">'+(isAdmin?'관리자':'게스트')+'</span>';
   document.getElementById('edit-mode-btn').style.display = isAdmin ? '' : 'none';
-  document.getElementById('tab-btn-rates').style.display = isAdmin ? '' : 'none';
+  document.getElementById('tab-btn-rates-bill').style.display = isAdmin ? '' : 'none';
+  document.getElementById('tab-btn-rates-pay').style.display = isAdmin ? '' : 'none';
   document.getElementById('tab-btn-dash').style.display = isAdmin ? '' : 'none';
   if (!isAdmin) {
     document.querySelectorAll('.tab').forEach(function(t){t.classList.remove('active');});
@@ -623,19 +642,51 @@ document.querySelectorAll('.tab').forEach(function(t){
   t.addEventListener('click',function(){switchTab(t.dataset.tab);});
 });
 function switchTab(t){
-  if((t==='rates'||t==='dash')&&SESSION.role==='guest'){toast('관리자만 접근 가능해요');return;}
+  if((t==='rates-bill'||t==='rates-pay'||t==='dash')&&SESSION.role==='guest'){toast('관리자만 접근 가능해요');return;}
   document.querySelectorAll('.tab').forEach(function(b){b.classList.toggle('active',b.dataset.tab===t);});
   document.querySelectorAll('.tab-panel').forEach(function(p){p.classList.toggle('active',p.id==='tab-'+t);});
   CUR=t;agP=0;ltP=0;rtP=0;
-  if(t==='rates')buildRateTabs();
+  if(t==='rates-bill'||t==='rates-pay')buildRateTabs();
   renderAll();
 }
+
+function renderRatesBill(){
+  buildRateTabs();
+  var rows=CUSTOM_RATES[rtF]||RATES_RAW[rtF]||[];
+  var slice=rows.slice(rtP*PER,(rtP+1)*PER);
+  var el=document.getElementById('tb-rt-bill');
+  if(el) el.innerHTML=slice.map(function(r){
+    return '<tr><td class="proj-nm">'+esc(r[0])+'</td><td class="base-val" style="text-align:right">'+wn(r[1])+'</td></tr>';
+  }).join('')||'<tr><td colspan="2" style="padding:24px;text-align:center;color:var(--txt3);font-size:12px">데이터 없음</td></tr>';
+  mkPg('pb-rt-bill','pi-rt-bill',rows.length,rtP,function(p){rtP=p;renderRatesBill();});
+}
+
+function renderRatesPay(){
+  buildRateTabs();
+  var rows=CUSTOM_RATES[rtF]||RATES_RAW[rtF]||[];
+  var slice=rows.slice(rtP*PER,(rtP+1)*PER);
+  var activeCols=ALL_COLS.filter(function(nm){return selLitters.has(nm);});
+  if(activeCols.length===0) activeCols=ALL_COLS.slice();
+  var colCount=1+activeCols.length;
+  var thEl=document.getElementById('rate-thead-pay');
+  if(thEl) thEl.innerHTML='<tr><th style="text-align:left">항목</th>'+activeCols.map(function(nm){return '<th style="text-align:right">'+esc(nm)+'</th>';}).join('')+'</tr>';
+  var tbEl=document.getElementById('tb-rt-pay');
+  if(tbEl) tbEl.innerHTML=slice.map(function(r){
+    return '<tr><td class="proj-nm">'+esc(r[0])+'</td>'+activeCols.map(function(nm){
+      var idx=ALL_COLS.indexOf(nm);
+      return '<td class="rate-val">'+wn(r[idx+2])+'</td>';
+    }).join('')+'</tr>';
+  }).join('')||'<tr><td colspan="'+colCount+'" style="padding:24px;text-align:center;color:var(--txt3);font-size:12px">데이터 없음</td></tr>';
+  mkPg('pb-rt-pay','pi-rt-pay',rows.length,rtP,function(p){rtP=p;renderRatesPay();});
+}
+
 function renderAll(){
   updateStats();
   if(CUR==='dash')renderDash();
   if(CUR==='agencies')renderAg();
   if(CUR==='litt')renderLt();
-  if(CUR==='rates')renderRates();
+  if(CUR==='rates-bill')renderRatesBill();
+  if(CUR==='rates-pay')renderRatesPay();
 }
 function updateStats(){
   document.getElementById('s-ag').textContent=new Set(DB.agencies.map(function(a){return a.name;})).size;
@@ -734,7 +785,8 @@ function renderAg(){
           +a.contacts.map(function(c,ci){
             return '<div class="detail-contact-item">'
               +'<span class="detail-contact-name" id="agd-nm-'+i+'-'+ci+'">'+esc(c.manager||'-')+'</span>'
-              +(c.email?'<span class="detail-contact-email" id="agd-em-'+i+'-'+ci+'">'+esc(c.email)+'</span>':'')
+              +'<span class="detail-contact-email" id="agd-em-'+i+'-'+ci+'">'+esc(c.email||'-')+'</span>'
+              +(c.tel?'<span class="detail-contact-tel" id="agd-tel-'+i+'-'+ci+'">'+esc(c.tel)+'</span>':'<span style="font-size:11px;color:var(--txt3);padding:1px 5px">-</span>')
               +'</div>';
           }).join('')
           +'</div>'
@@ -759,8 +811,10 @@ function renderAg(){
     a.contacts.forEach(function(c,ci){
       var nmEl=document.getElementById('agd-nm-'+i+'-'+ci);
       var eEl=document.getElementById('agd-em-'+i+'-'+ci);
+      var tEl=document.getElementById('agd-tel-'+i+'-'+ci);
       if(nmEl)(function(v,el){el.addEventListener('click',function(e){e.stopPropagation();cp(v,el);});})(c.manager||'',nmEl);
-      if(eEl)(function(v,el){el.addEventListener('click',function(e){e.stopPropagation();cp(v,el);});})(c.email||'',eEl);
+      if(eEl&&c.email)(function(v,el){el.addEventListener('click',function(e){e.stopPropagation();cp(v,el);});})(c.email,eEl);
+      if(tEl&&c.tel)(function(v,el){el.addEventListener('click',function(e){e.stopPropagation();cp(v,el);});})(c.tel,tEl);
     });
     if(canEdit()){
       var edBtn=document.getElementById('ag-ed-'+i);var dlBtn=document.getElementById('ag-dl-'+i);
@@ -853,17 +907,15 @@ function renderLt(){
         +'</tr>'
         +'<tr class="tr-detail" id="'+eid+'"><td colspan="9" style="padding:0">'
           +'<div class="detail-panel">'
-            +'<div class="detail-section-label">개인 정보</div>'
             +'<div class="detail-list">'
               +'<div class="detail-row"><span class="detail-k">주민/사업자번호</span><span class="detail-v" id="ltd-rid-'+i+'">'+esc(l.regId||'-')+'</span></div>'
+              +'<div class="detail-row"><span class="detail-k">은행·계좌</span><span class="detail-v" id="ltd-acct-'+i+'">'
+                +(l.bank?'<span class="bank-tag">'+esc(l.bank)+'</span>':'')+' '
+                +(l.acct?'<span id="ltd-acct-num-'+i+'" style="cursor:pointer">'+esc(l.acct)+'</span>':'-')
+              +'</span></div>'
               +'<div class="detail-row"><span class="detail-k">주소</span><span class="detail-v" id="ltd-addr-'+i+'">'+esc(l.addr||'-')+'</span></div>'
-              +(l.ceo?'<div class="detail-row"><span class="detail-k">대표명(사업자)</span><span class="detail-v" id="ltd-ceo-'+i+'">'+esc(l.ceo)+'</span></div>':'')
-            +'</div>'
-            +'<div class="detail-section-label">계좌 정보</div>'
-            +'<div class="detail-list">'
-              +'<div class="detail-row"><span class="detail-k">지급은행</span><span class="detail-v" id="ltd-bank-'+i+'">'+esc(l.bank||'-')+'</span></div>'
-              +'<div class="detail-row"><span class="detail-k">계좌번호</span><span class="detail-v" id="ltd-acct-'+i+'">'+esc(l.acct||'-')+'</span></div>'
-              +'<div class="detail-row"><span class="detail-k">이메일</span><span class="detail-v" id="ltd-email-'+i+'">'+esc(l.email||'-')+'</span></div>'
+              +'<div class="detail-row"><span class="detail-k">연락처</span><span class="detail-v" id="ltd-tel-'+i+'">'+esc(l.tel||'-')+'</span></div>'
+              +(l.ceo?'<div class="detail-row"><span class="detail-k">대표명</span><span class="detail-v" id="ltd-ceo-'+i+'">'+esc(l.ceo)+'</span></div>':'')
             +'</div>'
           +'</div>'
         +'</td></tr>';
@@ -891,10 +943,19 @@ function renderLt(){
         if(el&&pair[1])(function(v,el){el.addEventListener('click',function(e){e.stopPropagation();cp(v,el);});})(pair[1],el);
       });
       // 토글 상세 복사
-      [['ltd-rid-'+i,l.regId],['ltd-addr-'+i,l.addr],['ltd-bank-'+i,l.bank],['ltd-acct-'+i,l.acct],['ltd-email-'+i,l.email]].forEach(function(pair){
-        var el=document.getElementById(pair[0]);
-        if(el&&pair[1])(function(v,el){el.addEventListener('click',function(e){e.stopPropagation();cp(v,el);});})(pair[1],el);
-      });
+      // 주민번호
+      var ridEl=document.getElementById('ltd-rid-'+i);
+      if(ridEl&&l.regId)(function(v,el){el.addEventListener('click',function(e){e.stopPropagation();cp(v,el);});})(l.regId,ridEl);
+      // 계좌번호 (하이픈 제거 복사)
+      var acctNumEl=document.getElementById('ltd-acct-num-'+i);
+      if(acctNumEl&&l.acct)(function(v,el){el.addEventListener('click',function(e){e.stopPropagation();cp(v.replace(/-/g,''),el);});})(l.acct,acctNumEl);
+      // 주소
+      var addrEl=document.getElementById('ltd-addr-'+i);
+      if(addrEl&&l.addr)(function(v,el){el.addEventListener('click',function(e){e.stopPropagation();cp(v,el);});})(l.addr,addrEl);
+      // 이메일
+      var ltEmailEl=document.getElementById('ltd-email-'+i);
+      if(ltEmailEl&&l.email)(function(v,el){el.addEventListener('click',function(e){e.stopPropagation();cp(v,el);});})(l.email,ltEmailEl);
+      // 대표명
       if(l.ceo){var ltCeoEl=document.getElementById('ltd-ceo-'+i);if(ltCeoEl)(function(v,el){ltCeoEl.addEventListener('click',function(e){e.stopPropagation();cp(v,el);});})(l.ceo,ltCeoEl);}
       if(canEdit()){
         var edBtn=document.getElementById('lt-ed-'+i);var dlBtn=document.getElementById('lt-dl-'+i);
@@ -913,7 +974,7 @@ function renderLt(){
   slice.forEach(function(l,i){
     var mid='ltm'+i;
     var acctStr=l.bank&&l.acct?l.bank+' '+l.acct:(l.bank||'-');
-    var subPreview=[l.email,l.tel].filter(Boolean).join(' · ')||acctStr;
+    var subPreview=l.email||'-';
     cards+='<div class="mc" id="'+mid+'">'
       +'<div class="mc-head" id="lt-mc-h-'+i+'">'
         +'<div class="mc-info">'
@@ -925,10 +986,13 @@ function renderLt(){
       +(detail?
         '<div class="mc-body">'
           +'<div class="mc-row"><span class="mc-k">주민/사업자번호</span><span class="mc-v" id="lmc-rid-'+i+'">'+esc(l.regId||'-')+'</span></div>'
+          +'<div class="mc-row"><span class="mc-k">은행·계좌</span><span class="mc-v">'
+            +(l.bank?'<span class="bank-tag">'+esc(l.bank)+'</span> ':'')+' '
+            +(l.acct?'<span id="lmc-acct-'+i+'" style="cursor:pointer">'+esc(l.acct)+'</span>':'-')
+          +'</span></div>'
           +'<div class="mc-row"><span class="mc-k">주소</span><span class="mc-v" id="lmc-addr-'+i+'">'+esc(l.addr||'-')+'</span></div>'
+          +'<div class="mc-row"><span class="mc-k">연락처</span><span class="mc-v">'+esc(l.tel||'-')+'</span></div>'
           +(l.ceo?'<div class="mc-row"><span class="mc-k">대표명</span><span class="mc-v" id="lmc-ceo-'+i+'">'+esc(l.ceo)+'</span></div>':'')
-          +'<div class="mc-row"><span class="mc-k">은행</span><span class="mc-v" id="lmc-bank-'+i+'">'+esc(l.bank||'-')+'</span></div>'
-          +'<div class="mc-row"><span class="mc-k">계좌번호</span><span class="mc-v" id="lmc-acct-'+i+'">'+esc(l.acct||'-')+'</span></div>'
           +'<div class="mc-row"><span class="mc-k">이메일</span><span class="mc-v" id="lmc-email-'+i+'">'+esc(l.email||'-')+'</span></div>'
           +(canEdit()?'<div class="mc-actions"><button class="ab ed" id="lmc-ed-'+i+'">✎</button><button class="ab dl" id="lmc-dl-'+i+'">✕</button></div>':'')
         +'</div>':'')
@@ -941,10 +1005,14 @@ function renderLt(){
     if(hEl&&detail)(function(id){hEl.addEventListener('click',function(){toggleMc(id);});})('ltm'+i);
     // 리터쳐 이름 클릭 = 토글
     if(detail){
-      [['lmc-rid-'+i,l.regId],['lmc-addr-'+i,l.addr],['lmc-bank-'+i,l.bank],['lmc-acct-'+i,l.acct],['lmc-email-'+i,l.email]].forEach(function(pair){
-        var el=document.getElementById(pair[0]);
-        if(el&&pair[1])(function(v,el){el.addEventListener('click',function(){cp(v,el);});})(pair[1],el);
-      });
+      var mcRidEl=document.getElementById('lmc-rid-'+i);
+      if(mcRidEl&&l.regId)(function(v,el){el.addEventListener('click',function(){cp(v,el);});})(l.regId,mcRidEl);
+      var mcAcctEl=document.getElementById('lmc-acct-'+i);
+      if(mcAcctEl&&l.acct)(function(v,el){el.addEventListener('click',function(){cp(v.replace(/-/g,''),el);});})(l.acct,mcAcctEl);
+      var mcAddrEl=document.getElementById('lmc-addr-'+i);
+      if(mcAddrEl&&l.addr)(function(v,el){el.addEventListener('click',function(){cp(v,el);});})(l.addr,mcAddrEl);
+      var mcEmailEl=document.getElementById('lmc-email-'+i);
+      if(mcEmailEl&&l.email)(function(v,el){el.addEventListener('click',function(){cp(v,el);});})(l.email,mcEmailEl);
       if(l.ceo){var cEl=document.getElementById('lmc-ceo-'+i);if(cEl)(function(v,el){cEl.addEventListener('click',function(){cp(v,el);});})(l.ceo,cEl);}
       if(canEdit()){
         var edB=document.getElementById('lmc-ed-'+i);var dlB=document.getElementById('lmc-dl-'+i);
@@ -971,22 +1039,39 @@ function toggleMc(id){
 
 // ── 단가표 ──
 var ALL_COLS=['김현수','박현아','강영순','최현경','이은지','권미향','기타'];
-var selLitters=new Set(['기본단가']); // 선택된 리터쳐들 (다중선택, 기본: 소속사 단가만)
+var selLitters=new Set(['강영순','최현경','이은지','권미향']); // 지급단가 기본 표시
 
 function buildRateTabs(){
-  document.getElementById('rate-tabs').innerHTML=Object.keys(RATES_RAW).map(function(k){
-    return '<button class="rate-agency-btn'+(k===rtF?' on':'')+'" onclick="switchRate(this,\''+k+'\')">'+esc(k)+'</button>';
-  }).join('');
-  // 리터쳐 버튼 초기 활성화
+  var agencies = Object.keys(RATES_RAW).slice().sort(function(a,b){return a.localeCompare(b);});
+  ['rate-select-bill','rate-select-pay'].forEach(function(selId){
+    var el=document.getElementById(selId);
+    if(!el) return;
+    el.innerHTML=agencies.map(function(k){
+      return '<option value="'+esc(k)+'"'+(k===rtF?' selected':'')+'>'+esc(k)+'</option>';
+    }).join('');
+    el.value=rtF;
+  });
   document.querySelectorAll('.rate-litter-btn').forEach(function(b){
     b.classList.toggle('on', selLitters.has(b.dataset.litter));
   });
 }
+function switchRateSelect(k,tab){
+  rtF=k; rtP=0;
+  ['rate-select-bill','rate-select-pay'].forEach(function(selId){
+    var sel=document.getElementById(selId);
+    if(sel) sel.value=k;
+  });
+  if(tab==='bill') renderRatesBill();
+  else renderRatesPay();
+}
 function switchRate(el,k){
-  rtF=k;rtP=0;
-  document.querySelectorAll('#rate-tabs .rate-agency-btn').forEach(function(b){b.classList.remove('on');});
-  el.classList.add('on');
-  renderRates();
+  rtF=k; rtP=0;
+  ['rate-select-bill','rate-select-pay'].forEach(function(selId){
+    var sel=document.getElementById(selId);
+    if(sel) sel.value=k;
+  });
+  if(CUR==='rates-bill') renderRatesBill();
+  else if(CUR==='rates-pay') renderRatesPay();
 }
 function switchLitter(litter, el){
   rtP=0;
@@ -1015,37 +1100,10 @@ function switchLitter(litter, el){
   // '전체' 버튼: 모든 리터쳐 선택됐을 때 on
   var allBtn=document.querySelector('.rate-litter-btn[data-litter="all"]');
   if(allBtn) allBtn.classList.toggle('on', ALL_COLS.every(function(c){return selLitters.has(c);}));
-  renderRates();
+  if(CUR==='rates-pay')renderRatesPay();
+  else renderRatesBill();
 }
 
-function renderRates(){
-  var rows=CUSTOM_RATES[rtF]||RATES_RAW[rtF]||[];
-  var slice=rows.slice(rtP*PER,(rtP+1)*PER);
-
-  // 현재 표시할 컬럼 계산
-  var isBaseOnly=selLitters.has('기본단가')&&selLitters.size===1;
-  var activeCols=ALL_COLS.filter(function(nm){return selLitters.has(nm);});
-  var colCount=1+1+activeCols.length; // 항목+기본단가+리터쳐들
-
-  // ── PC 테이블 헤더 ──
-  var thCols='<th >항목</th><th>기본단가</th>'
-    +activeCols.map(function(nm){return '<th>'+esc(nm)+'</th>';}).join('');
-  document.getElementById('rate-thead-pc').innerHTML='<tr>'+thCols+'</tr>';
-
-  // ── PC 테이블 바디 ──
-  document.getElementById('tb-rt').innerHTML=slice.map(function(r){
-    var cols='<td class="proj-nm">'+esc(r[0])+'</td><td class="base-val">'+wn(r[1])+'</td>'
-      +activeCols.map(function(nm){
-        var idx=ALL_COLS.indexOf(nm);
-        return '<td class="rate-val">'+wn(r[idx+2])+'</td>';
-      }).join('');
-    return '<tr>'+cols+'</tr>';
-  }).join('')||'<tr><td colspan="'+colCount+'" style="padding:24px;text-align:center;color:var(--txt3);font-size:12px">데이터 없음</td></tr>';
-
-  mkPg('pb-rt','pi-rt',rows.length,rtP,function(p){rtP=p;renderRates();});
-
-
-}
 
 // ── 수수료 편집 ──
 function openRateEditMo(){
@@ -1073,7 +1131,7 @@ function saveRateEdit(){
   ALL_COLS.slice(0,6).forEach(function(nm){var el=document.getElementById('fee-'+nm);if(el)CUSTOM_FEES[nm]=1-parseFloat(el.value||'20')/100;});
   var baseRows=CUSTOM_RATES[rtF]?JSON.parse(JSON.stringify(CUSTOM_RATES[rtF])):JSON.parse(JSON.stringify(RATES_RAW[rtF]||[]));
   baseRows.forEach(function(r,i){var el=document.getElementById('rr-'+i);if(el){var base=parseInt(el.value)||r[1];r[1]=base;ALL_COLS.forEach(function(nm,ni){var fee=CUSTOM_FEES[nm]!==undefined?CUSTOM_FEES[nm]:0.8;r[ni+2]=Math.round(base*fee);});}});
-  CUSTOM_RATES[rtF]=baseRows;saveDB();closeMo('mo-rate');renderRates();toast('저장됐어요!');
+  CUSTOM_RATES[rtF]=baseRows;saveDB();closeMo('mo-rate');if(CUR==='rates-bill')renderRatesBill();else if(CUR==='rates-pay')renderRatesPay();toast('저장됐어요!');
 }
 
 // ── 페이지네이션 ──
