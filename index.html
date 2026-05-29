@@ -1,0 +1,784 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Pitch Master</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Asta+Sans:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&display=swap');
+:root{
+  --bg:#0d0d0f;--sur:#16161a;--sur2:#1e1e24;
+  --bdr:#2a2a35;--acc:#3b82f6;--acc2:#93c5fd;
+  --danger:#ff5f5f;--txt:#e8e8ed;--txt2:#8888a0;--txt3:#5a5a70;
+  --grn:#34d399;--gold:#fbbf24;--teal:#22d3ee;--purple:#a78bfa;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;background:var(--bg);color:var(--txt);font-family:'Asta Sans',sans-serif;font-size:14px;line-height:1.6;color-scheme:dark}
+#app{display:flex;flex-direction:column;height:100dvh;overflow:hidden}
+
+/* 로그인 */
+#login-screen{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:999;padding:16px}
+#login-screen.hidden{display:none}
+.login-box{background:var(--sur);border:1px solid var(--bdr);border-radius:16px;width:100%;max-width:360px;padding:32px 28px}
+.login-logo{font-family:'DM Mono',monospace;font-size:22px;font-weight:700;color:var(--acc2);letter-spacing:.05em;margin-bottom:6px}
+.login-sub{font-size:12px;color:var(--txt3);margin-bottom:28px}
+.login-role-btns{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:20px}
+.role-btn{padding:12px 4px;background:var(--sur2);border:1px solid var(--bdr);border-radius:10px;font-size:13px;font-family:'Asta Sans',sans-serif;color:var(--txt3);cursor:pointer;transition:all .15s;text-align:center;font-weight:500}
+.role-btn:hover{border-color:var(--acc);color:var(--acc2)}
+.role-btn.selected{background:rgba(59,130,246,.12);border-color:var(--acc);color:var(--acc2);font-weight:600}
+.login-pw-wrap{display:none;gap:8px;margin-bottom:8px}
+.login-pw-wrap.show{display:flex}
+.login-err{font-size:11px;color:var(--danger);min-height:16px;margin-bottom:10px}
+.login-btn{width:100%;height:44px;background:var(--acc);color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:700;font-family:'Asta Sans',sans-serif;cursor:pointer;transition:all .2s}
+.login-btn:hover{background:#2563eb}
+.login-btn:disabled{opacity:.35;cursor:not-allowed}
+
+header{background:var(--sur);border-bottom:1px solid var(--bdr);padding:0 16px;display:flex;align-items:center;height:52px;flex-shrink:0;gap:10px}
+.logo{font-family:'DM Mono',monospace;font-size:14px;font-weight:700;letter-spacing:.05em;color:var(--acc2);flex:1}
+.logo span{color:var(--txt2);font-weight:400}
+.tabs-wrapper{background:var(--sur);border-bottom:1px solid var(--bdr);overflow-x:auto;flex-shrink:0;scrollbar-width:none}
+.tabs-wrapper::-webkit-scrollbar{display:none}
+.tabs{display:flex;padding:0 10px;min-width:max-content}
+.tab{padding:0 14px;height:44px;display:flex;align-items:center;cursor:pointer;white-space:nowrap;font-size:13px;font-family:'Asta Sans',sans-serif;color:var(--txt3);border-bottom:2px solid transparent;transition:color .2s,border-color .2s;user-select:none}
+.tab:hover{color:var(--txt2)}
+.tab.active{color:var(--txt);border-bottom-color:var(--acc)}
+.content{flex:1;overflow-y:auto}
+.content::-webkit-scrollbar{width:3px}.content::-webkit-scrollbar-thumb{background:var(--bdr);border-radius:3px}
+.ci{padding:16px 20px 100px;max-width:1100px;margin:0 auto}
+.fl{font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--txt3);margin-bottom:4px;display:block;font-family:'Asta Sans',sans-serif}
+.fg{margin-bottom:10px}
+.fi{width:100%;background:var(--sur);border:1px solid var(--bdr);border-radius:8px;padding:9px 11px;color:var(--txt);font-size:13px;font-family:'Asta Sans',sans-serif;outline:none;transition:border-color .2s}
+.fi:focus{border-color:var(--acc)}.fi::placeholder{color:var(--txt3)}
+.fi.sm{padding:7px 9px;font-size:12px;border-radius:6px}
+select.fi option{background:var(--sur2)}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:5px;padding:0 12px;height:34px;border-radius:7px;font-size:12px;font-family:'Asta Sans',sans-serif;font-weight:500;cursor:pointer;border:none;transition:all .15s;white-space:nowrap}
+.btn-p{background:var(--acc);color:#fff}.btn-p:hover{background:#2563eb}
+.btn-g{background:transparent;color:var(--txt2);border:1px solid var(--bdr)}.btn-g:hover{color:var(--txt);border-color:#6b7280}
+.stats{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:14px}
+@media(min-width:400px){.stats{grid-template-columns:repeat(4,1fr)}}
+.sc{background:var(--sur);border:1px solid var(--bdr);border-radius:9px;padding:11px 12px}
+.sc-l{font-size:10px;color:var(--txt3);text-transform:uppercase;letter-spacing:.07em;font-weight:500;margin-bottom:3px;font-family:'Asta Sans',sans-serif}
+.sc-v{font-size:22px;font-weight:700;font-family:'Asta Sans',sans-serif;line-height:1.2}
+.sc-s{font-size:10px;color:var(--txt3);margin-top:2px;font-family:'Asta Sans',sans-serif}
+.sc.a .sc-v{color:var(--acc2)}.sc.t .sc-v{color:var(--teal)}.sc.g .sc-v{color:var(--gold)}.sc.s .sc-v{color:var(--grn)}
+.tc{background:var(--sur);border:1px solid var(--bdr);border-radius:9px;overflow:hidden;margin-bottom:12px}
+.tc-h{display:flex;align-items:center;padding:10px 12px;border-bottom:1px solid var(--bdr);gap:7px;flex-wrap:wrap}
+.tc-t{font-size:13px;font-weight:500;flex:1;font-family:'Asta Sans',sans-serif}
+.ftabs{display:flex;gap:2px;flex-wrap:wrap}
+.ft{padding:3px 9px;border-radius:5px;font-size:11px;cursor:pointer;color:var(--txt3);transition:all .15s;background:none;border:none;font-family:'Asta Sans',sans-serif}
+.ft:hover{color:var(--txt2)}
+.ft.on{background:rgba(59,130,246,.18);color:var(--acc2);font-weight:500}
+.tbl-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th{padding:7px 10px;text-align:left;font-size:10px;color:var(--txt3);font-weight:600;text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid var(--bdr);white-space:nowrap;background:var(--sur2);font-family:'Asta Sans',sans-serif}
+td{padding:9px 10px;border-bottom:1px solid rgba(42,42,53,.5);vertical-align:middle;font-family:'Asta Sans',sans-serif}
+tr:last-child td{border-bottom:none}
+tr.row-clickable{cursor:pointer}
+tr.row-clickable:hover td{background:rgba(59,130,246,.04)}
+.tag{display:inline-flex;align-items:center;padding:2px 6px;border-radius:4px;font-size:10px;font-weight:500;white-space:nowrap;font-family:'Asta Sans',sans-serif}
+.t-b{background:rgba(59,130,246,.15);color:var(--acc2)}
+.t-g{background:rgba(251,191,36,.12);color:var(--gold)}
+.t-t{background:rgba(34,211,238,.12);color:var(--teal)}
+.t-s{background:rgba(52,211,153,.12);color:var(--grn)}
+.t-x{background:var(--sur2);color:var(--txt2)}
+.nm{font-weight:500;font-size:12px;font-family:'Asta Sans',sans-serif}
+.ab{width:26px;height:26px;border-radius:5px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;border:1px solid transparent;color:var(--txt3);background:transparent;font-size:12px;transition:all .15s;font-family:'Asta Sans',sans-serif}
+.ab:hover{background:var(--sur2);border-color:var(--bdr)}
+.ab.ed:hover{color:var(--acc2)}.ab.dl:hover{color:var(--danger)}
+/* 토글 행 */
+.tr-expand{background:var(--sur2);display:none}
+.tr-expand.open{display:table-row}
+.tr-expand td{padding:10px 14px;border-bottom:1px solid var(--bdr)}
+.expand-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:6px 16px}
+.exp-item{font-size:11px}
+.exp-label{color:var(--txt3);margin-bottom:1px;font-size:10px;text-transform:uppercase;letter-spacing:.06em}
+.exp-val{color:var(--txt);font-weight:500}
+.pg{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;border-top:1px solid var(--bdr)}
+.pg-i{font-size:11px;color:var(--txt3);font-family:'Asta Sans',sans-serif}
+.pg-bs{display:flex;gap:2px}
+.pg-b{width:25px;height:25px;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:11px;cursor:pointer;border:1px solid transparent;color:var(--txt3);transition:all .15s;font-family:'Asta Sans',sans-serif}
+.pg-b:hover{background:var(--sur2);color:var(--txt)}
+.pg-b.on{background:var(--acc);color:#fff}
+.srch{display:flex;align-items:center;gap:6px;background:var(--sur2);border:1px solid var(--bdr);border-radius:7px;padding:0 10px;height:34px;flex:1;min-width:0}
+.srch input{background:none;border:none;outline:none;color:var(--txt);font-size:12px;font-family:'Asta Sans',sans-serif;flex:1;min-width:0}
+.srch input::placeholder{color:var(--txt3)}
+.mo{position:fixed;inset:0;background:rgba(0,0,0,.72);display:none;align-items:center;justify-content:center;z-index:100}
+.mo.open{display:flex}
+.md{background:var(--sur);border:1px solid var(--bdr);border-radius:14px;width:calc(100% - 32px);max-width:480px;max-height:90dvh;overflow-y:auto}
+.md-h{padding:14px 16px 0;display:flex;align-items:center;justify-content:space-between}
+.md-t{font-size:14px;font-weight:600;font-family:'Asta Sans',sans-serif}
+.md-b{padding:12px 16px 16px;display:flex;flex-direction:column;gap:9px}
+.divider{border:none;border-top:1px solid var(--bdr);margin:2px 0}
+.md-f{padding:0 16px 16px;display:flex;gap:7px;justify-content:flex-end}
+.xb{cursor:pointer;color:var(--txt3);font-size:17px;background:none;border:none;display:flex;align-items:center;padding:2px;font-family:'Asta Sans',sans-serif}
+.xb:hover{color:var(--txt)}
+.rate-val{font-family:'Asta Sans',sans-serif;font-size:11px;color:var(--acc2);text-align:right}
+.base-val{font-family:'Asta Sans',sans-serif;font-size:11px;color:var(--gold);font-weight:600}
+.proj-name{font-weight:600;font-size:12px;font-family:'Asta Sans',sans-serif}
+.toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%) translateY(50px);background:var(--acc);color:#fff;padding:8px 16px;border-radius:20px;font-size:12px;font-weight:600;opacity:0;transition:all .3s;pointer-events:none;z-index:200;white-space:nowrap;font-family:'Asta Sans',sans-serif}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.empty-st{padding:32px 16px;text-align:center;color:var(--txt3);font-size:12px;font-family:'Asta Sans',sans-serif}
+.tab-panel{display:none}.tab-panel.active{display:block}
+.chevron{display:inline-block;transition:transform .2s;font-size:11px;color:var(--txt3)}
+.chevron.open{transform:rotate(90deg)}
+.masked{color:var(--txt3)}
+
+/* ── 모바일 카드형 (599px 이하) ── */
+@media(max-width:599px){
+  .tbl-wrap{overflow-x:visible}
+  .desktop-table{display:none}
+  .mobile-cards{display:block}
+}
+@media(min-width:600px){
+  .mobile-cards{display:none}
+  .desktop-table{display:block}
+}
+.mobile-cards{padding:8px 0}
+.m-card{background:var(--sur);border:1px solid var(--bdr);border-radius:12px;margin-bottom:8px;overflow:hidden;transition:border-color .2s}
+.m-card.open{border-color:var(--acc)}
+.m-card-head{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;cursor:pointer;user-select:none}
+.m-card-left{display:flex;align-items:center;gap:10px;flex:1;min-width:0}
+.m-card-name{font-size:13px;font-weight:600;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.m-card-sub{font-size:11px;color:var(--txt3);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.m-card-right{display:flex;align-items:center;gap:8px;flex-shrink:0}
+.m-chv{font-size:13px;color:var(--txt3);transition:transform .2s;display:inline-block}
+.m-card.open .m-chv{transform:rotate(90deg)}
+.m-card-body{display:none;padding:0 14px 12px;border-top:1px solid var(--bdr)}
+.m-card.open .m-card-body{display:block}
+.m-row{display:flex;justify-content:space-between;align-items:flex-start;padding:7px 0;border-bottom:1px solid rgba(42,42,53,.4);gap:10px}
+.m-row:last-child{border-bottom:none}
+.m-key{font-size:10px;color:var(--txt3);text-transform:uppercase;letter-spacing:.06em;flex-shrink:0;padding-top:1px}
+.m-val{font-size:12px;font-weight:500;color:var(--txt);text-align:right;word-break:break-all}
+.m-section-title{font-size:10px;color:var(--txt3);text-transform:uppercase;letter-spacing:.08em;font-weight:600;padding:10px 0 6px;border-bottom:1px solid var(--bdr);margin-bottom:4px}
+.m-contact{padding:6px 0;border-bottom:1px solid rgba(42,42,53,.3)}
+.m-contact:last-child{border-bottom:none}
+.m-contact-name{font-size:12px;font-weight:500;color:var(--txt)}
+.m-contact-email{font-size:11px;color:var(--acc2);margin-top:1px}
+.m-actions{display:flex;gap:6px;justify-content:flex-end;padding-top:8px;border-top:1px solid rgba(42,42,53,.3);margin-top:4px}
+</style>
+</head>
+<body>
+
+<!-- 로그인 화면 -->
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-logo">PITCH <span style="color:var(--txt2);font-weight:400">MASTER</span></div>
+    <div class="login-sub">접속 유형을 선택하고 비밀번호를 입력해주세요</div>
+    <div class="login-role-btns">
+      <button class="role-btn" onclick="selectRole('guest',this)">게스트</button>
+      <button class="role-btn" onclick="selectRole('admin',this)">관리자</button>
+      <button class="role-btn" onclick="selectRole('editor',this)">편집자</button>
+    </div>
+    <div class="login-pw-wrap" id="login-pw-wrap">
+      <input class="fi" id="login-pw" type="password" placeholder="비밀번호" style="letter-spacing:.15em" onkeydown="if(event.key==='Enter')doLogin()">
+      <button class="btn btn-p" onclick="doLogin()" style="flex-shrink:0;height:42px;padding:0 16px">확인</button>
+    </div>
+    <div class="login-err" id="login-err"></div>
+    <button class="login-btn" id="login-btn" onclick="doLogin()" disabled>접속</button>
+  </div>
+</div>
+
+<div id="app" style="display:none">
+  <header>
+    <div class="logo">PITCH<span> MASTER</span></div>
+    <span id="role-tag"></span>
+    <button class="btn btn-g" onclick="doLogout()" style="height:28px;font-size:11px;padding:0 10px">로그아웃</button>
+  </header>
+  <div class="tabs-wrapper">
+    <div class="tabs" id="main-tabs">
+      <div class="tab active" data-tab="dash" id="tab-dash-btn">대시보드</div>
+      <div class="tab" data-tab="agencies">거래처</div>
+      <div class="tab" data-tab="litt">리터쳐</div>
+      <div class="tab" data-tab="rates" id="tab-rates-btn">단가표</div>
+    </div>
+  </div>
+  <div class="content">
+    <div class="ci">
+
+      <!-- DASHBOARD -->
+      <div id="tab-dash" class="tab-panel active">
+        <div class="stats">
+          <div class="sc a"><div class="sc-l">거래처</div><div class="sc-v" id="s-ag">0</div><div class="sc-s">소속사</div></div>
+          <div class="sc t"><div class="sc-l">리터쳐</div><div class="sc-v" id="s-lt">0</div><div class="sc-s">등록</div></div>
+          <div class="sc g"><div class="sc-l">단가시트</div><div class="sc-v" id="s-rt">0</div><div class="sc-s">소속사</div></div>
+          <div class="sc s"><div class="sc-l">수수료</div><div class="sc-v">20%</div><div class="sc-s">공통</div></div>
+        </div>
+        <div style="display:grid;gap:12px">
+          <div class="tc">
+            <div class="tc-h"><span class="tc-t">거래처 현황</span><button class="btn btn-g" style="height:28px;font-size:11px" onclick="switchTab('agencies')">전체 →</button></div>
+            <table><thead><tr><th>거래처명</th><th>소속 아티스트</th><th>담당자 수</th></tr></thead><tbody id="d-ag"></tbody></table>
+          </div>
+          <div class="tc">
+            <div class="tc-h"><span class="tc-t">리터쳐 현황</span><button class="btn btn-g" style="height:28px;font-size:11px" onclick="switchTab('litt')">전체 →</button></div>
+            <table><thead><tr><th>이름</th><th>구분</th><th>은행</th></tr></thead><tbody id="d-lt"></tbody></table>
+          </div>
+        </div>
+      </div>
+
+      <!-- AGENCIES -->
+      <div id="tab-agencies" class="tab-panel">
+        <div style="display:flex;gap:8px;margin-bottom:12px">
+          <div class="srch"><span style="color:var(--txt3);font-size:13px">⌕</span><input id="q-ag" type="text" placeholder="거래처명, 담당자 검색" oninput="renderAg()"/></div>
+          <button class="btn btn-p" id="btn-add-ag" onclick="openMo('mo-ag',-1)" style="display:none">+ 추가</button>
+        </div>
+        <div class="tc">
+          <div class="tbl-wrap desktop-table">
+            <table>
+              <thead><tr><th></th><th>거래처명</th><th>대표명</th><th>사업자번호</th><th>소속 아티스트</th><th>담당자 수</th><th></th></tr></thead>
+              <tbody id="tb-ag"></tbody>
+            </table>
+          </div>
+          <div class="mobile-cards" id="mc-ag"></div>
+          <div class="pg"><span class="pg-i" id="pi-ag"></span><div class="pg-bs" id="pb-ag"></div></div>
+        </div>
+      </div>
+
+      <!-- LITT -->
+      <div id="tab-litt" class="tab-panel">
+        <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
+          <div class="srch"><span style="color:var(--txt3);font-size:13px">⌕</span><input id="q-lt" type="text" placeholder="이름, 이메일 검색" oninput="renderLt()"/></div>
+          <div class="ftabs">
+            <button class="ft on" onclick="fltLt('all',this)">전체</button>
+            <button class="ft" onclick="fltLt('원천세',this)">원천세</button>
+            <button class="ft" onclick="fltLt('사업자',this)">사업자</button>
+          </div>
+          <button class="btn btn-p" id="btn-add-lt" onclick="openMo('mo-lt',-1)" style="display:none">+ 추가</button>
+        </div>
+        <div class="tc">
+          <div class="tbl-wrap desktop-table">
+            <table>
+              <thead><tr><th></th><th>이름</th><th>구분</th><th>주민/사업자번호</th><th>주소</th><th>은행</th><th>계좌번호</th><th>이메일</th><th></th></tr></thead>
+              <tbody id="tb-lt"></tbody>
+            </table>
+          </div>
+          <div class="mobile-cards" id="mc-lt"></div>
+          <div class="pg"><span class="pg-i" id="pi-lt"></span><div class="pg-bs" id="pb-lt"></div></div>
+        </div>
+      </div>
+
+      <!-- RATES -->
+      <div id="tab-rates" class="tab-panel">
+        <div class="tc">
+          <div class="tc-h">
+            <span class="tc-t">단가표</span>
+            <div class="ftabs" id="rate-tabs"></div>
+          </div>
+          <div style="padding:8px 12px;font-size:11px;color:var(--txt3)">수수료 20% 적용 기준</div>
+          <div class="tbl-wrap">
+            <table>
+              <thead><tr><th>항목</th><th>기본단가</th><th>김현수</th><th>박현아</th><th>강영순</th><th>최현경</th><th>이은지</th><th>권미향</th><th>기타</th></tr></thead>
+              <tbody id="tb-rt"></tbody>
+            </table>
+          </div>
+          <div class="pg"><span class="pg-i" id="pi-rt"></span><div class="pg-bs" id="pb-rt"></div></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- 거래처 모달 -->
+<div class="mo" id="mo-ag">
+  <div class="md">
+    <div class="md-h"><span class="md-t" id="mo-ag-t">거래처 추가</span><button class="xb" onclick="closeMo('mo-ag')">✕</button></div>
+    <div class="md-b">
+      <div class="row2"><div class="fg" style="margin:0"><label class="fl">거래처명 *</label><input class="fi sm" id="ag-n" placeholder="거래처명"/></div><div class="fg" style="margin:0"><label class="fl">대표명</label><input class="fi sm" id="ag-c" placeholder="대표자"/></div></div>
+      <div class="row2"><div class="fg" style="margin:0"><label class="fl">사업자번호</label><input class="fi sm" id="ag-b" placeholder="000-00-00000"/></div><div class="fg" style="margin:0"><label class="fl">소속 아티스트</label><input class="fi sm" id="ag-a" placeholder="쉼표 구분"/></div></div>
+      <hr class="divider"/>
+      <div class="row2"><div class="fg" style="margin:0"><label class="fl">담당자명</label><input class="fi sm" id="ag-m" placeholder="담당자"/></div><div class="fg" style="margin:0"><label class="fl">연락처</label><input class="fi sm" id="ag-p" placeholder="010-0000-0000"/></div></div>
+      <div class="fg" style="margin:0"><label class="fl">이메일</label><input class="fi sm" id="ag-e" placeholder="email@example.com"/></div>
+    </div>
+    <div class="md-f"><button class="btn btn-g" onclick="closeMo('mo-ag')">취소</button><button class="btn btn-p" onclick="saveAg()">저장</button></div>
+  </div>
+</div>
+
+<!-- 리터쳐 모달 -->
+<div class="mo" id="mo-lt">
+  <div class="md">
+    <div class="md-h"><span class="md-t" id="mo-lt-t">리터쳐 추가</span><button class="xb" onclick="closeMo('mo-lt')">✕</button></div>
+    <div class="md-b">
+      <div class="row2"><div class="fg" style="margin:0"><label class="fl">이름 *</label><input class="fi sm" id="lt-n" placeholder="이름"/></div><div class="fg" style="margin:0"><label class="fl">구분</label><select class="fi sm" id="lt-t"><option>원천세</option><option>사업자</option></select></div></div>
+      <div class="fg" style="margin:0"><label class="fl">주민번호 / 사업자번호</label><input class="fi sm" id="lt-i" placeholder="주민번호 또는 사업자번호"/></div>
+      <div class="fg" style="margin:0"><label class="fl">주소</label><input class="fi sm" id="lt-a" placeholder="주소"/></div>
+      <div class="fg" style="margin:0"><label class="fl">대표명 (사업자용)</label><input class="fi sm" id="lt-r" placeholder="사업자인 경우 대표명"/></div>
+      <hr class="divider"/>
+      <div class="row2"><div class="fg" style="margin:0"><label class="fl">지급은행</label><select class="fi sm" id="lt-bk"><option>IBK</option><option>국민</option><option>신한</option><option>우리</option><option>하나</option><option>농협</option><option>기업</option><option>토스</option><option>카카오</option><option>케이</option><option>기타</option></select></div><div class="fg" style="margin:0"><label class="fl">계좌번호</label><input class="fi sm" id="lt-ac" placeholder="계좌번호"/></div></div>
+      <div class="fg" style="margin:0"><label class="fl">이메일</label><input class="fi sm" id="lt-e" placeholder="email@example.com"/></div>
+    </div>
+    <div class="md-f"><button class="btn btn-g" onclick="closeMo('mo-lt')">취소</button><button class="btn btn-p" onclick="saveLt()">저장</button></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+var ROLES={guest:{pw:'guest',label:'게스트',color:'var(--purple)',bg:'rgba(167,139,250,.12)'},admin:{pw:'0524',label:'관리자',color:'var(--acc2)',bg:'rgba(59,130,246,.12)'},editor:{pw:'2648911',label:'편집자',color:'var(--grn)',bg:'rgba(52,211,153,.12)'}};
+var SESSION={role:null};
+var selectedRole=null;
+
+function selectRole(role,el){
+  selectedRole=role;
+  document.querySelectorAll('.role-btn').forEach(function(b){b.classList.remove('selected');});
+  el.classList.add('selected');
+  document.getElementById('login-pw-wrap').classList.add('show');
+  document.getElementById('login-pw').value='';
+  document.getElementById('login-err').textContent='';
+  document.getElementById('login-btn').disabled=false;
+  setTimeout(function(){document.getElementById('login-pw').focus();},100);
+}
+function doLogin(){
+  if(!selectedRole){document.getElementById('login-err').textContent='접속 유형을 선택해주세요';return;}
+  var pw=document.getElementById('login-pw').value;
+  if(pw!==ROLES[selectedRole].pw){
+    document.getElementById('login-err').textContent='비밀번호가 틀렸어요';
+    document.getElementById('login-pw').value='';
+    document.getElementById('login-pw').focus();
+    return;
+  }
+  SESSION.role=selectedRole;
+  document.getElementById('login-screen').classList.add('hidden');
+  document.getElementById('app').style.display='flex';
+  applyRoleUI();
+  buildRateTabs();
+  renderAll();
+}
+function doLogout(){
+  SESSION.role=null;selectedRole=null;
+  document.getElementById('login-screen').classList.remove('hidden');
+  document.getElementById('app').style.display='none';
+  document.querySelectorAll('.role-btn').forEach(function(b){b.classList.remove('selected');});
+  document.getElementById('login-pw-wrap').classList.remove('show');
+  document.getElementById('login-pw').value='';
+  document.getElementById('login-err').textContent='';
+  document.getElementById('login-btn').disabled=true;
+  // 첫 탭으로 리셋
+  CUR='dash';
+}
+function applyRoleUI(){
+  var r=ROLES[SESSION.role];
+  document.getElementById('role-tag').innerHTML='<span style="display:inline-flex;align-items:center;padding:2px 8px;border-radius:5px;font-size:10px;font-weight:700;letter-spacing:.06em;background:'+r.bg+';color:'+r.color+';margin-right:6px;font-family:\'Asta Sans\',sans-serif">'+r.label+'</span>';
+  // 게스트: 대시보드 숨김, 단가표 숨김 → 거래처 탭 첫번째로
+  var dashBtn=document.getElementById('tab-dash-btn');
+  var ratesBtn=document.getElementById('tab-rates-btn');
+  if(SESSION.role==='guest'){
+    dashBtn.style.display='none';
+    ratesBtn.style.display='none';
+    // 거래처 탭을 active로
+    document.querySelectorAll('.tab').forEach(function(t){t.classList.remove('active');});
+    document.querySelector('[data-tab="agencies"]').classList.add('active');
+    document.querySelectorAll('.tab-panel').forEach(function(p){p.classList.remove('active');});
+    document.getElementById('tab-agencies').classList.add('active');
+    CUR='agencies';
+  } else {
+    dashBtn.style.display='';
+    ratesBtn.style.display='';
+  }
+  // 편집 버튼
+  var addAg=document.getElementById('btn-add-ag');
+  var addLt=document.getElementById('btn-add-lt');
+  if(SESSION.role==='editor'){if(addAg)addAg.style.display='';if(addLt)addLt.style.display='';}
+  else{if(addAg)addAg.style.display='none';if(addLt)addLt.style.display='none';}
+}
+function isAdmin(){return SESSION.role==='admin'||SESSION.role==='editor';}
+function isEditor(){return SESSION.role==='editor';}
+function canSeeDetail(){return SESSION.role==='admin'||SESSION.role==='editor';}
+
+// ── 데이터 ──
+var AGENCIES_RAW=[
+  {name:'모어비전',ceo:'PARK JAY BUM(박재범)',biz:'828-86-02400',manager:'정혜영',email:'hyjung@morevision.kr',artists:'박재범, 청하, 롱샷',tel:''},
+  {name:'모어비전',ceo:'PARK JAY BUM(박재범)',biz:'828-86-02400',manager:'문중균',email:'moon@morevision.kr',artists:'박재범, 청하, 롱샷',tel:''},
+  {name:'모어비전',ceo:'PARK JAY BUM(박재범)',biz:'828-86-02400',manager:'신다영',email:'dyshin@morevision.kr',artists:'박재범, 청하, 롱샷',tel:''},
+  {name:'모어비전',ceo:'PARK JAY BUM(박재범)',biz:'828-86-02400',manager:'이세인',email:'sein5340@morevision.kr',artists:'박재범, 청하, 롱샷',tel:''},
+  {name:'케이큐',ceo:'김규옥',biz:'105-87-90055',manager:'정한별',email:'hbyeol1@kqent.com',artists:'에이티즈, 싸이커스',tel:''},
+  {name:'케이큐',ceo:'김규옥',biz:'105-87-90055',manager:'강이레',email:'yireh17@kqent.com',artists:'에이티즈, 싸이커스',tel:''},
+  {name:'케이큐',ceo:'김규옥',biz:'105-87-90055',manager:'윤상은',email:'eveyun@kqent.com',artists:'에이티즈, 싸이커스',tel:''},
+  {name:'케이큐',ceo:'김규옥',biz:'105-87-90055',manager:'이혜지',email:'hzi@kqent.com',artists:'에이티즈, 싸이커스',tel:''},
+  {name:'케이큐',ceo:'김규옥',biz:'105-87-90055',manager:'정지원',email:'jiwon.41@kqent.com',artists:'에이티즈, 싸이커스',tel:''},
+  {name:'와이지 엔터테인먼트',ceo:'양민석',biz:'105-81-91810',manager:'허윤영',email:'hyy27@ygmail.net',artists:'블랙핑크, 트레저, 베이비몬스터, 악뮤, 위너',tel:''},
+  {name:'와이지 엔터테인먼트',ceo:'양민석',biz:'105-81-91810',manager:'김수진',email:'ksoojin@ygmail.net',artists:'블랙핑크, 트레저, 베이비몬스터, 악뮤, 위너',tel:''},
+  {name:'와이지 엔터테인먼트',ceo:'양민석',biz:'105-81-91810',manager:'김건영',email:'gygy@ygmail.net',artists:'블랙핑크, 트레저, 베이비몬스터, 악뮤, 위너',tel:''},
+  {name:'와이지 엔터테인먼트',ceo:'양민석',biz:'105-81-91810',manager:'신지애',email:'sjiae@ygmail.net',artists:'블랙핑크, 트레저, 베이비몬스터, 악뮤, 위너',tel:''},
+  {name:'와이지 엔터테인먼트',ceo:'양민석',biz:'105-81-91810',manager:'황미애',email:'miae@ygmail.net',artists:'블랙핑크, 트레저, 베이비몬스터, 악뮤, 위너',tel:''},
+  {name:'와이지 엔터테인먼트',ceo:'양민석',biz:'105-81-91810',manager:'전민지',email:'jeon@ygmail.net',artists:'블랙핑크, 트레저, 베이비몬스터, 악뮤, 위너',tel:''},
+  {name:'와이지 엔터테인먼트',ceo:'양민석',biz:'105-81-91810',manager:'김진욱',email:'poemskor@ygmail.net',artists:'블랙핑크, 트레저, 베이비몬스터, 악뮤, 위너',tel:''},
+  {name:'와이지 플러스',ceo:'최성준',biz:'120-81-6733',manager:'심승현',email:'shsim@ygmail.net',artists:'블랙핑크, 트레저, 베이비몬스터, 악뮤, 위너',tel:''},
+  {name:'와이지 플러스',ceo:'최성준',biz:'120-81-6733',manager:'김소영',email:'okay@ygmail.net',artists:'블랙핑크, 트레저, 베이비몬스터, 악뮤, 위너',tel:''},
+  {name:'와이지 플러스',ceo:'최성준',biz:'120-81-6733',manager:'임준식',email:'goblin@ygmail.net',artists:'블랙핑크, 트레저, 베이비몬스터, 악뮤, 위너',tel:''},
+  {name:'와이지 플러스',ceo:'최성준',biz:'120-81-6733',manager:'이가은',email:'gannee@ygmail.net',artists:'블랙핑크, 트레저, 베이비몬스터, 악뮤, 위너',tel:''},
+  {name:'이담',ceo:'배종한',biz:'779-87-01692',manager:'양은하',email:'enxia5@edam-ent.com',artists:'아이유, 우즈',tel:''},
+  {name:'이담',ceo:'배종한',biz:'779-87-01692',manager:'신자경',email:'jgshin@edam-ent.com',artists:'아이유, 우즈',tel:''},
+  {name:'이담',ceo:'배종한',biz:'779-87-01692',manager:'김보성',email:'tjd3218@edam-ent.com',artists:'아이유, 우즈',tel:''},
+  {name:'엠엠디디',ceo:'윤정윤',biz:'210-41-64943',manager:'대표',email:'gloomyart@naver.com',artists:'윤종신',tel:''},
+  {name:'눌랑컴퍼니',ceo:'최윤진',biz:'225-10-08667',manager:'대표',email:'agencychoe@gmail.com',artists:'',tel:''},
+  {name:'하이브',ceo:'이재상',biz:'120-86-78223',manager:'임혜린',email:'imhyelin@hybecorp.com',artists:'세븐틴, 투바투, 엔하이픈',tel:''},
+  {name:'하이브',ceo:'이재상',biz:'120-86-78223',manager:'조훈',email:'hoon.cho@hybecorp.com',artists:'세븐틴, 투바투, 엔하이픈',tel:''},
+  {name:'더블랙레이블',ceo:'정경인',biz:'629-86-00391',manager:'대표',email:'tbltax@theblacklabel.com',artists:'미야오, 소미, 태양, 로제',tel:''},
+  {name:'더블랙레이블',ceo:'정경인',biz:'629-86-00391',manager:'김슬기',email:'sksksk@theblacklabel.com',artists:'미야오, 소미, 태양, 로제',tel:''},
+  {name:'아우라',ceo:'김성위',biz:'629-88-03053',manager:'오주희',email:'ohjuhee0964@gmail.com',artists:'배진영',tel:''},
+  {name:'아우라',ceo:'김성위',biz:'629-88-03053',manager:'공유빈',email:'godmemeiame@gmail.com',artists:'배진영',tel:''},
+  {name:'아우라',ceo:'김성위',biz:'629-88-03053',manager:'김은주',email:'aura_ent@daum.net',artists:'배진영',tel:''},
+  {name:'스타쉽',ceo:'이훈희, 이진성',biz:'114-86-65214',manager:'정수연',email:'retoler01@gmail.com',artists:'아이브, 크래비티, 몬스타엑스, 키키',tel:''},
+  {name:'스타쉽',ceo:'이훈희, 이진성',biz:'114-86-65214',manager:'윤은수',email:'sueunyoon126@gmail.com',artists:'아이브, 크래비티, 몬스타엑스, 키키',tel:''},
+  {name:'스타쉽',ceo:'이훈희, 이진성',biz:'114-86-65214',manager:'김윤지',email:'u3u17412@gmail.com',artists:'아이브, 크래비티, 몬스타엑스, 키키',tel:''},
+  {name:'스타쉽',ceo:'이훈희, 이진성',biz:'114-86-65214',manager:'박솔채',email:'solchaepark@gmail.com',artists:'아이브, 크래비티, 몬스타엑스, 키키',tel:''},
+  {name:'스타쉽',ceo:'이훈희, 이진성',biz:'114-86-65214',manager:'조수연',email:'assd0608@gmail.com',artists:'아이브, 크래비티, 몬스타엑스, 키키',tel:''},
+  {name:'인코오드',ceo:'노윤상',biz:'803-88-02555',manager:'대표',email:'hkseo@in-kode.com',artists:'키빗업, 김재중',tel:''},
+  {name:'인코오드',ceo:'노윤상',biz:'803-88-02555',manager:'정남결',email:'gyeol7@in-kode.com',artists:'키빗업, 김재중',tel:''},
+];
+var LITTERCHERS_RAW=[
+  {tax:'원천세',name:'김현수',regId:'880107-1019519',addr:'서울시 동대문구 답십리로 130 101동 10호',ceo:'',bank:'IBK',acct:'209-1017-130-1013',email:'kimhyunsooswim@gmail.com'},
+  {tax:'원천세',name:'박현아',regId:'860524-2648911',addr:'서울시 마포구 도화4길 41 102동 603호',ceo:'',bank:'우리',acct:'1002-980-074363',email:'iamhyona@gmail.com'},
+  {tax:'원천세',name:'강영순',regId:'600103-2654915',addr:'경상남도 거제시 양정 5길 36 아이파크 111동 302호',ceo:'',bank:'농협',acct:'920-020-29196',email:'pitch.since2022@gmail.com'},
+  {tax:'원천세',name:'이은지',regId:'851118-2249122',addr:'인천광역시 서구 승학로372번길 21 뉴첼시빌2차 301호',ceo:'',bank:'농협',acct:'356-1251-4823-33',email:'raimlavin@gmail.com'},
+  {tax:'원천세',name:'최현경',regId:'831113-2075212',addr:'서울특별시 강남구 테헤란로 53길 27 301호',ceo:'',bank:'우리',acct:'1002-5523-72595',email:'gradehyun@gmail.com'},
+  {tax:'사업자',name:'권미향',regId:'716-24-01264',addr:'',ceo:'스튜디오134(박상현)',bank:'국민',acct:'044201-04-263183',email:'dolphin.mh@gmail.com'},
+  {tax:'원천세',name:'박현제',regId:'',addr:'',ceo:'',bank:'',acct:'',email:'cubista2@gmail.com'},
+  {tax:'원천세',name:'박종배',regId:'',addr:'',ceo:'',bank:'',acct:'',email:'jongbai0070@gmail.com'},
+  {tax:'원천세',name:'김슬기',regId:'860609-2156813',addr:'서울특별시 용산구 백범로 74길 13 204호',ceo:'',bank:'우리',acct:'1002-129-588254',email:'chancep1515@gmail.com'},
+  {tax:'원천세',name:'한규선',regId:'860519-1228512',addr:'',ceo:'',bank:'우리',acct:'1002-247-959472',email:''},
+  {tax:'원천세',name:'박지현',regId:'900815-2408914',addr:'',ceo:'',bank:'국민',acct:'461302-04-248050',email:''},
+  {tax:'원천세',name:'권지윤',regId:'910219-2629739',addr:'',ceo:'',bank:'우리',acct:'1002-239-106164',email:''},
+];
+var RATES_RAW={
+  'YG PLUS':[['1인',30000,24000,24000,24000,24000,24000,24000,24000],['2인',60000,48000,48000,48000,48000,48000,48000,48000],['3인',90000,72000,72000,72000,72000,72000,72000,72000],['4인',120000,96000,96000,96000,96000,96000,96000,96000],['5인',150000,120000,120000,120000,120000,120000,120000,120000],['6인',180000,144000,144000,144000,144000,144000,144000,144000],['7인',210000,168000,168000,168000,168000,168000,168000,168000],['8인',240000,192000,192000,192000,192000,192000,192000,192000],['9인',270000,216000,216000,216000,216000,216000,216000,216000],['10인',300000,240000,240000,240000,240000,240000,240000,240000],['오브제',30000,24000,24000,24000,24000,24000,24000,24000],['합성',20000,16000,16000,16000,16000,16000,16000,16000]],
+  'YG':[['1인',40000,32000,32000,32000,32000,32000,32000,32000],['2인',60000,48000,48000,48000,48000,48000,48000,48000],['3인',84000,67200,67200,67200,67200,67200,67200,67200],['4인',112000,89600,89600,89600,89600,89600,89600,89600],['5인',125000,100000,100000,100000,100000,100000,100000,100000],['6인',138000,110400,110400,110400,110400,110400,110400,110400],['7인',149996,119997,119997,119997,119997,119997,119997,119997],['8인',161200,128960,128960,128960,128960,128960,128960,128960],['9인',171396,137117,137117,137117,137117,137117,137117,137117],['10인',180000,144000,144000,144000,144000,144000,144000,144000],['합성',15000,12000,12000,12000,12000,12000,12000,12000],['클리닝',15000,12000,12000,12000,12000,12000,12000,12000],['업스케일링',100000,80000,80000,80000,80000,80000,80000,80000],['긴급작업비',20000,16000,16000,16000,16000,16000,16000,16000]],
+  'STARSHIP':[['1인',40000,32000,32000,32000,32000,32000,32000,32000],['2인',60000,48000,48000,48000,48000,48000,48000,48000],['3인',90000,72000,72000,72000,72000,72000,72000,72000],['4인',120000,96000,96000,96000,96000,96000,96000,96000],['5인',150000,120000,120000,120000,120000,120000,120000,120000],['6인',120000,96000,96000,96000,96000,96000,96000,96000],['7인',140000,112000,112000,112000,112000,112000,112000,112000],['8인',160000,128000,128000,128000,128000,128000,128000,128000],['9인',180000,144000,144000,144000,144000,144000,144000,144000],['10인',200000,160000,160000,160000,160000,160000,160000,160000],['오브제',30000,24000,24000,24000,24000,24000,24000,24000],['부분합성',20000,16000,16000,16000,16000,16000,16000,16000],['합성',30000,24000,24000,24000,24000,24000,24000,24000]],
+  'THEBLACKLABEL':[['1인',30000,24000,24000,24000,24000,24000,24000,24000],['2인',40000,32000,32000,32000,32000,32000,32000,32000],['3인',60000,48000,48000,48000,48000,48000,48000,48000],['4인',80000,64000,64000,64000,64000,64000,64000,64000],['5인',100000,80000,80000,80000,80000,80000,80000,80000],['6인',120000,96000,96000,96000,96000,96000,96000,96000],['7인',140000,112000,112000,112000,112000,112000,112000,112000],['8인',160000,128000,128000,128000,128000,128000,128000,128000],['9인',180000,144000,144000,144000,144000,144000,144000,144000],['10인',180000,144000,144000,144000,144000,144000,144000,144000],['오브제',30000,24000,24000,24000,24000,24000,24000,24000],['합성',20000,16000,16000,16000,16000,16000,16000,16000]],
+  'MOREVISION':[['1인',40000,32000,32000,32000,32000,32000,32000,32000],['2인',50000,40000,40000,40000,40000,40000,40000,40000],['3인',60000,48000,48000,48000,48000,48000,48000,48000],['4인',70000,56000,56000,56000,56000,56000,56000,56000],['5인',80000,64000,64000,64000,64000,64000,64000,64000],['합성',20000,16000,16000,16000,16000,16000,16000,16000]],
+  'HYBE':[['1인',40000,32000,32000,32000,32000,32000,32000,32000],['2인',60000,48000,48000,48000,48000,48000,48000,48000],['3인',90000,72000,72000,72000,72000,72000,72000,72000],['4인',120000,96000,96000,96000,96000,96000,96000,96000],['5인',150000,120000,120000,120000,120000,120000,120000,120000],['6인',180000,144000,144000,144000,144000,144000,144000,144000],['7인',210000,168000,168000,168000,168000,168000,168000,168000],['8인',240000,192000,192000,192000,192000,192000,192000,192000],['9인',270000,216000,216000,216000,216000,216000,216000,216000],['10인',300000,240000,240000,240000,240000,240000,240000,240000],['오브제',30000,24000,24000,24000,24000,24000,24000,24000],['합성',30000,24000,24000,24000,24000,24000,24000,24000]],
+  'HYBE(USA)':[['1인',40000,32000,32000,32000,32000,32000,32000,32000],['2인',64000,51200,51200,51200,51200,51200,51200,51200],['3인',90000,72000,72000,72000,72000,72000,72000,72000],['4인',112000,89600,89600,89600,89600,89600,89600,89600],['5인',130000,104000,104000,104000,104000,104000,104000,104000],['6인',144000,115200,115200,115200,115200,115200,115200,115200],['7인',161000,128800,128800,128800,128800,128800,128800,128800],['8인',176000,140800,140800,140800,140800,140800,140800,140800],['9인',189000,151200,151200,151200,151200,151200,151200,151200],['10인',209000,167200,167200,167200,167200,167200,167200,167200],['오브제',30000,24000,24000,24000,24000,24000,24000,24000],['합성',25000,20000,20000,20000,20000,20000,20000,20000]],
+  'KQ':[['1인',30000,24000,24000,24000,24000,24000,24000,24000],['2인',40000,32000,32000,32000,32000,32000,32000,32000],['3인',60000,48000,48000,48000,48000,48000,48000,48000],['4인',80000,64000,64000,64000,64000,64000,64000,64000],['5인',100000,80000,80000,80000,80000,80000,80000,80000],['6인',120000,96000,96000,96000,96000,96000,96000,96000],['7인',140000,112000,112000,112000,112000,112000,112000,112000],['8인',160000,128000,128000,128000,128000,128000,128000,128000],['9인',162000,129600,129600,129600,129600,129600,129600,129600],['10인',180000,144000,144000,144000,144000,144000,144000,144000],['오브제',20000,16000,16000,16000,16000,16000,16000,16000],['부분합성',10000,8000,8000,8000,8000,8000,8000,8000],['합성',20000,16000,16000,16000,16000,16000,16000,16000]],
+  'INKODE':[['1인',30000,24000,24000,24000,24000,24000,24000,24000],['2인',68500,54800,54800,54800,54800,54800,54800,54800],['3인',85500,68400,68400,68400,68400,68400,68400,68400],['4인',91000,72800,72800,72800,72800,72800,72800,72800],['5인',85000,68000,68000,68000,68000,68000,68000,68000],['6인',99000,79200,79200,79200,79200,79200,79200,79200],['7인',112000,89600,89600,89600,89600,89600,89600,89600],['8인',124000,99200,99200,99200,99200,99200,99200,99200],['9인',135000,108000,108000,108000,108000,108000,108000,108000],['10인',145000,116000,116000,116000,116000,116000,116000,116000],['오브제',30000,24000,24000,24000,24000,24000,24000,24000],['합성',25000,20000,20000,20000,20000,20000,20000,20000]],
+  '최나랑':[['1인',40000,32000,32000,32000,32000,32000,32000,32000],['2인',64000,51200,51200,51200,51200,51200,51200,51200],['3인',90000,72000,72000,72000,72000,72000,72000,72000],['4인',112000,89600,89600,89600,89600,89600,89600,89600],['5인',130000,104000,104000,104000,104000,104000,104000,104000],['6인',144000,115200,115200,115200,115200,115200,115200,115200],['7인',154000,123200,123200,123200,123200,123200,123200,123200],['8인',160000,128000,128000,128000,128000,128000,128000,128000],['9인',180000,144000,144000,144000,144000,144000,144000,144000],['10인',200000,160000,160000,160000,160000,160000,160000,160000],['합성',30000,24000,24000,24000,24000,24000,24000,24000],['클리닝',15000,12000,12000,12000,12000,12000,12000,12000]]
+};
+
+var DB={
+  agencies:AGENCIES_RAW.map(function(a,i){return Object.assign({},a,{id:'ag'+i});}),
+  litterchers:LITTERCHERS_RAW.map(function(l,i){return Object.assign({},l,{id:'lt'+i});})
+};
+try{var _sv=localStorage.getItem('pm_extra');if(_sv){var _ex=JSON.parse(_sv);if(_ex.agencies)DB.agencies=DB.agencies.concat(_ex.agencies);if(_ex.litterchers)DB.litterchers=DB.litterchers.concat(_ex.litterchers);}}catch(e){}
+
+var CUR='dash',EI=-1,ltF='all',rtF='YG PLUS',agP=0,ltP=0,rtP=0,PER=20;
+
+function saveExtra(){
+  try{
+    var oa=new Set(AGENCIES_RAW.map(function(_,i){return 'ag'+i;}));
+    var ol=new Set(LITTERCHERS_RAW.map(function(_,i){return 'lt'+i;}));
+    localStorage.setItem('pm_extra',JSON.stringify({agencies:DB.agencies.filter(function(a){return !oa.has(a.id);}),litterchers:DB.litterchers.filter(function(l){return !ol.has(l.id);})}));
+  }catch(e){}
+}
+function uid(){return 'u'+Date.now().toString(36)+Math.random().toString(36).slice(2,5);}
+function esc(s){var d=document.createElement('div');d.textContent=s||'';return d.innerHTML;}
+function wn(n){if(!n||isNaN(n)||n===0)return '-';return Number(n).toLocaleString('ko-KR')+'원';}
+function mask(s){return s&&s.length>4?s.slice(0,3)+'****'+s.slice(-4):s||'-';}
+
+document.querySelectorAll('.tab').forEach(function(t){
+  t.addEventListener('click',function(){switchTab(t.dataset.tab);});
+});
+function switchTab(t){
+  if(t==='rates'&&SESSION.role==='guest'){toast('관리자/편집자만 접근 가능해요');return;}
+  if(t==='dash'&&SESSION.role==='guest'){toast('게스트는 거래처/리터쳐만 볼 수 있어요');return;}
+  document.querySelectorAll('.tab').forEach(function(b){b.classList.toggle('active',b.dataset.tab===t);});
+  document.querySelectorAll('.tab-panel').forEach(function(p){p.classList.toggle('active',p.id==='tab-'+t);});
+  CUR=t;agP=0;ltP=0;rtP=0;
+  if(t==='rates')buildRateTabs();
+  renderAll();
+}
+function renderAll(){
+  updateStats();
+  if(CUR==='dash')renderDash();
+  if(CUR==='agencies')renderAg();
+  if(CUR==='litt')renderLt();
+  if(CUR==='rates')renderRates();
+}
+function updateStats(){
+  document.getElementById('s-ag').textContent=new Set(DB.agencies.map(function(a){return a.name;})).size;
+  document.getElementById('s-lt').textContent=DB.litterchers.length;
+  document.getElementById('s-rt').textContent=Object.keys(RATES_RAW).length;
+}
+
+function renderDash(){
+  var agNames=Array.from(new Set(DB.agencies.map(function(a){return a.name;}))).sort(function(a,b){return a.localeCompare(b,'ko');});
+  document.getElementById('d-ag').innerHTML=agNames.slice(0,6).map(function(name){
+    var a=DB.agencies.find(function(x){return x.name===name;});
+    var cnt=DB.agencies.filter(function(x){return x.name===name;}).length;
+    return '<tr class="row-clickable" onclick="switchTab(\'agencies\')"><td class="nm">'+esc(name)+'</td><td style="font-size:11px;color:var(--txt2)">'+esc((a.artists||'').split(',').slice(0,2).join(', ')||'-')+'</td><td><span class="tag t-b">'+cnt+'명</span></td></tr>';
+  }).join('')||'<tr><td colspan="3" class="empty-st">데이터 없음</td></tr>';
+  document.getElementById('d-lt').innerHTML=DB.litterchers.slice(0,6).map(function(l){
+    return '<tr class="row-clickable" onclick="switchTab(\'litt\')"><td class="nm">'+esc(l.name)+'</td><td><span class="tag '+(l.tax==='사업자'?'t-g':'t-t')+'">'+esc(l.tax)+'</span></td><td>'+esc(l.bank||'-')+'</td></tr>';
+  }).join('');
+}
+
+// 거래처: 소속사별로 묶어서, 토글로 담당자 목록 표시
+function renderAg(){
+  var q=(document.getElementById('q-ag')&&document.getElementById('q-ag').value||'').toLowerCase();
+  var agMap={};
+  DB.agencies.forEach(function(a){
+    if(!agMap[a.name])agMap[a.name]=Object.assign({},a,{contacts:[]});
+    agMap[a.name].contacts.push({id:a.id,manager:a.manager,email:a.email,tel:a.tel});
+  });
+  var data=Object.values(agMap).filter(function(a){
+    return !q||a.name.toLowerCase().includes(q)||a.contacts.some(function(c){return c.manager.toLowerCase().includes(q);});
+  });
+  data.sort(function(a,b){return a.name.localeCompare(b.name,'ko');});
+  var slice=data.slice(agP*PER,(agP+1)*PER);
+  var rows='';
+  slice.forEach(function(a,idx){
+    var expandId='ag-exp-'+idx;
+    var editBtns=isEditor()?'<td style="text-align:right"><div style="display:flex;gap:2px;justify-content:flex-end"><button class="ab ed" onclick="event.stopPropagation();editAg(\''+a.id+'\')">✎</button><button class="ab dl" onclick="event.stopPropagation();delAg(\''+a.id+'\')">✕</button></div></td>':'<td></td>';
+    rows+='<tr class="row-clickable" onclick="toggleExpand(\''+expandId+'\',this)">'+
+      '<td style="width:30px;text-align:center"><span class="chevron" id="chv-'+expandId+'">›</span></td>'+
+      '<td class="nm">'+esc(a.name)+'</td>'+
+      '<td style="font-size:11px">'+esc(a.ceo||'-')+'</td>'+
+      '<td style="font-size:11px">'+esc(a.biz||'-')+'</td>'+
+      '<td style="font-size:11px;color:var(--txt2)">'+esc((a.artists||'').split(',').slice(0,2).join(', ')||'-')+'</td>'+
+      '<td><span class="tag t-b">'+a.contacts.length+'명</span></td>'+
+      editBtns+
+      '</tr>'+
+      '<tr class="tr-expand" id="'+expandId+'">'+
+      '<td colspan="7" style="padding:0">'+
+      '<table style="width:100%;font-size:11px">'+
+      '<thead><tr style="background:rgba(42,42,53,.5)"><th style="padding:6px 14px;font-size:10px;color:var(--txt3)">담당자</th><th style="padding:6px 10px;font-size:10px;color:var(--txt3)">이메일</th><th style="padding:6px 10px;font-size:10px;color:var(--txt3)">연락처</th></tr></thead>'+
+      '<tbody>'+a.contacts.map(function(c){
+        return '<tr><td style="padding:7px 14px;font-weight:500">'+esc(c.manager||'-')+'</td><td style="padding:7px 10px;color:var(--acc2)">'+esc(c.email||'-')+'</td><td style="padding:7px 10px;color:var(--txt3)">'+esc(c.tel||'-')+'</td></tr>';
+      }).join('')+
+      '</tbody></table>'+
+      '</td></tr>';
+  });
+  document.getElementById('tb-ag').innerHTML=rows||'<tr><td colspan="7" class="empty-st">거래처가 없어요</td></tr>';
+  // 모바일 카드
+  var mCards='';
+  slice.forEach(function(a,idx){
+    var mid='m-ag-'+idx;
+    var editHtml='';
+    if(isEditor()){
+      editHtml='<div class="m-actions">'+
+        '<button class="ab ed" onclick="event.stopPropagation();editAg('+JSON.stringify(a.id)+')">✎ 수정</button>'+
+        '<button class="ab dl" onclick="event.stopPropagation();delAg('+JSON.stringify(a.id)+')">✕ 삭제</button>'+
+      '</div>';
+    }
+    var agSub=(a.ceo?esc(a.ceo):'-')+(a.biz?' · '+esc(a.biz):'');
+    mCards+='<div class="m-card" id="'+mid+'">'+
+      '<div class="m-card-head" onclick="toggleMCard('+JSON.stringify(mid)+')">'+
+        '<div class="m-card-left">'+
+          '<div>'+
+            '<div class="m-card-name">'+esc(a.name)+'</div>'+
+            '<div class="m-card-sub">'+agSub+'</div>'+
+          '</div>'+
+        '</div>'+
+        '<div class="m-card-right">'+
+          '<span class="tag t-b" style="font-size:10px">'+a.contacts.length+'명</span>'+
+          '<span class="m-chv">›</span>'+
+        '</div>'+
+      '</div>'+
+      '<div class="m-card-body">'+
+        '<div class="m-row"><span class="m-key">대표명</span><span class="m-val">'+esc(a.ceo||'-')+'</span></div>'+
+        '<div class="m-row"><span class="m-key">사업자번호</span><span class="m-val">'+esc(a.biz||'-')+'</span></div>'+
+        '<div class="m-row"><span class="m-key">소속 아티스트</span><span class="m-val">'+esc(a.artists||'-')+'</span></div>'+
+        '<div class="m-section-title">담당자</div>'+
+        a.contacts.map(function(c){
+          return '<div class="m-contact">'+
+            '<div class="m-contact-name">'+esc(c.manager||'-')+'</div>'+
+            (c.email?'<div class="m-contact-email">'+esc(c.email)+'</div>':'')+
+          '</div>';
+        }).join('')+
+        editHtml+
+      '</div>'+
+    '</div>';
+  });
+  var mcEl=document.getElementById('mc-ag');
+  if(mcEl)mcEl.innerHTML=mCards||'<div class="empty-st">거래처가 없어요</div>';
+  mkPg('pb-ag','pi-ag',data.length,agP,function(p){agP=p;renderAg();});
+}
+
+// 리터쳐: 토글로 상세정보 표시 (관리자/편집자만)
+function renderLt(){
+  var q=(document.getElementById('q-lt')&&document.getElementById('q-lt').value||'').toLowerCase();
+  var data=DB.litterchers.filter(function(l){
+    return(!q||l.name.toLowerCase().includes(q)||(l.email&&l.email.toLowerCase().includes(q)))&&(ltF==='all'||l.tax===ltF);
+  });
+  data.sort(function(a,b){return a.name.localeCompare(b.name,'ko');});
+  var slice=data.slice(ltP*PER,(ltP+1)*PER);
+  var detail=canSeeDetail();
+  var rows='';
+  slice.forEach(function(l,idx){
+    var expandId='lt-exp-'+idx;
+    var editBtns=isEditor()?'<td style="text-align:right"><div style="display:flex;gap:2px;justify-content:flex-end"><button class="ab ed" onclick="event.stopPropagation();editLt(\''+l.id+'\')">✎</button><button class="ab dl" onclick="event.stopPropagation();delLt(\''+l.id+'\')">✕</button></div></td>':'<td></td>';
+    var chv=detail?'<td style="width:30px;text-align:center"><span class="chevron" id="chv-'+expandId+'">›</span></td>':'<td style="width:30px"></td>';
+    var onclk=detail?'onclick="toggleExpand(\''+expandId+'\',this)"':'';
+    rows+='<tr class="'+(detail?'row-clickable':'')+'" '+onclk+'>'+
+      chv+
+      '<td class="nm">'+esc(l.name)+'</td>'+
+      '<td><span class="tag '+(l.tax==='사업자'?'t-g':'t-t')+'">'+esc(l.tax)+'</span></td>'+
+      (detail?
+        '<td style="font-size:11px">'+esc(l.regId?mask(l.regId):'-')+'</td>'+
+        '<td style="font-size:11px;color:var(--txt2)">'+esc(l.addr||'-')+'</td>'+
+        '<td><span class="tag t-x">'+esc(l.bank||'-')+'</span></td>'+
+        '<td style="font-size:11px">'+esc(l.acct?mask(l.acct):'-')+'</td>'+
+        '<td style="font-size:11px;color:var(--txt3)">'+esc(l.email||'-')+'</td>'
+        :
+        '<td colspan="4" style="font-size:11px;color:var(--txt3)">— 상세정보는 관리자/편집자만 열람 가능해요 —</td>'+
+        '<td style="font-size:11px;color:var(--txt3)">'+esc(l.email||'-')+'</td>'
+      )+
+      editBtns+'</tr>';
+    if(detail){
+      rows+='<tr class="tr-expand" id="'+expandId+'"><td colspan="9" style="padding:12px 16px">'+
+        '<div class="expand-grid">'+
+        '<div class="exp-item"><div class="exp-label">주민/사업자번호</div><div class="exp-val">'+esc(l.regId||'-')+'</div></div>'+
+        '<div class="exp-item"><div class="exp-label">주소</div><div class="exp-val">'+esc(l.addr||'-')+'</div></div>'+
+        (l.ceo?'<div class="exp-item"><div class="exp-label">대표명</div><div class="exp-val">'+esc(l.ceo)+'</div></div>':'')+
+        '<div class="exp-item"><div class="exp-label">은행</div><div class="exp-val">'+esc(l.bank||'-')+'</div></div>'+
+        '<div class="exp-item"><div class="exp-label">계좌번호</div><div class="exp-val">'+esc(l.acct||'-')+'</div></div>'+
+        '<div class="exp-item"><div class="exp-label">이메일</div><div class="exp-val">'+esc(l.email||'-')+'</div></div>'+
+        '</div></td></tr>';
+    }
+  });
+  document.getElementById('tb-lt').innerHTML=rows||'<tr><td colspan="9" class="empty-st">리터쳐가 없어요</td></tr>';
+  // 모바일 카드
+  var mCards='';
+  slice.forEach(function(l,idx){
+    var mid='m-lt-'+idx;
+    var editHtml='';
+    if(isEditor()){
+      editHtml='<div class="m-actions">'+
+        '<button class="ab ed" onclick="event.stopPropagation();editLt('+JSON.stringify(l.id)+')">✎ 수정</button>'+
+        '<button class="ab dl" onclick="event.stopPropagation();delLt('+JSON.stringify(l.id)+')">✕ 삭제</button>'+
+      '</div>';
+    }
+    var taxClass=l.tax==='사업자'?'t-g':'t-t';
+    // 기본 표시: 은행+계좌번호 / 이메일
+    var ltSubParts=[];
+    if(l.bank&&l.acct) ltSubParts.push(l.bank+' '+mask(l.acct));
+    else if(l.bank) ltSubParts.push(l.bank);
+    if(l.email) ltSubParts.push(l.email);
+    var ltSub=ltSubParts.join(' · ')||'-';
+    var headOnclick=detail?' onclick="toggleMCard('+JSON.stringify(mid)+')"':'';
+    var bodyHtml='';
+    if(detail){
+      bodyHtml='<div class="m-card-body">'+
+        '<div class="m-row"><span class="m-key">주민/사업자번호</span><span class="m-val">'+esc(l.regId||'-')+'</span></div>'+
+        '<div class="m-row"><span class="m-key">주소</span><span class="m-val">'+esc(l.addr||'-')+'</span></div>'+
+        (l.ceo?'<div class="m-row"><span class="m-key">대표명</span><span class="m-val">'+esc(l.ceo)+'</span></div>':'')+
+        '<div class="m-row"><span class="m-key">은행</span><span class="m-val">'+esc(l.bank||'-')+'</span></div>'+
+        '<div class="m-row"><span class="m-key">계좌번호</span><span class="m-val">'+esc(l.acct||'-')+'</span></div>'+
+        '<div class="m-row"><span class="m-key">이메일</span><span class="m-val">'+esc(l.email||'-')+'</span></div>'+
+        editHtml+
+      '</div>';
+    }
+    mCards+='<div class="m-card" id="'+mid+'">'+
+      '<div class="m-card-head"'+headOnclick+'>'+
+        '<div class="m-card-left">'+
+          '<div>'+
+            '<div class="m-card-name">'+esc(l.name)+'</div>'+
+            '<div class="m-card-sub">'+esc(ltSub)+'</div>'+
+          '</div>'+
+        '</div>'+
+        '<div class="m-card-right">'+
+          '<span class="tag '+taxClass+'" style="font-size:10px">'+esc(l.tax)+'</span>'+
+          (detail?'<span class="m-chv">›</span>':'')+
+        '</div>'+
+      '</div>'+
+      bodyHtml+
+    '</div>';
+  });
+  var mcLtEl=document.getElementById('mc-lt');
+  if(mcLtEl)mcLtEl.innerHTML=mCards||'<div class="empty-st">리터쳐가 없어요</div>';
+  mkPg('pb-lt','pi-lt',data.length,ltP,function(p){ltP=p;renderLt();});
+}
+
+function toggleMCard(id){
+  var el=document.getElementById(id);
+  if(el)el.classList.toggle('open');
+}
+function toggleExpand(id,tr){
+  var el=document.getElementById(id);
+  var chv=document.getElementById('chv-'+id);
+  if(!el)return;
+  var isOpen=el.classList.contains('open');
+  el.classList.toggle('open',!isOpen);
+  if(chv)chv.classList.toggle('open',!isOpen);
+}
+
+function buildRateTabs(){
+  document.getElementById('rate-tabs').innerHTML=Object.keys(RATES_RAW).map(function(k){
+    return '<button class="ft'+(k===rtF?' on':'')+'" onclick="switchRate(\''+k+'\',this)">'+esc(k)+'</button>';
+  }).join('');
+}
+function switchRate(k,el){rtF=k;rtP=0;document.querySelectorAll('#rate-tabs .ft').forEach(function(t){t.classList.remove('on');});el.classList.add('on');renderRates();}
+function renderRates(){
+  var rows=RATES_RAW[rtF]||[];
+  var slice=rows.slice(rtP*PER,(rtP+1)*PER);
+  document.getElementById('tb-rt').innerHTML=slice.map(function(r){
+    return '<tr><td class="proj-name">'+esc(r[0])+'</td><td class="base-val">'+wn(r[1])+'</td>'+[2,3,4,5,6,7,8].map(function(i){return '<td class="rate-val">'+wn(r[i])+'</td>';}).join('')+'</tr>';
+  }).join('')||'<tr><td colspan="9" class="empty-st">데이터 없음</td></tr>';
+  mkPg('pb-rt','pi-rt',rows.length,rtP,function(p){rtP=p;renderRates();});
+}
+
+function mkPg(btnId,infoId,total,cur,cb){
+  var pages=Math.ceil(total/PER)||1;
+  document.getElementById(infoId).textContent='총 '+total+'건';
+  var c=document.getElementById(btnId);c.innerHTML='';
+  if(pages<=1)return;
+  for(var i=0;i<pages;i++){(function(idx){var b=document.createElement('div');b.className='pg-b'+(idx===cur?' on':'');b.textContent=idx+1;b.onclick=function(){cb(idx);};c.appendChild(b);})(i);}
+}
+function fltLt(f,el){ltF=f;ltP=0;document.querySelectorAll('#tab-litt .ft').forEach(function(t){t.classList.remove('on');});el.classList.add('on');renderLt();}
+
+// CRUD
+function v(id){return(document.getElementById(id)&&document.getElementById(id).value.trim())||'';}
+function openMo(id,idx){EI=idx;document.getElementById(id).classList.add('open');}
+function closeMo(id){document.getElementById(id).classList.remove('open');}
+
+function saveAg(){
+  if(!isEditor())return;
+  var name=v('ag-n');if(!name){toast('거래처명을 입력해 주세요');return;}
+  var obj={id:EI>=0?DB.agencies[EI].id:uid(),name:name,ceo:v('ag-c'),biz:v('ag-b'),artists:v('ag-a'),manager:v('ag-m'),tel:v('ag-p'),email:v('ag-e')};
+  if(EI>=0)DB.agencies[EI]=obj;else DB.agencies.push(obj);
+  saveExtra();closeMo('mo-ag');renderAll();toast(EI>=0?'수정됐어요':'추가됐어요');
+}
+function editAg(id){
+  if(!isEditor()){toast('편집자만 수정할 수 있어요');return;}
+  var i=DB.agencies.findIndex(function(a){return a.id===id;});if(i<0)return;EI=i;var a=DB.agencies[i];
+  document.getElementById('mo-ag-t').textContent='거래처 수정';
+  document.getElementById('ag-n').value=a.name||'';document.getElementById('ag-c').value=a.ceo||'';
+  document.getElementById('ag-b').value=a.biz||'';document.getElementById('ag-a').value=a.artists||'';
+  document.getElementById('ag-m').value=a.manager||'';document.getElementById('ag-p').value=a.tel||'';
+  document.getElementById('ag-e').value=a.email||'';
+  openMo('mo-ag',i);
+}
+function delAg(id){
+  if(!isEditor()){toast('편집자만 삭제할 수 있어요');return;}
+  if(!confirm('삭제할까요?'))return;
+  DB.agencies=DB.agencies.filter(function(a){return a.id!==id;});saveExtra();renderAll();toast('삭제됐어요');
+}
+function saveLt(){
+  if(!isEditor())return;
+  var name=v('lt-n');if(!name){toast('이름을 입력해 주세요');return;}
+  var obj={id:EI>=0?DB.litterchers[EI].id:uid(),name:name,tax:document.getElementById('lt-t').value,regId:v('lt-i'),addr:v('lt-a'),ceo:v('lt-r'),bank:document.getElementById('lt-bk').value,acct:v('lt-ac'),email:v('lt-e')};
+  if(EI>=0)DB.litterchers[EI]=obj;else DB.litterchers.push(obj);
+  saveExtra();closeMo('mo-lt');renderAll();toast(EI>=0?'수정됐어요':'추가됐어요');
+}
+function editLt(id){
+  if(!isEditor()){toast('편집자만 수정할 수 있어요');return;}
+  var i=DB.litterchers.findIndex(function(l){return l.id===id;});if(i<0)return;EI=i;var l=DB.litterchers[i];
+  document.getElementById('mo-lt-t').textContent='리터쳐 수정';
+  document.getElementById('lt-n').value=l.name||'';document.getElementById('lt-t').value=l.tax||'원천세';
+  document.getElementById('lt-i').value=l.regId||'';document.getElementById('lt-a').value=l.addr||'';
+  document.getElementById('lt-r').value=l.ceo||'';document.getElementById('lt-bk').value=l.bank||'IBK';
+  document.getElementById('lt-ac').value=l.acct||'';document.getElementById('lt-e').value=l.email||'';
+  openMo('mo-lt',i);
+}
+function delLt(id){
+  if(!isEditor()){toast('편집자만 삭제할 수 있어요');return;}
+  if(!confirm('삭제할까요?'))return;
+  DB.litterchers=DB.litterchers.filter(function(l){return l.id!==id;});saveExtra();renderAll();toast('삭제됐어요');
+}
+
+var _tt;
+function toast(msg){var el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');clearTimeout(_tt);_tt=setTimeout(function(){el.classList.remove('show');},2500);}
+document.addEventListener('keydown',function(e){if(e.key==='Escape')document.querySelectorAll('.mo.open').forEach(function(m){m.classList.remove('open');});});
+</script>
+</body>
+</html>
