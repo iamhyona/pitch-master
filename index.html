@@ -1068,7 +1068,23 @@ function saveRateEdit(){
   if(CUR==='rates-bill') renderBill();
   else renderPay();
   toast('저장됐어요!');
-  postSheet('upsert_rate_sheet', {sheet:rtF, rows:newRows});
+  // 단가 시트에 행별로 upsert
+  var agIdMap={'YG PLUS':'CL-004','YG':'CL-003','STARSHIP':'CL-011','THEBLACKLABEL':'CL-009','MOREVISION':'CL-001','HYBE':'CL-008','HYBE(USA)':'CL-013','최나랑':'CL-014','KQ':'CL-002','INKODE':'CL-012'};
+  var cid = agIdMap[rtF]||'';
+  var LITTERS_RT=['김현수','박현아','강영순','최현경','이은지','권미향','기타'];
+  var RT_IDS={'김현수':'RT-001','박현아':'RT-002','강영순':'RT-003','최현경':'RT-005','이은지':'RT-004','권미향':'RT-006','기타':'RT-999'};
+  newRows.forEach(function(r, ri){
+    var pid = rtF.replace(/[^A-Z0-9]/gi,'').toUpperCase().slice(0,3)+'-'+String(ri+1).padStart(3,'0');
+    // 청구단가 upsert
+    postSheet('upsert_rate_row',{priceId:pid, clientId:cid, 회사명:rtF, 작업구분:r[0], 인당단가:'', 작업명수:'1', 청구단가:r[1], 고급청구단가:'', 고급수수료율:'50%', 사용여부:'사용'});
+    // 지급단가 upsert (리터쳐별)
+    LITTERS_RT.forEach(function(nm,li){
+      var payVal = r[li+2]||0;
+      var rid = RT_IDS[nm]||'';
+      var ppid = 'PAY-'+pid+'-'+nm.replace(/[^A-Z0-9가-힣]/gi,'');
+      postSheet('upsert_pay_row',{payPriceId:ppid, priceId:pid, clientId:cid, 회사명:rtF, retoucherId:rid, 리터쳐명:nm, 작업구분:r[0], 작업명수:'1', 지급단가:payVal, 수수료율:'20%', 사용여부:'사용'});
+    });
+  });
 }
 
 // ── 페이지네이션 ──
