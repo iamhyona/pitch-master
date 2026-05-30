@@ -49,10 +49,10 @@ header{background:var(--sur);border-bottom:1px solid var(--bdr);padding:0 16px;d
 /* 콘텐츠 */
 .content{flex:1;overflow-y:auto}
 .content::-webkit-scrollbar{width:3px}.content::-webkit-scrollbar-thumb{background:var(--bdr);border-radius:3px}
-.ci{padding:20px 16px 80px;max-width:700px;margin:0 auto;width:100%}
-.tab-panel{display:none}.tab-panel.active{display:block}
+.ci{padding:28px 20px 80px;max-width:700px;margin:0 auto;width:100%}
+.tab-panel{display:none}.tab-panel.active{display:block;padding-top:4px}
 /* 테이블/카드 공통 */
-.tc{background:var(--sur);border:1px solid var(--bdr);border-radius:10px;overflow:hidden;margin-bottom:12px}
+.tc{background:var(--sur);border:1px solid var(--bdr);border-radius:10px;overflow:hidden;margin-bottom:14px}
 .tc-h{display:flex;align-items:center;padding:12px 16px;border-bottom:1px solid var(--bdr);gap:8px}
 .tc-t{font-size:13px;font-weight:600;flex:1}
 table{width:100%;border-collapse:collapse;font-size:12px}
@@ -75,9 +75,9 @@ tr.dash-row:hover td{background:rgba(59,130,246,.06)}
 .mc.open .mc-chv{transform:rotate(180deg)}
 .mc-body{display:none;border-top:1px solid var(--bdr);padding:12px 16px}
 .mc.open .mc-body{display:block}
-.mc-row{display:flex;justify-content:space-between;align-items:flex-start;padding:7px 0;border-bottom:1px solid rgba(42,42,53,.3);gap:12px}
+.mc-row{display:flex;justify-content:space-between;align-items:flex-start;padding:7px 0;border-bottom:1px solid rgba(42,42,53,.3);gap:12px}.mc-row-left{display:flex;justify-content:flex-start;align-items:flex-start;padding:7px 0;border-bottom:1px solid rgba(42,42,53,.3);gap:12px}
 .mc-row:last-child{border-bottom:none}
-.mc-k{font-size:10px;color:var(--txt3);text-transform:uppercase;font-weight:700;flex-shrink:0;padding-top:2px;min-width:72px}
+.mc-k{font-size:10px;color:var(--txt3);text-transform:uppercase;font-weight:700;flex-shrink:0;padding-top:2px;min-width:72px}.mc-v-left{text-align:left!important;word-break:break-all}
 .mc-v{font-size:12px;font-weight:600;text-align:right;cursor:pointer;word-break:break-all;padding:2px 6px;border-radius:4px;transition:all .15s}
 .mc-v:hover{background:rgba(59,130,246,.12);color:var(--acc2)}
 .mc-v.copied{background:rgba(52,211,153,.12);color:var(--grn)}
@@ -123,7 +123,7 @@ tr.dash-row:hover td{background:rgba(59,130,246,.06)}
 .t-g{background:rgba(251,191,36,.12);color:var(--gold)}
 .t-t{background:rgba(34,211,238,.12);color:var(--teal)}
 .t-x{background:var(--sur2);color:var(--txt2)}
-.bank-tag{display:inline-flex;align-items:center;padding:2px 7px;border-radius:4px;font-size:11px;font-weight:600;background:var(--sur2);color:var(--txt2);white-space:nowrap}
+.bank-tag{display:inline-flex;align-items:center;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700;background:rgba(136,136,160,.12);color:var(--txt2);white-space:nowrap;letter-spacing:.02em}
 /* 검색 */
 .srch{display:flex;align-items:center;gap:6px;background:var(--sur2);border:1px solid var(--bdr);border-radius:8px;padding:0 12px;height:36px;flex:1}
 .srch input{background:none;border:none;outline:none;color:var(--txt);font-size:13px;font-family:'Asta Sans',sans-serif;flex:1}
@@ -251,7 +251,7 @@ select.fi option{background:var(--sur2)}
           <div class="sc a"><div class="sc-l">거래처</div><div class="sc-v" id="s-ag">0</div></div>
           <div class="sc t"><div class="sc-l">리터쳐</div><div class="sc-v" id="s-lt">0</div></div>
         </div>
-        <div style="display:grid;gap:12px">
+        <div style="display:flex;flex-direction:column;gap:14px">
           <div class="tc">
             <div class="tc-h"><span class="tc-t">리터쳐 현황</span><button class="btn btn-g" style="height:26px;font-size:11px" id="dash-lt-btn" onclick="toggleDashAll('lt')">전체 보기 →</button></div>
             <table style="table-layout:fixed;width:100%">
@@ -299,7 +299,10 @@ select.fi option{background:var(--sur2)}
       <!-- 청구단가 -->
       <div id="tab-rates-bill" class="tab-panel">
         <div class="rate-agency-box">
-          <div class="rate-agency-label">소속사</div>
+          <div class="rate-agency-label" style="display:flex;justify-content:space-between;align-items:center">
+            <span>소속사</span>
+            <button class="btn btn-g" id="btn-edit-rate-bill" style="display:none;height:24px;font-size:10px;padding:0 10px;margin-right:4px" onclick="openRateEditMo()">단가 편집</button>
+          </div>
           <div class="rate-agency-wrap">
             <select class="rate-agency-select" id="rate-select-bill" onchange="switchRateSelect(this.value,'bill')"></select>
           </div>
@@ -378,7 +381,7 @@ select.fi option{background:var(--sur2)}
       <div class="fg"><label class="fl">대표명 (사업자용)</label><input class="fi sm" id="lt-ceo"></div>
       <hr class="hr">
       <div class="row2"><div class="fg"><label class="fl">지급은행</label><select class="fi sm" id="lt-bank"><option>IBK</option><option>국민</option><option>신한</option><option>우리</option><option>하나</option><option>농협</option><option>기업</option><option>토스</option><option>카카오</option><option>케이</option><option>기타</option></select></div><div class="fg"><label class="fl">계좌번호</label><input class="fi sm" id="lt-acct"></div></div>
-      <div class="fg"><label class="fl">이메일</label><input class="fi sm" id="lt-email"></div>
+      <div class="row2"><div class="fg"><label class="fl">이메일</label><input class="fi sm" id="lt-email"></div><div class="fg"><label class="fl">연락처</label><input class="fi sm" id="lt-tel" placeholder="010-0000-0000"></div></div>
     </div>
     <div class="md-f"><button class="btn btn-g" onclick="closeMo('mo-lt')">취소</button><button class="btn btn-p" onclick="saveLt()">저장</button></div>
   </div>
@@ -386,17 +389,27 @@ select.fi option{background:var(--sur2)}
 
 <!-- 수수료 편집 모달 -->
 <div class="mo" id="mo-rate">
-  <div class="md" style="max-width:500px">
-    <div class="md-h"><span class="md-t">수수료 · 단가 편집</span><button class="xb" onclick="closeMo('mo-rate')">✕</button></div>
-    <div class="md-b">
-      <div style="font-size:11px;color:var(--txt3);margin-bottom:4px">리터쳐별 수수료를 설정합니다.</div>
-      <div id="fee-rows" style="display:flex;flex-direction:column;gap:6px"></div>
-      <hr class="hr" style="margin:8px 0">
-      <div style="font-size:10px;color:var(--txt3);text-transform:uppercase;margin-bottom:6px">단가 수정 — <span id="rate-edit-name" style="color:var(--acc2)"></span></div>
-      <div id="rate-rows" style="display:flex;flex-direction:column;gap:4px;max-height:220px;overflow-y:auto"></div>
+  <div class="md" style="max-width:760px;width:95vw">
+    <div class="md-h">
+      <span class="md-t">단가 편집 — <span id="rate-edit-name" style="color:var(--acc2)"></span></span>
+      <button class="xb" onclick="closeMo('mo-rate')">✕</button>
     </div>
-    <div style="padding:0 16px 10px;display:flex;gap:8px">
+    <div class="md-b" style="padding:10px 12px">
+      <!-- 수수료율 헤더 -->
+      <div style="font-size:10px;color:var(--txt3);margin-bottom:6px;text-transform:uppercase;letter-spacing:.06em">리터쳐별 수수료율 (% 입력 시 자동계산, 셀 개별 수정 가능)</div>
+      <div id="fee-header" style="overflow-x:auto;margin-bottom:10px"></div>
+      <hr class="hr" style="margin:6px 0 10px">
+      <!-- 단가 테이블 -->
+      <div style="overflow-x:auto;max-height:55vh;overflow-y:auto">
+        <table id="rate-edit-table" style="width:100%;border-collapse:collapse;font-size:12px;min-width:500px">
+          <thead id="rate-edit-thead" style="position:sticky;top:0;z-index:1"></thead>
+          <tbody id="rate-edit-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+    <div style="padding:6px 12px 10px;display:flex;gap:8px;align-items:center">
       <button class="btn btn-g" style="font-size:11px;height:28px" onclick="addRateRow()">+ 항목 추가</button>
+      <span style="font-size:10px;color:var(--txt3)">셀 클릭으로 단가 직접 수정</span>
     </div>
     <div class="md-f"><button class="btn btn-g" onclick="closeMo('mo-rate')">취소</button><button class="btn btn-p" onclick="saveRateEdit()">저장</button></div>
   </div>
@@ -408,7 +421,7 @@ select.fi option{background:var(--sur2)}
 var PW = {guest:'guest', admin:'0090'};
 // ── Apps Script URL ──
 var AS_INFO = 'https://script.google.com/macros/s/AKfycbxjWPLTl9Cv2sx8N40OBY9nMLYjf54FW3CtM6R6M9IBtDcBrUPKjfhyNc4kbIYbKeDk/exec';
-var AS_RATE = 'https://script.google.com/macros/s/AKfycbzkvA8F1uGheXiLKu_6S8U29M0NiZraK544c8pBZDPgURGbgh_cuoAebJFEe9ex__gAcg/exec';
+var AS_RATE = 'https://script.google.com/macros/s/AKfycbzhOE3Pclc-rak09kB76X1SWOmnt8F1HpWUAVNAyFktM0DxUGR5PeP_B2TUklAN3UcPQA/exec';
 
 var SESSION = {role:null, editMode:false};
 var selRole = null;
@@ -419,12 +432,12 @@ function doLogin(){if(!selRole){document.getElementById('login-err').textContent
 function doLogout(){SESSION.role=null;SESSION.editMode=false;selRole=null;document.getElementById('login-screen').classList.remove('hidden');document.getElementById('app').style.display='none';document.querySelectorAll('.role-btn').forEach(function(b){b.classList.remove('selected');});document.getElementById('login-pw-wrap').classList.remove('show');document.getElementById('login-pw').value='';document.getElementById('login-err').textContent='';document.getElementById('login-btn').disabled=true;CUR='dash';}
 function applyRoleUI(){var isAdmin=SESSION.role==='admin';var c=isAdmin?['rgba(59,130,246,.12)','var(--acc2)']:['rgba(167,139,250,.12)','var(--purple)'];document.getElementById('role-tag').innerHTML='<span style="display:inline-flex;align-items:center;padding:2px 8px;border-radius:5px;font-size:10px;font-weight:700;background:'+c[0]+';color:'+c[1]+'">'+(isAdmin?'관리자':'게스트')+'</span>';document.getElementById('edit-mode-btn').style.display=isAdmin?'':'none';['tab-btn-rates-bill','tab-btn-rates-pay','tab-btn-dash'].forEach(function(id){var el=document.getElementById(id);if(el)el.style.display=isAdmin?'':'none';});if(!isAdmin){document.querySelectorAll('.tab').forEach(function(t){t.classList.remove('active');});document.querySelector('[data-tab="agencies"]').classList.add('active');document.querySelectorAll('.tab-panel').forEach(function(p){p.classList.remove('active');});document.getElementById('tab-agencies').classList.add('active');CUR='agencies';}updateEditUI();}
 function toggleEditMode(){SESSION.editMode=!SESSION.editMode;var btn=document.getElementById('edit-mode-btn');if(SESSION.editMode){btn.textContent='편집 종료';btn.classList.add('btn-danger');btn.classList.remove('btn-g');}else{btn.textContent='편집하기';btn.classList.remove('btn-danger');btn.classList.add('btn-g');}updateEditUI();renderAll();toast(SESSION.editMode?'편집 모드 켜짐':'편집 모드 꺼짐');}
-function updateEditUI(){var show=SESSION.role==='admin'&&SESSION.editMode;['btn-add-ag','btn-add-lt','btn-edit-rate'].forEach(function(id){var el=document.getElementById(id);if(el)el.style.display=show?'':'none';});}
+function updateEditUI(){var show=SESSION.role==='admin'&&SESSION.editMode;['btn-add-ag','btn-add-lt','btn-edit-rate','btn-edit-rate-bill'].forEach(function(id){var el=document.getElementById(id);if(el)el.style.display=show?'':'none';});}
 function canEdit(){return SESSION.role==='admin'&&SESSION.editMode;}
 function canSeeDetail(){return SESSION.role==='admin';}
 
 // ── 데이터 ──
-var AG_RAW=[{name:'모어비전',ceo:'PARK JAY BUM(박재범)',biz:'828-86-02400',artists:'박재범, 청하, 롱샷',manager:'정혜영',email:'hyjung@morevision.kr',tel:''},{name:'모어비전',ceo:'PARK JAY BUM(박재범)',biz:'828-86-02400',artists:'박재범, 청하, 롱샷',manager:'문중균',email:'moon@morevision.kr',tel:''},{name:'모어비전',ceo:'PARK JAY BUM(박재범)',biz:'828-86-02400',artists:'박재범, 청하, 롱샷',manager:'신다영',email:'dyshin@morevision.kr',tel:''},{name:'모어비전',ceo:'PARK JAY BUM(박재범)',biz:'828-86-02400',artists:'박재범, 청하, 롱샷',manager:'이세인',email:'sein5340@morevision.kr',tel:''},{name:'케이큐',ceo:'김규옥',biz:'105-87-90055',artists:'에이티즈, 싸이커스',manager:'정한별',email:'hbyeol1@kqent.com',tel:''},{name:'케이큐',ceo:'김규옥',biz:'105-87-90055',artists:'에이티즈, 싸이커스',manager:'강이레',email:'yireh17@kqent.com',tel:''},{name:'케이큐',ceo:'김규옥',biz:'105-87-90055',artists:'에이티즈, 싸이커스',manager:'윤상은',email:'eveyun@kqent.com',tel:''},{name:'케이큐',ceo:'김규옥',biz:'105-87-90055',artists:'에이티즈, 싸이커스',manager:'이혜지',email:'hzi@kqent.com',tel:''},{name:'케이큐',ceo:'김규옥',biz:'105-87-90055',artists:'에이티즈, 싸이커스',manager:'정지원',email:'jiwon.41@kqent.com',tel:''},{name:'와이지 엔터테인먼트',ceo:'양민석',biz:'105-81-91810',artists:'블랙핑크, 트레저, 베이비몬스터',manager:'허윤영',email:'hyy27@ygmail.net',tel:''},{name:'와이지 엔터테인먼트',ceo:'양민석',biz:'105-81-91810',artists:'블랙핑크, 트레저, 베이비몬스터',manager:'김수진',email:'ksoojin@ygmail.net',tel:''},{name:'와이지 엔터테인먼트',ceo:'양민석',biz:'105-81-91810',artists:'블랙핑크, 트레저, 베이비몬스터',manager:'김건영',email:'gygy@ygmail.net',tel:''},{name:'와이지 엔터테인먼트',ceo:'양민석',biz:'105-81-91810',artists:'블랙핑크, 트레저, 베이비몬스터',manager:'신지애',email:'sjiae@ygmail.net',tel:''},{name:'와이지 엔터테인먼트',ceo:'양민석',biz:'105-81-91810',artists:'블랙핑크, 트레저, 베이비몬스터',manager:'황미애',email:'miae@ygmail.net',tel:''},{name:'와이지 엔터테인먼트',ceo:'양민석',biz:'105-81-91810',artists:'블랙핑크, 트레저, 베이비몬스터',manager:'전민지',email:'jeon@ygmail.net',tel:''},{name:'와이지 엔터테인먼트',ceo:'양민석',biz:'105-81-91810',artists:'블랙핑크, 트레저, 베이비몬스터',manager:'김진욱',email:'poemskor@ygmail.net',tel:''},{name:'와이지 플러스',ceo:'최성준',biz:'120-81-6733',artists:'블랙핑크, 트레저',manager:'심승현',email:'shsim@ygmail.net',tel:''},{name:'와이지 플러스',ceo:'최성준',biz:'120-81-6733',artists:'블랙핑크, 트레저',manager:'김소영',email:'okay@ygmail.net',tel:''},{name:'와이지 플러스',ceo:'최성준',biz:'120-81-6733',artists:'블랙핑크, 트레저',manager:'임준식',email:'goblin@ygmail.net',tel:''},{name:'와이지 플러스',ceo:'최성준',biz:'120-81-6733',artists:'블랙핑크, 트레저',manager:'이가은',email:'gannee@ygmail.net',tel:''},{name:'이담',ceo:'배종한',biz:'779-87-01692',artists:'아이유, 우즈',manager:'양은하',email:'enxia5@edam-ent.com',tel:''},{name:'이담',ceo:'배종한',biz:'779-87-01692',artists:'아이유, 우즈',manager:'신자경',email:'jgshin@edam-ent.com',tel:''},{name:'이담',ceo:'배종한',biz:'779-87-01692',artists:'아이유, 우즈',manager:'김보성',email:'tjd3218@edam-ent.com',tel:''},{name:'엠엠디디',ceo:'윤정윤',biz:'210-41-64943',artists:'윤종신',manager:'대표',email:'gloomyart@naver.com',tel:''},{name:'눌랑컴퍼니',ceo:'최윤진',biz:'225-10-08667',artists:'',manager:'대표',email:'agencychoe@gmail.com',tel:''},{name:'하이브',ceo:'이재상',biz:'120-86-78223',artists:'세븐틴, 투바투, 엔하이픈',manager:'임혜린',email:'imhyelin@hybecorp.com',tel:''},{name:'하이브',ceo:'이재상',biz:'120-86-78223',artists:'세븐틴, 투바투, 엔하이픈',manager:'조훈',email:'hoon.cho@hybecorp.com',tel:''},{name:'더블랙레이블',ceo:'정경인',biz:'629-86-00391',artists:'미야오, 소미, 태양, 로제',manager:'대표',email:'tbltax@theblacklabel.com',tel:''},{name:'더블랙레이블',ceo:'정경인',biz:'629-86-00391',artists:'미야오, 소미, 태양, 로제',manager:'김슬기',email:'sksksk@theblacklabel.com',tel:''},{name:'아우라',ceo:'김성위',biz:'629-88-03053',artists:'배진영',manager:'오주희',email:'ohjuhee0964@gmail.com',tel:''},{name:'아우라',ceo:'김성위',biz:'629-88-03053',artists:'배진영',manager:'공유빈',email:'godmemeiame@gmail.com',tel:''},{name:'아우라',ceo:'김성위',biz:'629-88-03053',artists:'배진영',manager:'김은주',email:'aura_ent@daum.net',tel:''},{name:'스타쉽',ceo:'이훈희, 이진성',biz:'114-86-65214',artists:'아이브, 크래비티, 몬스타엑스',manager:'정수연',email:'retoler01@gmail.com',tel:''},{name:'스타쉽',ceo:'이훈희, 이진성',biz:'114-86-65214',artists:'아이브, 크래비티, 몬스타엑스',manager:'윤은수',email:'sueunyoon126@gmail.com',tel:''},{name:'스타쉽',ceo:'이훈희, 이진성',biz:'114-86-65214',artists:'아이브, 크래비티, 몬스타엑스',manager:'김윤지',email:'u3u17412@gmail.com',tel:''},{name:'스타쉽',ceo:'이훈희, 이진성',biz:'114-86-65214',artists:'아이브, 크래비티, 몬스타엑스',manager:'박솔채',email:'solchaepark@gmail.com',tel:''},{name:'스타쉽',ceo:'이훈희, 이진성',biz:'114-86-65214',artists:'아이브, 크래비티, 몬스타엑스',manager:'조수연',email:'assd0608@gmail.com',tel:''},{name:'인코오드',ceo:'노윤상',biz:'803-88-02555',artists:'키빗업, 김재중',manager:'대표',email:'hkseo@in-kode.com',tel:''},{name:'인코오드',ceo:'노윤상',biz:'803-88-02555',artists:'키빗업, 김재중',manager:'정남결',email:'gyeol7@in-kode.com',tel:''}];
+var AG_RAW=[{name:'MORE VISION',ceo:'PARK JAY BUM(박재범)',biz:'828-86-02400',artists:'박재범, 청하, 롱샷',manager:'정혜영',email:'hyjung@morevision.kr',tel:'010-8991-8631',dept:'제작'},{name:'MORE VISION',ceo:'PARK JAY BUM(박재범)',biz:'828-86-02400',artists:'박재범, 청하, 롱샷',manager:'문중균',email:'moon@morevision.kr',tel:'010-7757-9646',dept:'A&R'},{name:'MORE VISION',ceo:'PARK JAY BUM(박재범)',biz:'828-86-02400',artists:'박재범, 청하, 롱샷',manager:'신다영',email:'dyshin@morevision.kr',tel:'010-7369-6382',dept:'제작'},{name:'MORE VISION',ceo:'PARK JAY BUM(박재범)',biz:'828-86-02400',artists:'박재범, 청하, 롱샷',manager:'이세인',email:'sein5340@morevision.kr',tel:'',dept:'제작'},{name:'KQ',ceo:'김규옥',biz:'105-87-90055',artists:'에이티즈, 싸이커스',manager:'정한별',email:'hbyeol1@kqent.com',tel:'010-8421-0207',dept:'A&R'},{name:'KQ',ceo:'김규옥',biz:'105-87-90055',artists:'에이티즈, 싸이커스',manager:'강이레',email:'yireh17@kqent.com',tel:'010-5246-3217',dept:'A&R'},{name:'KQ',ceo:'김규옥',biz:'105-87-90055',artists:'에이티즈, 싸이커스',manager:'윤상은',email:'eveyun@kqent.com',tel:'010-6223-8708',dept:'A&R'},{name:'KQ',ceo:'김규옥',biz:'105-87-90055',artists:'에이티즈, 싸이커스',manager:'이혜지',email:'hzi@kqent.com',tel:'010-6776-4026',dept:'A&R'},{name:'KQ',ceo:'김규옥',biz:'105-87-90055',artists:'에이티즈, 싸이커스',manager:'정지원',email:'jiwon.41@kqent.com',tel:'010-4046-2925',dept:'A&R'},{name:'YG',ceo:'양민석',biz:'105-81-91810',artists:'블랙핑크, 트레저, 베이비몬스터, 위너, 빅뱅',manager:'허윤영',email:'hyy27@ygmail.net',tel:'',dept:'피지컬뮤직사업'},{name:'YG',ceo:'양민석',biz:'105-81-91810',artists:'블랙핑크, 트레저, 베이비몬스터, 위너, 빅뱅',manager:'김수진',email:'ksoojin@ygmail.net',tel:'',dept:'디자인'},{name:'YG',ceo:'양민석',biz:'105-81-91810',artists:'블랙핑크, 트레저, 베이비몬스터, 위너, 빅뱅',manager:'김건영',email:'gygy@ygmail.net',tel:'010-9886-0265',dept:'디자인'},{name:'YG',ceo:'양민석',biz:'105-81-91810',artists:'블랙핑크, 트레저, 베이비몬스터, 위너, 빅뱅',manager:'신지애',email:'sjiae@ygmail.net',tel:'010-6808-3208',dept:'비주얼'},{name:'YG',ceo:'양민석',biz:'105-81-91810',artists:'블랙핑크, 트레저, 베이비몬스터, 위너, 빅뱅',manager:'황미애',email:'miae@ygmail.net',tel:'010-2042-9106',dept:'비주얼'},{name:'YG',ceo:'양민석',biz:'105-81-91810',artists:'블랙핑크, 트레저, 베이비몬스터, 위너, 빅뱅',manager:'전민지',email:'jeon@ygmail.net',tel:'010-9058-8527',dept:'비주얼'},{name:'YG',ceo:'양민석',biz:'105-81-91810',artists:'블랙핑크, 트레저, 베이비몬스터, 위너, 빅뱅',manager:'김진욱',email:'poemskor@ygmail.net',tel:'010-5091-7628',dept:'피지컬뮤직사업'},{name:'YG PLUS',ceo:'최성준',biz:'120-81-6733',artists:'블랙핑크, 트레저, 베이비몬스터, 위너, 빅뱅',manager:'심승현',email:'shsim@ygmail.net',tel:'010-2954-8606',dept:'디자인'},{name:'YG PLUS',ceo:'최성준',biz:'120-81-6733',artists:'블랙핑크, 트레저, 베이비몬스터, 위너, 빅뱅',manager:'김소영',email:'okay@ygmail.net',tel:'010-9974-6106',dept:'디자인'},{name:'YG PLUS',ceo:'최성준',biz:'120-81-6733',artists:'블랙핑크, 트레저, 베이비몬스터, 위너, 빅뱅',manager:'임준식',email:'goblin@ygmail.net',tel:'010-9730-0963',dept:'디자인'},{name:'YG PLUS',ceo:'최성준',biz:'120-81-6733',artists:'블랙핑크, 트레저, 베이비몬스터, 위너, 빅뱅',manager:'이가은',email:'gannee@ygmail.net',tel:'010-9961-1369',dept:'디자인'},{name:'EDAM',ceo:'배종한',biz:'779-87-01692',artists:'아이유, 우즈',manager:'양은하',email:'enxia5@edam-ent.com',tel:'010-4152-9254',dept:'마케팅'},{name:'EDAM',ceo:'배종한',biz:'779-87-01692',artists:'아이유, 우즈',manager:'신자경',email:'jgshin@edam-ent.com',tel:'010-5657-6970',dept:'A&R'},{name:'EDAM',ceo:'배종한',biz:'779-87-01692',artists:'아이유, 우즈',manager:'김보성',email:'tjd3218@edam-ent.com',tel:'010-8939-3576',dept:'A&R'},{name:'mmdd',ceo:'윤정윤',biz:'210-41-64943',artists:'윤종신',manager:'대표',email:'gloomyart@naver.com',tel:'010-6490-8443',dept:'디자인'},{name:'눌랑컴퍼니',ceo:'최윤진',biz:'225-10-08667',artists:'',manager:'대표',email:'agencychoe@gmail.com',tel:'010-5299-5766',dept:'포토'},{name:'HYBE',ceo:'이재상',biz:'120-86-78223',artists:'세븐틴, 투바투, 엔하이픈, 보이즈넥스트도어',manager:'임혜린',email:'imhyelin@hybecorp.com',tel:'010-3130-5586',dept:'HMS'},{name:'HYBE',ceo:'이재상',biz:'120-86-78223',artists:'세븐틴, 투바투, 엔하이픈, 보이즈넥스트도어',manager:'조훈',email:'hoon.cho@hybecorp.com',tel:'010-5392-9932',dept:'HMS'},{name:'THE BLACK LABEL',ceo:'정경인',biz:'629-86-00391',artists:'미야오, 소미, 태양, 로제, 올데이프로젝트, 임시완, 박보검',manager:'대표',email:'tbltax@theblacklabel.com',tel:'',dept:''},{name:'THE BLACK LABEL',ceo:'정경인',biz:'629-86-00391',artists:'미야오, 소미, 태양, 로제, 올데이프로젝트, 임시완, 박보검',manager:'김슬기',email:'sksksk@theblacklabel.com',tel:'010-5358-1519',dept:'디자인'},{name:'AURA',ceo:'김성위',biz:'629-88-03053',artists:'배진영',manager:'오주희',email:'ohjuhee0964@gmail.com',tel:'',dept:'A&R'},{name:'AURA',ceo:'김성위',biz:'629-88-03053',artists:'배진영',manager:'공유빈',email:'godmemeiame@gmail.com',tel:'010-4141-1207',dept:'디자인'},{name:'AURA',ceo:'김성위',biz:'629-88-03053',artists:'배진영',manager:'김은주',email:'aura_ent@daum.net',tel:'010-8511-6890',dept:'이사'},{name:'STARSHIP',ceo:'이훈희, 이진성',biz:'114-86-65214',artists:'아이브, 크래비티, 몬스타엑스, 셔누, 키키, 우주소녀',manager:'정수연',email:'retoler01@gmail.com',tel:'010-7177-4375',dept:'비주얼'},{name:'STARSHIP',ceo:'이훈희, 이진성',biz:'114-86-65214',artists:'아이브, 크래비티, 몬스타엑스, 셔누, 키키, 우주소녀',manager:'윤은수',email:'sueunyoon126@gmail.com',tel:'010-8644-4629',dept:'비주얼'},{name:'STARSHIP',ceo:'이훈희, 이진성',biz:'114-86-65214',artists:'아이브, 크래비티, 몬스타엑스, 셔누, 키키, 우주소녀',manager:'김윤지',email:'u3u17412@gmail.com',tel:'010-9626-1741',dept:'비주얼'},{name:'STARSHIP',ceo:'이훈희, 이진성',biz:'114-86-65214',artists:'아이브, 크래비티, 몬스타엑스, 셔누, 키키, 우주소녀',manager:'박솔채',email:'solchaepark@gmail.com',tel:'010-2028-4647',dept:'비주얼'},{name:'STARSHIP',ceo:'이훈희, 이진성',biz:'114-86-65214',artists:'아이브, 크래비티, 몬스타엑스, 셔누, 키키, 우주소녀',manager:'조수연',email:'assd0608@gmail.com',tel:'010-5706-7551',dept:'비주얼'},{name:'iNKODE',ceo:'노윤상',biz:'803-88-02555',artists:'키빗업, 김재중',manager:'대표',email:'hkseo@in-kode.com',tel:'',dept:''},{name:'iNKODE',ceo:'노윤상',biz:'803-88-02555',artists:'키빗업, 김재중',manager:'정남결',email:'gyeol7@in-kode.com',tel:'010-2303-2125',dept:'A&R'}];
 var LT_RAW=[{tax:'원천세',name:'김현수',regId:'880107-1019519',addr:'서울시 동대문구 답십리로 130 101동 10호',ceo:'',bank:'IBK',acct:'209-1017-130-1013',email:'kimhyunsooswim@gmail.com'},{tax:'원천세',name:'박현아',regId:'860524-2648911',addr:'서울시 마포구 도화4길 41 102동 603호',ceo:'',bank:'우리',acct:'1002-980-074363',email:'iamhyona@gmail.com'},{tax:'원천세',name:'강영순',regId:'600103-2654915',addr:'경상남도 거제시 양정 5길 36 아이파크 111동 302호',ceo:'',bank:'농협',acct:'920-020-29196',email:'pitch.since2022@gmail.com'},{tax:'원천세',name:'이은지',regId:'851118-2249122',addr:'인천광역시 서구 승학로372번길 21 뉴첼시빌2차 301호',ceo:'',bank:'농협',acct:'356-1251-4823-33',email:'raimlavin@gmail.com'},{tax:'원천세',name:'최현경',regId:'831113-2075212',addr:'서울특별시 강남구 테헤란로 53길 27 301호',ceo:'',bank:'우리',acct:'1002-5523-72595',email:'gradehyun@gmail.com'},{tax:'사업자',name:'권미향',regId:'716-24-01264',addr:'',ceo:'스튜디오134(박상현)',bank:'국민',acct:'044201-04-263183',email:'dolphin.mh@gmail.com'},{tax:'원천세',name:'박현제',regId:'',addr:'',ceo:'',bank:'',acct:'',email:'cubista2@gmail.com'},{tax:'원천세',name:'박종배',regId:'',addr:'',ceo:'',bank:'',acct:'',email:'jongbai0070@gmail.com'},{tax:'원천세',name:'김슬기',regId:'860609-2156813',addr:'서울특별시 용산구 백범로 74길 13 204호',ceo:'',bank:'우리',acct:'1002-129-588254',email:'chancep1515@gmail.com'},{tax:'원천세',name:'한규선',regId:'860519-1228512',addr:'',ceo:'',bank:'우리',acct:'1002-247-959472',email:''},{tax:'원천세',name:'박지현',regId:'900815-2408914',addr:'',ceo:'',bank:'국민',acct:'461302-04-248050',email:''},{tax:'원천세',name:'권지윤',regId:'910219-2629739',addr:'',ceo:'',bank:'우리',acct:'1002-239-106164',email:''}];
 var RATES_RAW={'YG PLUS':[['1인',30000,24000,24000,24000,24000,24000,24000,24000],['2인',60000,48000,48000,48000,48000,48000,48000,48000],['3인',90000,72000,72000,72000,72000,72000,72000,72000],['4인',120000,96000,96000,96000,96000,96000,96000,96000],['5인',150000,120000,120000,120000,120000,120000,120000,120000],['6인',180000,144000,144000,144000,144000,144000,144000,144000],['7인',210000,168000,168000,168000,168000,168000,168000,168000],['8인',240000,192000,192000,192000,192000,192000,192000,192000],['9인',270000,216000,216000,216000,216000,216000,216000,216000],['10인',300000,240000,240000,240000,240000,240000,240000,240000],['오브제',30000,24000,24000,24000,24000,24000,24000,24000],['합성',20000,16000,16000,16000,16000,16000,16000,16000]],'YG':[['1인',40000,32000,32000,32000,32000,32000,32000,32000],['2인',60000,48000,48000,48000,48000,48000,48000,48000],['3인',84000,67200,67200,67200,67200,67200,67200,67200],['4인',112000,89600,89600,89600,89600,89600,89600,89600],['5인',125000,100000,100000,100000,100000,100000,100000,100000],['6인',138000,110400,110400,110400,110400,110400,110400,110400],['7인',149996,119997,119997,119997,119997,119997,119997,119997],['8인',161200,128960,128960,128960,128960,128960,128960,128960],['9인',171396,137117,137117,137117,137117,137117,137117,137117],['10인',180000,144000,144000,144000,144000,144000,144000,144000],['합성',15000,12000,12000,12000,12000,12000,12000,12000],['클리닝',15000,12000,12000,12000,12000,12000,12000,12000],['업스케일링',100000,80000,80000,80000,80000,80000,80000,80000],['긴급작업비',20000,16000,16000,16000,16000,16000,16000,16000]],'STARSHIP':[['1인',40000,32000,32000,32000,32000,32000,32000,32000],['2인',60000,48000,48000,48000,48000,48000,48000,48000],['3인',90000,72000,72000,72000,72000,72000,72000,72000],['4인',120000,96000,96000,96000,96000,96000,96000,96000],['5인',150000,120000,120000,120000,120000,120000,120000,120000],['6인',120000,96000,96000,96000,96000,96000,96000,96000],['7인',140000,112000,112000,112000,112000,112000,112000,112000],['8인',160000,128000,128000,128000,128000,128000,128000,128000],['9인',180000,144000,144000,144000,144000,144000,144000,144000],['10인',200000,160000,160000,160000,160000,160000,160000,160000],['오브제',30000,24000,24000,24000,24000,24000,24000,24000],['부분합성',20000,16000,16000,16000,16000,16000,16000,16000],['합성',30000,24000,24000,24000,24000,24000,24000,24000]],'THEBLACKLABEL':[['1인',30000,24000,24000,24000,24000,24000,24000,24000],['2인',40000,32000,32000,32000,32000,32000,32000,32000],['3인',60000,48000,48000,48000,48000,48000,48000,48000],['4인',80000,64000,64000,64000,64000,64000,64000,64000],['5인',100000,80000,80000,80000,80000,80000,80000,80000],['6인',120000,96000,96000,96000,96000,96000,96000,96000],['7인',140000,112000,112000,112000,112000,112000,112000,112000],['8인',160000,128000,128000,128000,128000,128000,128000,128000],['9인',180000,144000,144000,144000,144000,144000,144000,144000],['10인',180000,144000,144000,144000,144000,144000,144000,144000],['오브제',30000,24000,24000,24000,24000,24000,24000,24000],['합성',20000,16000,16000,16000,16000,16000,16000,16000]],'MOREVISION':[['1인',40000,32000,32000,32000,32000,32000,32000,32000],['2인',50000,40000,40000,40000,40000,40000,40000,40000],['3인',60000,48000,48000,48000,48000,48000,48000,48000],['4인',70000,56000,56000,56000,56000,56000,56000,56000],['5인',80000,64000,64000,64000,64000,64000,64000,64000],['합성',20000,16000,16000,16000,16000,16000,16000,16000]],'HYBE':[['1인',40000,32000,32000,32000,32000,32000,32000,32000],['2인',60000,48000,48000,48000,48000,48000,48000,48000],['3인',90000,72000,72000,72000,72000,72000,72000,72000],['4인',120000,96000,96000,96000,96000,96000,96000,96000],['5인',150000,120000,120000,120000,120000,120000,120000,120000],['6인',180000,144000,144000,144000,144000,144000,144000,144000],['7인',210000,168000,168000,168000,168000,168000,168000,168000],['8인',240000,192000,192000,192000,192000,192000,192000,192000],['9인',270000,216000,216000,216000,216000,216000,216000,216000],['10인',300000,240000,240000,240000,240000,240000,240000,240000],['오브제',30000,24000,24000,24000,24000,24000,24000,24000],['합성',30000,24000,24000,24000,24000,24000,24000,24000]],'HYBE(USA)':[['1인',40000,32000,32000,32000,32000,32000,32000,32000],['2인',64000,51200,51200,51200,51200,51200,51200,51200],['3인',90000,72000,72000,72000,72000,72000,72000,72000],['4인',112000,89600,89600,89600,89600,89600,89600,89600],['5인',130000,104000,104000,104000,104000,104000,104000,104000],['6인',144000,115200,115200,115200,115200,115200,115200,115200],['7인',161000,128800,128800,128800,128800,128800,128800,128800],['8인',176000,140800,140800,140800,140800,140800,140800,140800],['9인',189000,151200,151200,151200,151200,151200,151200,151200],['10인',209000,167200,167200,167200,167200,167200,167200,167200],['오브제',30000,24000,24000,24000,24000,24000,24000,24000],['합성',25000,20000,20000,20000,20000,20000,20000,20000]],'KQ':[['1인',30000,24000,24000,24000,24000,24000,24000,24000],['2인',40000,32000,32000,32000,32000,32000,32000,32000],['3인',60000,48000,48000,48000,48000,48000,48000,48000],['4인',80000,64000,64000,64000,64000,64000,64000,64000],['5인',100000,80000,80000,80000,80000,80000,80000,80000],['6인',120000,96000,96000,96000,96000,96000,96000,96000],['7인',140000,112000,112000,112000,112000,112000,112000,112000],['8인',160000,128000,128000,128000,128000,128000,128000,128000],['9인',162000,129600,129600,129600,129600,129600,129600,129600],['10인',180000,144000,144000,144000,144000,144000,144000,144000],['오브제',20000,16000,16000,16000,16000,16000,16000,16000],['부분합성',10000,8000,8000,8000,8000,8000,8000,8000],['합성',20000,16000,16000,16000,16000,16000,16000,16000]],'INKODE':[['1인',30000,24000,24000,24000,24000,24000,24000,24000],['2인',68500,54800,54800,54800,54800,54800,54800,54800],['3인',85500,68400,68400,68400,68400,68400,68400,68400],['4인',91000,72800,72800,72800,72800,72800,72800,72800],['5인',85000,68000,68000,68000,68000,68000,68000,68000],['6인',99000,79200,79200,79200,79200,79200,79200,79200],['7인',112000,89600,89600,89600,89600,89600,89600,89600],['8인',124000,99200,99200,99200,99200,99200,99200,99200],['9인',135000,108000,108000,108000,108000,108000,108000,108000],['10인',145000,116000,116000,116000,116000,116000,116000,116000],['오브제',30000,24000,24000,24000,24000,24000,24000,24000],['합성',25000,20000,20000,20000,20000,20000,20000,20000]],'최나랑':[['1인',40000,32000,32000,32000,32000,32000,32000,32000],['2인',64000,51200,51200,51200,51200,51200,51200,51200],['3인',90000,72000,72000,72000,72000,72000,72000,72000],['4인',112000,89600,89600,89600,89600,89600,89600,89600],['5인',130000,104000,104000,104000,104000,104000,104000,104000],['6인',144000,115200,115200,115200,115200,115200,115200,115200],['7인',154000,123200,123200,123200,123200,123200,123200,123200],['8인',160000,128000,128000,128000,128000,128000,128000,128000],['9인',180000,144000,144000,144000,144000,144000,144000,144000],['10인',200000,160000,160000,160000,160000,160000,160000,160000],['합성',30000,24000,24000,24000,24000,24000,24000,24000],['클리닝',15000,12000,12000,12000,12000,12000,12000,12000]]};
 var CUSTOM_RATES={}, CUSTOM_FEES={};
@@ -459,106 +472,158 @@ function loadSheetData(){
     .then(function(r){return r.json();})
     .catch(function(){return null;})
     .then(function(data){
-      if(!data){ showSyncBar('error','⚠ 시트 연결 실패 — 내장 데이터로 표시 중'); setTimeout(hideSyncBar,3000); return; }
+      if(!data){
+        showSyncBar('error','⚠ 시트 연결 실패 — 내장 데이터로 표시 중');
+        setTimeout(hideSyncBar,3000); return;
+      }
 
       var ok = false;
 
+      // ── doGet 응답 구조 ──
+      // { '거래처회사명': {headers:[...], rows:[{clientId,회사명,...}]},
+      //   '거래처담당자': {headers:[...], rows:[{contactId,clientId,...}]},
+      //   '리터쳐': {headers:[...], rows:[...]},
+      //   '소속사별 청구단가': {headers:[...], rows:[...]},
+      //   '리터쳐별 소속사별 지급단가': {headers:[...], rows:[...]} }
+
       // ── 거래처 파싱 ──
-      // rows: col0=빈칸, col1=ID, col2=거래처명, col3=대표명, col4=사업자번호
-      //       col5=담당자명, col6=담당자 이메일, col7=담당자 연락처, col8=담당 부서, col9=소속 아티스트
-      // 첫 2행(타이틀행, 헤더행) 건너뜀
-      var litData = data.litterchers || {};
-      var agRawRows = (litData['거래처'] && litData['거래처'].rows) || [];
+      var clientRows  = (data['거래처회사명']  && data['거래처회사명'].rows)  || [];
+      var contactRows = (data['거래처담당자']  && data['거래처담당자'].rows)  || [];
+
+      // clientId → 회사 정보 맵
+      var clientMap = {};
+      clientRows.forEach(function(r){
+        var cid = String(r.clientId||'').trim();
+        if(!cid) return;
+        clientMap[cid] = {
+          cid:     cid,
+          name:    String(r['회사명']||'').trim(),
+          ceo:     String(r['대표명']||'').trim(),
+          biz:     String(r['사업자번호']||'').trim(),
+          artists: String(r['소속 아티스트']||'').trim()
+        };
+      });
+
+      // 담당자 기반으로 DB.agencies 구성
       var sheetAgencies = [];
-      agRawRows.slice(2).forEach(function(r){
-        var name = String(r['col2']||'').trim();
-        if(!name) return;
-        var sid = String(r['col1']||'').trim();
-        var id  = sid || ('sh-ag-'+name+'-'+(r['col5']||'')).replace(/\s/g,'');
+      var existCtIds = new Set(DB.agencies.map(function(a){return a.id;}));
+
+      contactRows.forEach(function(r){
+        var ctid   = String(r.contactId||'').trim();
+        var cid    = String(r.clientId||'').trim();
+        var status = String(r['사용여부']||'사용').trim();
+        if(!ctid || status==='미사용') return;
+        if(existCtIds.has(ctid)) return;
+        var client = clientMap[cid] || {};
         sheetAgencies.push({
-          id:id, sheetId:sid,
-          name:    name,
-          ceo:     String(r['col3']||'').trim(),
-          biz:     String(r['col4']||'').trim(),
-          manager: String(r['col5']||'').trim(),
-          email:   String(r['col6']||'').trim(),
-          tel:     String(r['col7']||'').trim(),
-          dept:    String(r['col8']||'').trim(),
-          artists: String(r['col9']||'').trim()
+          id:       ctid,
+          sheetId:  ctid,
+          clientId: cid,
+          name:     client.name    || String(r['회사명']||'').trim(),
+          ceo:      client.ceo     || '',
+          biz:      client.biz     || '',
+          artists:  client.artists || '',
+          manager:  String(r['담당자명']||'').trim(),
+          email:    String(r['담당자 이메일']||'').trim(),
+          tel:      String(r['담당자 연락처']||'').trim(),
+          dept:     String(r['담당 부서']||'').trim()
         });
       });
-      if(sheetAgencies.length > 0){ DB.agencies = sheetAgencies; ok = true; }
+      // 담당자 없는 회사도 추가
+      Object.values(clientMap).forEach(function(c){
+        var hasCt = sheetAgencies.some(function(a){return a.clientId===c.cid;});
+        if(!hasCt && !existCtIds.has(c.cid)){
+          sheetAgencies.push({id:c.cid,sheetId:c.cid,clientId:c.cid,name:c.name,ceo:c.ceo,biz:c.biz,artists:c.artists,manager:'',email:'',tel:'',dept:''});
+        }
+      });
+      if(sheetAgencies.length>0){ DB.agencies=sheetAgencies; ok=true; }
 
       // ── 리터쳐 파싱 ──
-      // col0=빈칸, col1=ID, col2=세금구분, col3=외주처명, col4=주민번호/사업자번호
-      // col5=주소, col6=은행, col7=계좌번호, col8=이메일, col9=연락처, col10=대표명(사업자)
-      var ltRawRows = (litData['리터쳐'] && litData['리터쳐'].rows) || [];
+      var ltRows = (data['리터쳐'] && data['리터쳐'].rows) || [];
       var sheetLitters = [];
-      ltRawRows.slice(2).forEach(function(r){
-        var name = String(r['col3']||'').trim();
-        if(!name) return;
-        var sid = String(r['col1']||'').trim();
-        var id  = sid || ('sh-lt-'+name).replace(/\s/g,'');
+      var existLtIds = new Set(DB.litters.map(function(l){return l.id;}));
+
+      ltRows.forEach(function(r){
+        var rid    = String(r.retoucherId||'').trim();
+        var name   = String(r['리터쳐명']||'').trim();
+        var status = String(r['사용여부']||'사용').trim();
+        if(!name || status==='미사용') return;
+        var id = rid||name;
+        if(existLtIds.has(id)) return;
         sheetLitters.push({
-          id:id, sheetId:sid,
-          tax:   String(r['col2']||'원천세').trim(),
-          name:  name,
-          regId: String(r['col4']||'').trim(),
-          addr:  String(r['col5']||'').trim(),
-          bank:  String(r['col6']||'').trim(),
-          acct:  String(r['col7']||'').trim(),
-          email: String(r['col8']||'').trim(),
-          tel:   String(r['col9']||'').trim(),
-          ceo:   String(r['col10']||'').trim()
+          id:     id,
+          sheetId:rid,
+          tax:    String(r['세금구분']||'원천세').trim(),
+          name:   name,
+          regId:  String(r['주민번호/사업자번호']||'').trim(),
+          addr:   String(r['주소']||'').trim(),
+          bank:   String(r['은행']||'').trim(),
+          acct:   String(r['계좌번호']||'').trim(),
+          email:  String(r['이메일']||'').trim(),
+          tel:    String(r['연락처']||'').trim(),
+          ceo:    String(r['대표명(사업자)']||'').trim()
         });
       });
-      if(sheetLitters.length > 0){ DB.litters = sheetLitters; ok = true; }
+      if(sheetLitters.length>0){ DB.litters=sheetLitters; ok=true; }
 
       // ── 단가 파싱 ──
-      // rows: col0=빈칸, col1=ID, col2=소속사, col3=작업구분, col4=인당단가
-      //       col5=작업명수, col6=기본단가, col7=고급단가
-      //       col8=김현수, col9=박현아, col10=강영순, col11=최현경
-      //       col12=이은지, col13=권미향, col14=이은지, col15=기타
-      // 첫 3행(타이틀/수수료/헤더) 건너뜀
-      var LITTER_COLS = ['col8','col9','col10','col11','col12','col13','col14','col15'];
-      var LITTER_NAMES = ['김현수','박현아','강영순','최현경','이은지','권미향','이은지','기타'];
-      if(data.rates){
-        Object.keys(data.rates).forEach(function(sheetName){
-          var sheet = data.rates[sheetName];
-          var rows = sheet.rows || [];
-          if(rows.length <= 3) return;
+      // priceId → {회사명, 작업구분, 청구단가}
+      var billRows = (data['소속사별 청구단가'] && data['소속사별 청구단가'].rows) || [];
+      var payRows  = (data['리터쳐별 소속사별 지급단가'] && data['리터쳐별 소속사별 지급단가'].rows) || [];
 
-          var parsed = rows.slice(3).map(function(r){
-            var proj = String(r['col3']||'').trim();
-            var base = parseFloat(String(r['col6']||'').replace(/,/g,'')) || 0;
-            if(!proj || !base) return null;
-            var sid = String(r['col1']||'').trim();
-            var litVals = LITTER_COLS.map(function(col){
-              var v = parseFloat(String(r[col]||'').replace(/,/g,''));
-              return isNaN(v) ? Math.round(base * 0.8) : v;
-            });
-            return [proj, base].concat(litVals).concat([sid]);
-          }).filter(Boolean);
-
-          if(parsed.length > 0){ CUSTOM_RATES[sheetName] = parsed; ok = true; }
+      if(billRows.length>0){
+        var priceMap = {};
+        billRows.forEach(function(r){
+          var pid    = String(r.priceId||'').trim();
+          var cname  = String(r['회사명']||'').trim();
+          var proj   = String(r['작업구분']||'').trim();
+          var base   = parseFloat(String(r['청구단가']||'0').replace(/,/g,''))||0;
+          var status = String(r['사용여부']||'사용').trim();
+          if(!pid||!proj||status==='미사용') return;
+          priceMap[pid]={cname:cname,proj:proj,base:base};
         });
+
+        // priceId → 리터쳐별 지급액
+        var LITTERS=['김현수','박현아','강영순','최현경','이은지','권미향','기타'];
+        var payByPrice={};
+        payRows.forEach(function(r){
+          var pid    = String(r.priceId||'').trim();
+          var ltName = String(r['리터쳐명']||'').trim();
+          var pay    = parseFloat(String(r['지급단가']||'0').replace(/,/g,''))||0;
+          var status = String(r['사용여부']||'사용').trim();
+          if(!pid||status==='미사용') return;
+          if(!payByPrice[pid]) payByPrice[pid]={};
+          payByPrice[pid][ltName]=pay;
+        });
+
+        // 회사명별 단가 배열 구성
+        var byCompany={};
+        Object.keys(priceMap).forEach(function(pid){
+          var p=priceMap[pid];
+          if(!byCompany[p.cname]) byCompany[p.cname]=[];
+          var litVals=LITTERS.map(function(nm){
+            return (payByPrice[pid]&&payByPrice[pid][nm]!=null)?payByPrice[pid][nm]:Math.round(p.base*0.8);
+          });
+          byCompany[p.cname].push([p.proj,p.base].concat(litVals));
+        });
+        Object.keys(byCompany).forEach(function(cname){
+          CUSTOM_RATES[cname]=byCompany[cname];
+        });
+        if(Object.keys(byCompany).length>0) ok=true;
       }
 
       if(ok){
-        SHEET_LOADED = true;
+        SHEET_LOADED=true;
         showSyncBar('success','✓ 시트 연동 완료');
-        setTimeout(hideSyncBar, 2500);
+        setTimeout(hideSyncBar,2500);
         buildRateTabs(); renderAll();
       } else {
         showSyncBar('error','⚠ 시트 연결 실패 — 내장 데이터로 표시 중');
-        setTimeout(hideSyncBar, 3000);
+        setTimeout(hideSyncBar,3000);
       }
-    }).catch(function(e){
-      console.error('loadSheetData error:', e);
-      showSyncBar('error','⚠ 네트워크 오류');
-      setTimeout(hideSyncBar, 3000);
     });
 }
+
 function showSyncBar(type,msg){var el=document.getElementById('sync-bar');if(!el)return;el.style.display='flex';el.className='sync-bar'+(type!=='loading'?' '+type:'');el.innerHTML=(type==='loading'?'<span class="spin">↻</span> ':'')+msg;}
 function hideSyncBar(){var el=document.getElementById('sync-bar');if(el)el.style.display='none';}
 
@@ -569,7 +634,7 @@ var selLitters=new Set(['강영순','최현경','이은지','권미향']);
 
 function esc(s){var d=document.createElement('div');d.textContent=s||'';return d.innerHTML;}
 function stripHyphen(s){return (s||'').replace(/-/g,'');}
-function wn(n){if(!n||isNaN(n))return '-';return Number(n).toLocaleString('ko-KR')+'원';}
+function wn(n){if(!n||isNaN(n))return '-';return Number(n).toLocaleString('ko-KR');}
 function uid(){return 'u'+Date.now().toString(36)+Math.random().toString(36).slice(2,5);}
 function gv(id){var el=document.getElementById(id);return el?el.value.trim():'';}
 
@@ -616,11 +681,14 @@ function renderDash(){
     var tr=document.createElement('tr');tr.className='dash-row';
     tr.innerHTML='<td class="nm" id="dlt-nm-'+i+'">'+esc(l.name)+'</td>'
       +'<td class="copyable" id="dlt-rid-'+i+'">'+esc(l.regId||'-')+'</td>'
-      +'<td class="copyable" id="dlt-ac-'+i+'">'+esc(acct)+'</td>';
+      +'<td class="copyable" id="dlt-ac-'+i+'" style="white-space:nowrap">'
+        +(l.bank?'<span class="bank-tag" style="margin-right:5px">'+esc(l.bank)+'</span>':'')
+        +esc(l.acct||'-')
+        +'</td>';
     ltEl.appendChild(tr);
     (function(el){el.addEventListener('click',function(){switchTab('litt');});})(tr.querySelector('#dlt-nm-'+i));
     (function(el,v){el.addEventListener('click',function(e){e.stopPropagation();cp(v,el);});})(tr.querySelector('#dlt-rid-'+i),l.regId||'');
-    (function(el,v){el.addEventListener('click',function(e){e.stopPropagation();cp(v,el);});})(tr.querySelector('#dlt-ac-'+i),acct);
+    (function(el,v){el.addEventListener('click',function(e){e.stopPropagation();cp(v,el);});})(tr.querySelector('#dlt-ac-'+i),l.acct||acct);
   });
   var agEl=document.getElementById('d-ag');
   agEl.innerHTML='';
@@ -640,7 +708,7 @@ function renderDash(){
 function toggleDashAll(type){if(type==='lt'){dashShowAllLt=!dashShowAllLt;var b=document.getElementById('dash-lt-btn');if(b)b.textContent=dashShowAllLt?'접기 ↑':'전체 보기 →';}else{dashShowAllAg=!dashShowAllAg;var b2=document.getElementById('dash-ag-btn');if(b2)b2.textContent=dashShowAllAg?'접기 ↑':'전체 보기 →';}renderDash();}
 
 // ── 거래처 ──
-function buildAgMap(){var m={};DB.agencies.forEach(function(a){if(!m[a.name])m[a.name]=Object.assign({},a,{contacts:[]});m[a.name].contacts.push({id:a.id,manager:a.manager,email:a.email,tel:a.tel});});return m;}
+function buildAgMap(){var m={};DB.agencies.forEach(function(a){if(!m[a.name])m[a.name]=Object.assign({},a,{contacts:[]});m[a.name].contacts.push({id:a.id,manager:a.manager,email:a.email,tel:a.tel,dept:a.dept});});return m;}
 
 function renderAg(){
   var q=(gv('q-ag')||'').toLowerCase();
@@ -652,30 +720,41 @@ function renderAg(){
   var sd=[];
   slice.forEach(function(a,i){
     sd.push(a);
+    var contactHtml=a.contacts.map(function(c,ci){
+      return '<div class="mc-contact" style="flex-direction:column;align-items:flex-start;gap:2px;padding:8px 0;border-bottom:1px solid rgba(42,42,53,.2)">'
+        +'<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">'
+          +'<span class="mc-contact-name" id="agmc-cm'+i+'x'+ci+'">'+esc(c.manager||'-')+'</span>'
+          +(c.dept?'<span style="font-size:10px;color:var(--txt3);background:var(--sur2);padding:1px 6px;border-radius:3px">'+esc(c.dept)+'</span>':'')
+        +'</div>'
+        +(c.email?'<span class="mc-contact-email" id="agmc-ce'+i+'x'+ci+'">'+esc(c.email)+'</span>':'')
+        +(c.tel?'<span id="agmc-ct'+i+'x'+ci+'" class="copyable" style="font-size:11px;color:var(--txt2)">'+esc(c.tel)+'</span>':'')
+        +'</div>';
+    }).join('');
     cards+='<div class="mc" id="agm'+i+'">'
-      +'<div class="mc-head" id="agmh'+i+'"><div class="mc-info">'
-        +'<div class="mc-name">'+esc(a.name)+'</div>'
-        +'<div class="mc-sub">'+esc(a.artists||'-')+'</div>'
-      +'</div><div class="mc-right"><span class="mc-chv">⌄</span></div></div>'
+      +'<div class="mc-head" id="agmh'+i+'" style="align-items:flex-start;padding:14px 16px 10px">'
+        +'<div class="mc-info" style="flex:1;min-width:0">'
+          +'<div class="mc-name" id="agmc-name'+i+'" class="copyable">'+esc(a.name)+'</div>'
+          +(a.artists?'<div class="mc-sub" style="margin-top:3px">'+esc(a.artists)+'</div>':'')
+        +'</div>'
+        +'<div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px;flex-shrink:0;margin-left:10px">'
+          +'<div style="display:flex;align-items:center;gap:5px">'
+            +(a.ceo?'<span class="copyable" id="agmc-ceo'+i+'" style="display:inline-flex;align-items:center;padding:2px 7px;border-radius:4px;font-size:10px;font-weight:700;background:rgba(136,136,160,.12);color:var(--txt2)">'+esc(a.ceo)+'</span>':'')
+            +'<span id="agmc-biz'+i+'" class="copyable" style="font-size:12px;font-weight:600">'+esc(a.biz||'-')+'</span>'
+          +'</div>'
+          +'<span class="mc-chv" style="font-size:14px">⌄</span>'
+        +'</div>'
+      +'</div>'
       +'<div class="mc-body">'
-        +'<div class="mc-row"><span class="mc-k">대표명</span><span class="mc-v" id="agmc-ceo'+i+'">'+esc(a.ceo||'-')+'</span></div>'
-        +'<div class="mc-row"><span class="mc-k">사업자번호</span><span class="mc-v" id="agmc-biz'+i+'">'+esc(a.biz||'-')+'</span></div>'
-        +'<div class="mc-section">담당자</div>'
-        +a.contacts.map(function(c,ci){
-          return '<div class="mc-contact">'
-            +'<span class="mc-contact-name" id="agmc-cm'+i+'x'+ci+'">'+esc(c.manager||'-')+'</span>'
-            +(c.email?'<span class="mc-contact-email" id="agmc-ce'+i+'x'+ci+'">'+esc(c.email)+'</span>':'')
-            +'</div>';
-        }).join('')
-        +(canEdit()?'<div class="mc-actions"><button class="ab ed" id="aged'+i+'">✎</button><button class="ab dl" id="agdl'+i+'">✕</button></div>':'')
+        +contactHtml
+        +(canEdit()?'<div class="mc-actions" style="margin-top:8px"><button class="ab ed" id="aged'+i+'">✎</button><button class="ab dl" id="agdl'+i+'">✕</button></div>':'')
       +'</div></div>';
   });
   document.getElementById('mc-ag').innerHTML=cards||'<div style="padding:24px;text-align:center;color:var(--txt3);font-size:12px">거래처가 없어요</div>';
   sd.forEach(function(a,i){
     var hEl=document.getElementById('agmh'+i);
     if(hEl)(function(id){hEl.addEventListener('click',function(){var el=document.getElementById(id);if(el)el.classList.toggle('open');});})(('agm'+i));
-    var ceoEl=document.getElementById('agmc-ceo'+i);
-    if(ceoEl)(function(v,el){el.addEventListener('click',function(){cp(v,el);});})(a.ceo||'',ceoEl);
+    var ceoEl2=document.getElementById('agmc-ceo'+i);
+    if(ceoEl2&&a.ceo)(function(v,el){el.addEventListener('click',function(e){e.stopPropagation();cp(v,el);});})(a.ceo,ceoEl2);
     var bizEl=document.getElementById('agmc-biz'+i);
     if(bizEl)(function(v,el){el.addEventListener('click',function(){cp(stripHyphen(v),el);});})(a.biz||'',bizEl);
     a.contacts.forEach(function(c,ci){
@@ -683,6 +762,8 @@ function renderAg(){
       var eEl=document.getElementById('agmc-ce'+i+'x'+ci);
       if(mEl)(function(v,el){el.addEventListener('click',function(){cp(v,el);});})(c.manager||'',mEl);
       if(eEl)(function(v,el){el.addEventListener('click',function(){cp(v,el);});})(c.email||'',eEl);
+      var tEl2=document.getElementById('agmc-ct'+i+'x'+ci);
+      if(tEl2&&c.tel)(function(v,el){el.addEventListener('click',function(){cp(v,el);});})(c.tel,tEl2);
     });
     if(canEdit()){
       var ed=document.getElementById('aged'+i);var dl=document.getElementById('agdl'+i);
@@ -715,11 +796,11 @@ function renderLt(){
         +'<div class="mc-right"><span class="tag '+(l.tax==='사업자'?'t-g':'t-t')+'">'+esc(l.tax)+'</span>'+(detail?'<span class="mc-chv">⌄</span>':'')+'</div>'
       +'</div>'
       +(detail?'<div class="mc-body">'
-        +'<div class="mc-row"><span class="mc-k">주민/사업자번호</span><span class="mc-v" id="ltmc-rid'+i+'">'+esc(l.regId||'-')+'</span></div>'
-        +'<div class="mc-row"><span class="mc-k">은행</span><span class="mc-v" id="ltmc-bank'+i+'">'+esc(l.bank||'-')+'</span></div>'
-        +'<div class="mc-row"><span class="mc-k">계좌번호</span><span class="mc-v" id="ltmc-acct'+i+'">'+(l.acct?l.acct:'-')+'</span></div>'
-        +'<div class="mc-row"><span class="mc-k">이메일</span><span class="mc-v" id="ltmc-email'+i+'">'+esc(l.email||'-')+'</span></div>'
+        +'<div class="mc-row"><span class="mc-k">주민/사업자번호</span><span class="mc-v" id="ltmc-rid'+i+'" style="text-align:right">'+esc(l.regId||'-')+'</span></div>'
+        +'<div class="mc-row"><span class="mc-k">계좌</span><span class="mc-v" style="display:flex;align-items:center;gap:6px;justify-content:flex-end">'+(l.bank?'<span class="bank-tag">'+esc(l.bank)+'</span>':'')+'<span id="ltmc-acct'+i+'" style="cursor:pointer;padding:2px 4px;border-radius:3px;transition:all .15s">'+(l.acct||'-')+'</span>'+'</span></div>'
         +'<div class="mc-row"><span class="mc-k">주소</span><span class="mc-v" id="ltmc-addr'+i+'">'+esc(l.addr||'-')+'</span></div>'
+        +'<div class="mc-row-left"><span class="mc-k">연락처</span><span class="mc-v" style="text-align:left;flex:1" id="ltmc-tel'+i+'">'+esc(l.tel||'-')+'</span></div>'
+        +'<div class="mc-row-left"><span class="mc-k">이메일</span><span class="mc-v" style="text-align:left;flex:1" id="ltmc-email'+i+'">'+esc(l.email||'-')+'</span></div>'
         +(l.ceo?'<div class="mc-row"><span class="mc-k">대표명</span><span class="mc-v" id="ltmc-ceo'+i+'">'+esc(l.ceo)+'</span></div>':'')
         +(canEdit()?'<div class="mc-actions"><button class="ab ed" id="lted'+i+'">✎</button><button class="ab dl" id="ltdl'+i+'">✕</button></div>':'')
       +'</div>':'')
@@ -739,6 +820,8 @@ function renderLt(){
       if(acctEl&&l.acct)(function(v,el){el.addEventListener('click',function(){cp(stripHyphen(v),el);});})(l.acct,acctEl);
       var emailEl=document.getElementById('ltmc-email'+i);
       if(emailEl&&l.email)(function(v,el){el.addEventListener('click',function(){cp(v,el);});})(l.email,emailEl);
+      var telEl=document.getElementById('ltmc-tel'+i);
+      if(telEl&&l.tel)(function(v,el){el.addEventListener('click',function(){cp(v,el);});})(l.tel,telEl);
       var addrEl=document.getElementById('ltmc-addr'+i);
       if(addrEl&&l.addr)(function(v,el){el.addEventListener('click',function(){cp(v,el);});})(l.addr,addrEl);
       if(l.ceo){var cEl=document.getElementById('ltmc-ceo'+i);if(cEl)(function(v,el){el.addEventListener('click',function(){cp(v,el);});})(l.ceo,cEl);}
@@ -812,43 +895,180 @@ function renderPay(){
 
 // ── 수수료 편집 ──
 function addRateRow(){
-  var container=document.getElementById('rate-rows');
-  var idx=container.querySelectorAll('.rate-row-item').length;
-  var div=document.createElement('div');
-  div.className='rate-row-item';
-  div.style.cssText='display:flex;align-items:center;gap:6px;padding:2px 0';
-  div.innerHTML='<input type="text" class="fi sm" style="width:80px" placeholder="항목명" id="rrp-'+idx+'">'
-    +'<input type="number" class="fi sm" style="width:90px;text-align:right" id="rr-'+idx+'" value="0">'
-    +'<span style="font-size:10px;color:var(--txt3)">원</span>'
-    +'<button onclick="this.parentElement.remove()" style="background:none;border:none;color:var(--danger);cursor:pointer;font-size:14px;padding:0 4px">✕</button>';
-  container.appendChild(div);
+  var tbody = document.getElementById('rate-edit-tbody');
+  if(!tbody) return;
+  var idx = tbody.querySelectorAll('.rate-edit-row').length;
+  var tr = document.createElement('tr');
+  tr.className = 'rate-edit-row';
+  tr.id = 'rerow-'+idx;
+  var td = '<td style="padding:4px 4px"><input type="text" class="fi sm" id="rrp-'+idx+'" placeholder="항목명" style="width:70px;padding:4px 6px;font-size:12px"></td>'
+    +'<td style="padding:4px 4px"><input type="number" class="fi sm" id="rr-'+idx+'" placeholder="단가" style="width:80px;text-align:right;padding:4px 6px;font-size:12px" onchange="recalcRateRow('+idx+')"></td>';
+  ALL_COLS.forEach(function(col,ci){
+    td += '<td style="padding:4px 4px"><input type="number" class="fi sm" id="rrcol-'+idx+'-'+ci+'" style="width:72px;text-align:right;padding:4px 6px;font-size:12px"></td>';
+  });
+  td += '<td style="padding:4px 4px;text-align:center"><button onclick="this.closest(\'tr\').remove()" style="background:none;border:none;color:var(--danger);cursor:pointer;font-size:14px">✕</button></td>';
+  tr.innerHTML = td;
+  tbody.appendChild(tr);
 }
 
-function openRateEditMo(){document.getElementById('rate-edit-name').textContent=rtF;var feeRows=document.getElementById('fee-rows');feeRows.innerHTML=ALL_COLS.slice(0,6).map(function(nm){var fee=CUSTOM_FEES[nm]!==undefined?CUSTOM_FEES[nm]:0.8;var pct=Math.round((1-fee)*100);return '<div style="display:flex;align-items:center;gap:8px;padding:3px 0"><span style="font-size:12px;font-weight:600;min-width:60px">'+nm+'</span><input type="number" class="fi sm" style="width:65px;text-align:right" id="fee-'+nm+'" value="'+pct+'" min="0" max="50"><span style="font-size:11px;color:var(--txt3)">% 수수료 → 지급 '+(100-pct)+'%</span></div>';}).join('');var baseRows=CUSTOM_RATES[rtF]?JSON.parse(JSON.stringify(CUSTOM_RATES[rtF])):JSON.parse(JSON.stringify(RATES_RAW[rtF]||[]));document.getElementById('rate-rows').innerHTML=baseRows.map(function(r,i){return '<div style="display:flex;align-items:center;gap:6px;padding:2px 0"><span style="min-width:80px;font-size:11px;color:var(--txt2)">'+esc(r[0])+'</span><input type="number" class="fi sm" style="width:90px;text-align:right" id="rr-'+i+'" value="'+r[1]+'"><span style="font-size:10px;color:var(--txt3)">원</span></div>';}).join('');openMo('mo-rate');}
-function saveRateEdit(){
-  ALL_COLS.slice(0,6).forEach(function(nm){var el=document.getElementById('fee-'+nm);if(el)CUSTOM_FEES[nm]=1-parseFloat(el.value||'20')/100;});
-  var baseRows=CUSTOM_RATES[rtF]?JSON.parse(JSON.stringify(CUSTOM_RATES[rtF])):JSON.parse(JSON.stringify(RATES_RAW[rtF]||[]));
-  // 모달에 남아있는 항목만 수집 (삭제 버튼으로 제거된 항목 제외)
-  var newRows=[];
-  document.querySelectorAll('#rate-rows .rate-row-item').forEach(function(item,i){
-    var projEl=item.querySelector('[id^="rrp-"]');
-    var baseEl=item.querySelector('[id^="rr-"]');
-    var proj=projEl?projEl.value.trim():'';
-    var base=baseEl?parseInt(baseEl.value)||0:0;
-    if(!proj||!base)return;
-    var existRow=baseRows.find(function(r){return r[0]===proj;})||baseRows[i]||[proj,base];
-    var row=[proj,base];
-    ALL_COLS.forEach(function(nm,ni){var fee=CUSTOM_FEES[nm]!==undefined?CUSTOM_FEES[nm]:0.8;row.push(Math.round(base*fee));});
-    newRows.push(row);
+function toggleFeeMode(){}  // deprecated
+
+function openRateEditMo(){
+  var nm = rtF;
+  document.getElementById('rate-edit-name').textContent = nm;
+  var baseRows = CUSTOM_RATES[nm]
+    ? JSON.parse(JSON.stringify(CUSTOM_RATES[nm]))
+    : JSON.parse(JSON.stringify(RATES_RAW[nm]||[]));
+
+  // 수수료율 헤더
+  var feeHtml = '<div style="display:flex;gap:6px;flex-wrap:wrap">';
+  ALL_COLS.forEach(function(col){
+    var fee = CUSTOM_FEES[col]!==undefined ? CUSTOM_FEES[col] : 0.8;
+    var pct = Math.round((1-fee)*100);
+    feeHtml += '<div style="display:flex;align-items:center;gap:4px;background:var(--sur2);border:1px solid var(--bdr);border-radius:6px;padding:4px 8px">'
+      +'<span style="font-size:11px;font-weight:700;color:var(--txt2)">'+col+'</span>'
+      +'<input type="number" class="fi sm" id="fee-'+col+'" value="'+pct+'" min="0" max="99"'
+      +' style="width:44px;text-align:right;padding:2px 4px;height:24px"'
+      +' onchange="recalcRateEditTable()">'
+      +'<span style="font-size:10px;color:var(--txt3)">%</span>'
+      +'</div>';
   });
-  baseRows=newRows;
-  CUSTOM_RATES[rtF]=baseRows;
+  feeHtml += '</div>';
+  var fhEl = document.getElementById('fee-header');
+  if(fhEl) fhEl.innerHTML = feeHtml;
+
+  // 테이블 헤더
+  var thHtml = '<tr style="background:var(--sur2)">'
+    +'<th style="text-align:left;padding:7px 8px;font-size:10px;color:var(--txt3);text-transform:uppercase;white-space:nowrap;border-bottom:1px solid var(--bdr);font-weight:700">항목</th>'
+    +'<th style="text-align:right;padding:7px 8px;font-size:10px;color:var(--txt3);text-transform:uppercase;white-space:nowrap;border-bottom:1px solid var(--bdr);font-weight:700">기본단가</th>';
+  ALL_COLS.forEach(function(col){
+    thHtml += '<th style="text-align:right;padding:7px 8px;font-size:10px;color:var(--acc2);text-transform:uppercase;white-space:nowrap;border-bottom:1px solid var(--bdr);font-weight:700">'+col+'</th>';
+  });
+  thHtml += '<th style="width:28px;border-bottom:1px solid var(--bdr)"></th></tr>';
+  var thEl = document.getElementById('rate-edit-thead');
+  if(thEl) thEl.innerHTML = thHtml;
+
+  // 테이블 바디
+  renderRateEditRows(baseRows);
+  openMo('mo-rate');
+}
+
+function renderRateEditRows(rows){
+  var tbody = document.getElementById('rate-edit-tbody');
+  if(!rows || !tbody) return;
+  tbody.innerHTML = rows.map(function(r,i){
+    var tr = '<tr class="rate-edit-row" id="rerow-'+i+'">'
+      +'<td style="padding:4px 4px"><input type="text" class="fi sm" id="rrp-'+i+'" value="'+esc(r[0]||'')+'" placeholder="항목명" style="width:70px;padding:4px 6px;font-size:12px"></td>'
+      +'<td style="padding:4px 4px"><input type="number" class="fi sm" id="rr-'+i+'" value="'+(r[1]||'')+'" placeholder="단가" style="width:80px;text-align:right;padding:4px 6px;font-size:12px" onchange="recalcRateRow('+i+')"></td>';
+    ALL_COLS.forEach(function(col,ci){
+      var val = r[ci+2]||'';
+      tr += '<td style="padding:4px 4px"><input type="number" class="fi sm" id="rrcol-'+i+'-'+ci+'" value="'+val+'" style="width:72px;text-align:right;padding:4px 6px;font-size:12px"></td>';
+    });
+    tr += '<td style="padding:4px 4px;text-align:center"><button onclick="document.getElementById(\'rerow-'+i+'\').remove()" style="background:none;border:none;color:var(--danger);cursor:pointer;font-size:14px">✕</button></td>';
+    tr += '</tr>';
+    return tr;
+  }).join('');
+}
+
+function recalcRateRow(i){
+  // 기본단가 변경 시 수수료율 기준으로 리터쳐 단가 자동계산
+  var baseEl = document.getElementById('rr-'+i);
+  if(!baseEl) return;
+  var base = parseFloat(baseEl.value)||0;
+  ALL_COLS.forEach(function(col,ci){
+    var feeEl = document.getElementById('fee-'+col);
+    var cellEl = document.getElementById('rrcol-'+i+'-'+ci);
+    if(!feeEl||!cellEl) return;
+    var pct = parseFloat(feeEl.value)||20;
+    cellEl.value = Math.round(base*(1-pct/100));
+  });
+}
+
+function recalcRateEditTable(){
+  if(!document.getElementById('rate-edit-tbody')) return;
+  var rows = document.querySelectorAll('.rate-edit-row');
+  rows.forEach(function(row, i){
+    var baseEl = document.getElementById('rr-'+i);
+    if(!baseEl) return;
+    var base = parseFloat(baseEl.value)||0;
+    ALL_COLS.forEach(function(col,ci){
+      var feeEl = document.getElementById('fee-'+col);
+      var cellEl = document.getElementById('rrcol-'+i+'-'+ci);
+      if(!feeEl||!cellEl) return;
+      var pct = parseFloat(feeEl.value)||20;
+      cellEl.value = Math.round(base*(1-pct/100));
+    });
+  });
+}
+
+function addRateRow(){
+  var tbody = document.getElementById('rate-edit-tbody');
+  if(!tbody) return;
+  var idx = tbody.querySelectorAll('.rate-edit-row').length;
+  var tr = document.createElement('tr');
+  tr.className = 'rate-edit-row';
+  tr.id = 'rerow-'+idx;
+  var td = '<td style="padding:4px 4px"><input type="text" class="fi sm" id="rrp-'+idx+'" placeholder="항목명" style="width:70px;padding:4px 6px;font-size:12px"></td>'
+    +'<td style="padding:4px 4px"><input type="number" class="fi sm" id="rr-'+idx+'" placeholder="단가" style="width:80px;text-align:right;padding:4px 6px;font-size:12px" onchange="recalcRateRow('+idx+')"></td>';
+  ALL_COLS.forEach(function(col,ci){
+    td += '<td style="padding:4px 4px"><input type="number" class="fi sm" id="rrcol-'+idx+'-'+ci+'" style="width:72px;text-align:right;padding:4px 6px;font-size:12px"></td>';
+  });
+  td += '<td style="padding:4px 4px;text-align:center"><button onclick="this.closest(\'tr\').remove()" style="background:none;border:none;color:var(--danger);cursor:pointer;font-size:14px">✕</button></td>';
+  tr.innerHTML = td;
+  tbody.appendChild(tr);
+}
+
+function toggleFeeMode(nm, btn) {
+  var wrap = document.getElementById('fee-wrap-'+nm);
+  var isNowFixed = btn.textContent === '%'; // % 버튼 클릭 → 정액으로 전환
+  if(isNowFixed) {
+    btn.textContent = '정액';
+    btn.style.background = 'rgba(52,211,153,.15)';
+    btn.style.color = 'var(--grn)';
+    wrap.innerHTML = '<input type="number" class="fi sm" style="flex:1;text-align:right" id="fee-'+nm+'" placeholder="정액 입력">'
+      +'<span style="font-size:11px;color:var(--txt3);white-space:nowrap">원 고정</span>';
+  } else {
+    btn.textContent = '%';
+    btn.style.background = 'rgba(59,130,246,.15)';
+    btn.style.color = 'var(--acc2)';
+    var curFee = CUSTOM_FEES[nm]!==undefined ? CUSTOM_FEES[nm] : 0.8;
+    var pct = Math.round((1-curFee)*100);
+    wrap.innerHTML = '<input type="number" class="fi sm" style="width:60px;text-align:right" id="fee-'+nm+'" value="'+pct+'" min="0" max="99">'
+      +'<span style="font-size:11px;color:var(--txt3);white-space:nowrap">% 수수료</span>';
+  }
+}
+
+// (구버전 openRateEditMo 제거됨)
+function saveRateEdit(){
+  // 수수료율 저장
+  ALL_COLS.forEach(function(col){
+    var el = document.getElementById('fee-'+col);
+    if(el) CUSTOM_FEES[col] = 1 - parseFloat(el.value||'20')/100;
+  });
+
+  // 테이블에서 rows 수집
+  var newRows = [];
+  document.querySelectorAll('#rate-edit-tbody .rate-edit-row').forEach(function(row,i){
+    var projEl = document.getElementById('rrp-'+i);
+    var baseEl = document.getElementById('rr-'+i);
+    var proj = projEl ? projEl.value.trim() : '';
+    var base = baseEl ? parseFloat(baseEl.value)||0 : 0;
+    if(!proj && !base) return;
+    var rowData = [proj, base];
+    ALL_COLS.forEach(function(col,ci){
+      var cellEl = document.getElementById('rrcol-'+i+'-'+ci);
+      rowData.push(cellEl ? (parseFloat(cellEl.value)||0) : Math.round(base*(CUSTOM_FEES[col]||0.8)));
+    });
+    newRows.push(rowData);
+  });
+
+  CUSTOM_RATES[rtF] = newRows;
   saveDB();
   closeMo('mo-rate');
-  if(CUR==='rates-bill')renderBill();else renderPay();
+  if(CUR==='rates-bill') renderBill();
+  else renderPay();
   toast('저장됐어요!');
-  // ── 단가 시트 전체 덮어쓰기 ──
-  postSheet('upsert_rate_sheet',{sheet:rtF, rows:baseRows});
+  postSheet('upsert_rate_sheet', {sheet:rtF, rows:newRows});
 }
 
 // ── 페이지네이션 ──
@@ -866,7 +1086,7 @@ function saveAg(){
   if(EI>=0)DB.agencies[EI]=obj;else DB.agencies.push(obj);
   saveDB(); closeMo('mo-ag'); renderAll(); toast(EI>=0?'수정됐어요':'추가됐어요');
   // ── 시트 쓰기 ──
-  postSheet('upsert_agency',{'ID':obj.id,'거래처명':obj.name,'대표명':obj.ceo,'사업자번호':obj.biz,'담당자명':obj.manager,'담당자 이메일':obj.email,'담당자 연락처':obj.tel,'소속 아티스트':obj.artists});
+  postSheet('upsert_contact',{'contactId':obj.id,'clientId':obj.clientId||'','회사명':obj.name,'담당자명':obj.manager,'담당자 이메일':obj.email,'담당자 연락처':obj.tel,'담당 부서':obj.dept||'','사용여부':'사용'});
 }
 function editAg(id){if(!canEdit()){toast('편집 모드를 켜주세요');return;}var i=DB.agencies.findIndex(function(a){return a.id===id;});if(i<0)return;EI=i;var a=DB.agencies[i];document.getElementById('mo-ag-title').textContent='거래처 수정';document.getElementById('ag-name').value=a.name||'';document.getElementById('ag-ceo').value=a.ceo||'';document.getElementById('ag-biz').value=a.biz||'';document.getElementById('ag-artists').value=a.artists||'';document.getElementById('ag-manager').value=a.manager||'';document.getElementById('ag-tel').value=a.tel||'';document.getElementById('ag-email').value=a.email||'';openMo('mo-ag');}
 function delAg(id){
@@ -875,25 +1095,25 @@ function delAg(id){
   var a=DB.agencies.find(function(x){return x.id===id;});
   DB.agencies=DB.agencies.filter(function(x){return x.id!==id;});
   saveDB(); renderAll(); toast('삭제됐어요');
-  if(a) postSheet('delete_agency',{'ID':a.id,'거래처명':a.name,'담당자명':a.manager});
+  if(a) postSheet('delete_contact',{'contactId':a.id});
 }
 function saveLt(){
   if(!canEdit())return;
   var name=gv('lt-name');if(!name){toast('이름을 입력해주세요');return;}
-  var obj={id:EI>=0?DB.litters[EI].id:uid(),name:name,tax:document.getElementById('lt-tax').value,regId:gv('lt-regid'),addr:gv('lt-addr'),ceo:gv('lt-ceo'),bank:document.getElementById('lt-bank').value,acct:gv('lt-acct'),email:gv('lt-email'),tel:''};
+  var obj={id:EI>=0?DB.litters[EI].id:uid(),name:name,tax:document.getElementById('lt-tax').value,regId:gv('lt-regid'),addr:gv('lt-addr'),ceo:gv('lt-ceo'),bank:document.getElementById('lt-bank').value,acct:gv('lt-acct'),email:gv('lt-email'),tel:gv('lt-tel')};
   if(EI>=0)DB.litters[EI]=obj;else DB.litters.push(obj);
   saveDB(); closeMo('mo-lt'); renderAll(); toast(EI>=0?'수정됐어요':'추가됐어요');
   // ── 시트 쓰기 ──
-  postSheet('upsert_litter',{'ID':obj.id,'세금구분':obj.tax,'외주처명':obj.name,'주민번호/사업자번호':obj.regId,'주소':obj.addr,'은행':obj.bank,'계좌번호':obj.acct,'이메일':obj.email,'연락처':obj.tel||'','대표명(사업자)':obj.ceo});
+  postSheet('upsert_litter',{'retoucherId':obj.id,'세금구분':obj.tax,'리터쳐명':obj.name,'주민번호/사업자번호':obj.regId,'주소':obj.addr,'은행':obj.bank,'계좌번호':obj.acct,'이메일':obj.email,'연락처':obj.tel||'','대표명(사업자)':obj.ceo,'사용여부':'사용'});
 }
-function editLt(id){if(!canEdit()){toast('편집 모드를 켜주세요');return;}var i=DB.litters.findIndex(function(l){return l.id===id;});if(i<0)return;EI=i;var l=DB.litters[i];document.getElementById('mo-lt-title').textContent='리터쳐 수정';document.getElementById('lt-name').value=l.name||'';document.getElementById('lt-tax').value=l.tax||'원천세';document.getElementById('lt-regid').value=l.regId||'';document.getElementById('lt-addr').value=l.addr||'';document.getElementById('lt-ceo').value=l.ceo||'';document.getElementById('lt-bank').value=l.bank||'IBK';document.getElementById('lt-acct').value=l.acct||'';document.getElementById('lt-email').value=l.email||'';openMo('mo-lt');}
+function editLt(id){if(!canEdit()){toast('편집 모드를 켜주세요');return;}var i=DB.litters.findIndex(function(l){return l.id===id;});if(i<0)return;EI=i;var l=DB.litters[i];document.getElementById('mo-lt-title').textContent='리터쳐 수정';document.getElementById('lt-name').value=l.name||'';document.getElementById('lt-tax').value=l.tax||'원천세';document.getElementById('lt-regid').value=l.regId||'';document.getElementById('lt-addr').value=l.addr||'';document.getElementById('lt-ceo').value=l.ceo||'';document.getElementById('lt-bank').value=l.bank||'IBK';document.getElementById('lt-acct').value=l.acct||'';document.getElementById('lt-email').value=l.email||'';document.getElementById('lt-tel').value=l.tel||'';openMo('mo-lt');}
 function delLt(id){
   if(!canEdit()){toast('편집 모드를 켜주세요');return;}
   if(!confirm('삭제할까요?'))return;
   var l=DB.litters.find(function(x){return x.id===id;});
   DB.litters=DB.litters.filter(function(x){return x.id!==id;});
   saveDB(); renderAll(); toast('삭제됐어요');
-  if(l) postSheet('delete_litter',{'ID':l.id,'외주처이름':l.name});
+  if(l) postSheet('delete_litter',{'retoucherId':l.id});
 }
 
 var _tt;
