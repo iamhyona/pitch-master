@@ -297,13 +297,11 @@ select.fi option{background:var(--sur2)}
 
       <!-- 견적서 -->
       <div id="tab-invoice" class="tab-panel">
-        <div style="margin-bottom:12px;display:flex;align-items:center;justify-content:space-between">
-          <span style="font-size:13px;font-weight:700;color:var(--txt)">견적서 작성</span>
-        </div>
+        <div id="inv-sync-bar" class="sync-bar" style="display:none"></div>
 
-        <!-- 수신처 정보 -->
-        <div style="background:var(--sur);border:1px solid var(--bdr);border-radius:12px;padding:16px;margin-bottom:12px">
-          <div style="font-size:10px;font-weight:700;color:var(--txt3);text-transform:uppercase;margin-bottom:12px">수신처 정보</div>
+        <!-- 기본 정보 -->
+        <div style="background:var(--sur);border:1px solid var(--bdr);border-radius:12px;padding:16px;margin-bottom:10px">
+          <div style="font-size:10px;font-weight:700;color:var(--txt3);text-transform:uppercase;margin-bottom:12px">기본 정보</div>
           <div class="row2" style="margin-bottom:8px">
             <div class="fg">
               <label class="fl">거래처 *</label>
@@ -314,34 +312,37 @@ select.fi option{background:var(--sur2)}
               <select class="fi sm" id="inv-manager"></select>
             </div>
           </div>
-          <div class="row2" style="margin-bottom:8px">
-            <div class="fg"><label class="fl">프로젝트명 *</label><input class="fi sm" id="inv-project" placeholder="예: LEGENDARY_2차"></div>
-            <div class="fg"><label class="fl">아티스트명</label><input class="fi sm" id="inv-artist" placeholder="예: 블랙핑크"></div>
+          <div class="fg" style="margin-bottom:8px">
+            <label class="fl">프로젝트명 *</label>
+            <input class="fi sm" id="inv-project" placeholder="예: LEGENDARY_2차">
           </div>
           <div class="row2" style="margin-bottom:8px">
-            <div class="fg"><label class="fl">검수완료일</label><input class="fi sm" id="inv-done" type="date"></div>
-            <div class="fg"><label class="fl">작성일</label><input class="fi sm" id="inv-date" type="date"></div>
+            <div class="fg">
+              <label class="fl">검수완료일</label>
+              <input class="fi sm" id="inv-done" type="date">
+            </div>
+            <div class="fg">
+              <label class="fl">작성일</label>
+              <input class="fi sm" id="inv-write" type="date">
+            </div>
           </div>
-          <div class="fg"><label class="fl">작업링크</label><input class="fi sm" id="inv-link" placeholder="https://..."></div>
-        </div>
-
-        <!-- 소속사 선택 -->
-        <div style="background:var(--sur);border:1px solid var(--bdr);border-radius:12px;padding:16px;margin-bottom:12px">
-          <div style="font-size:10px;font-weight:700;color:var(--txt3);text-transform:uppercase;margin-bottom:10px">단가 기준 소속사</div>
-          <select class="fi sm" id="inv-agency" onchange="onInvAgencyChange()"></select>
+          <div class="fg">
+            <label class="fl">작업링크</label>
+            <input class="fi sm" id="inv-link" placeholder="https://...">
+          </div>
         </div>
 
         <!-- 작업 항목 -->
-        <div style="background:var(--sur);border:1px solid var(--bdr);border-radius:12px;overflow:hidden;margin-bottom:12px">
-          <div style="padding:12px 16px;border-bottom:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between">
-            <span style="font-size:10px;font-weight:700;color:var(--txt3);text-transform:uppercase">작업 항목</span>
-            <button class="btn btn-p" style="height:26px;font-size:11px" onclick="addInvItem()">+ 항목 추가</button>
+        <div style="background:var(--sur);border:1px solid var(--bdr);border-radius:12px;padding:16px;margin-bottom:10px">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+            <div style="font-size:10px;font-weight:700;color:var(--txt3);text-transform:uppercase">작업 항목</div>
+            <button class="btn btn-g" style="height:26px;font-size:11px" onclick="addInvItem()">+ 항목 추가</button>
           </div>
-          <div id="inv-items" style="padding:8px 16px 12px"></div>
+          <div id="inv-items"></div>
         </div>
 
         <!-- 합계 -->
-        <div style="background:var(--sur);border:1px solid var(--bdr);border-radius:12px;padding:14px 16px;margin-bottom:16px">
+        <div style="background:var(--sur);border:1px solid var(--bdr);border-radius:12px;padding:16px;margin-bottom:10px">
           <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--bdr)">
             <span style="font-size:12px;color:var(--txt2)">Subtotal</span>
             <span style="font-size:13px;font-weight:700;color:var(--gold)" id="inv-subtotal">0</span>
@@ -356,10 +357,10 @@ select.fi option{background:var(--sur2)}
           </div>
         </div>
 
-        <button class="btn btn-p" style="width:100%;height:44px;font-size:13px;font-weight:700" onclick="submitInvoice()">
-          📄 구글 시트로 견적서 생성
+        <!-- 생성 버튼 -->
+        <button class="btn btn-p" style="width:100%;height:44px;font-size:14px" onclick="createInvoice()">
+          📄 견적서 구글시트 생성
         </button>
-        <div id="inv-result" style="margin-top:12px;display:none"></div>
       </div>
 
     </div>
@@ -608,7 +609,7 @@ var selLitters=new Set(['최현경','이은지','권미향']);
 
 function esc(s){var d=document.createElement('div');d.textContent=s||'';return d.innerHTML;}
 function stripHyphen(s){return (s||'').replace(/-/g,'');}
-function wn(n){if(!n||isNaN(n))return '-';return Number(n).toLocaleString('ko-KR');}
+function wn(n){if(n===''||n===null||n===undefined)return '-';if(isNaN(n))return String(n);return Number(n).toLocaleString('ko-KR');}
 function uid(){return 'u'+Date.now().toString(36)+Math.random().toString(36).slice(2,5);}
 function gv(id){var el=document.getElementById(id);return el?el.value.trim():'';}
 
@@ -995,13 +996,36 @@ function onInvClientChange() {
   var agMap = buildAgMap();
   var name = gv('inv-client');
   var ag = agMap[name];
-  var sel = document.getElementById('inv-manager');
-  if (!sel) return;
-  if (!ag) { sel.innerHTML = '<option value="">담당자 선택</option>'; return; }
-  sel.innerHTML = '<option value="">담당자 선택</option>'
-    + (ag.contacts||[]).map(function(c){
-        return '<option value="'+esc(c.manager)+'">'+esc(c.manager)+(c.dept?' ('+c.dept+')':'')+'</option>';
-      }).join('');
+
+  // 담당자 드롭다운
+  var mgSel = document.getElementById('inv-manager');
+  if (mgSel) {
+    if (!ag) { mgSel.innerHTML = '<option value="">담당자 선택</option>'; }
+    else {
+      mgSel.innerHTML = '<option value="">담당자 선택</option>'
+        + (ag.contacts||[]).filter(function(c){return c.manager;}).map(function(c){
+            return '<option value="'+esc(c.manager)+'">'+esc(c.manager)+(c.dept?' ('+c.dept+')':'')+'</option>';
+          }).join('');
+    }
+  }
+
+  // 아티스트 드롭다운 (inv-artist를 select로 변경)
+  var artists = ag && ag.artists ? ag.artists.split(',').map(function(s){return s.trim();}).filter(Boolean) : [];
+  var artSel = document.getElementById('inv-artist');
+  if (artSel) {
+    artSel.innerHTML = '<option value="">아티스트 선택</option>'
+      + artists.map(function(a){return '<option value="'+esc(a)+'">'+esc(a)+'</option>';}).join('');
+  }
+
+  // 소속사 드롭다운도 거래처에 맞는 소속사 자동 선택
+  // (단가표 키와 거래처명이 다를 수 있으므로 유사 매칭)
+  var agencySel = document.getElementById('inv-agency');
+  if (agencySel && name) {
+    var agencies = Object.keys(RATES_RAW);
+    // 거래처명과 같은 소속사 찾기
+    var matched = agencies.find(function(a){return a===name || name.includes(a) || a.includes(name);});
+    if (matched) agencySel.value = matched;
+  }
 }
 
 function onInvAgencyChange() {
@@ -1177,6 +1201,7 @@ function submitInvoice() {
     toast('연결 실패');
   });
 }
+
 
 var _tt;
 function toast(msg){var el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');clearTimeout(_tt);_tt=setTimeout(function(){el.classList.remove('show');},2200);}
