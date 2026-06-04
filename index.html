@@ -326,7 +326,7 @@ select.fi option{background:var(--sur2)}
           </div>
           <div class="row2" style="margin-bottom:8px">
             <div class="fg">
-              <label class="fl">프로젝트명 *</label>
+              <label class="fl">프로젝트명</label>
               <input class="fi sm" id="inv-project" placeholder="예: LEGENDARY_2차">
             </div>
             <div class="fg">
@@ -1328,17 +1328,17 @@ function calcInvTotal() {
 function submitInvoice() {
   var client  = gv('inv-client');
   var project = gv('inv-project');
-  if (!client || !project) { toast('거래처와 프로젝트명을 입력해주세요'); return; }
+  if (!client) { toast('거래처를 선택해주세요'); return; }
 
   var items = INV_ITEMS.map(function(item) {
     return {
       desc:      (document.getElementById('inv-desc-'+item.id)||{}).value || '',
       qty:       parseFloat((document.getElementById('inv-qty-'+item.id)||{}).value)||0,
       unitPrice: getPriceVal(item.id),
-      urgent:    !!(document.getElementById('inv-urgent-'+item.id)||{}).checked,
+      urgent:    (function(){var el=document.getElementById('inv-urgent-'+item.id);return !!(el&&el.checked);})(),
       premium:   !!(document.getElementById('inv-premium-'+item.id)||{}).checked,
     };
-  }).filter(function(i){return i.desc && i.qty > 0;});
+  }).filter(function(i){return i.qty > 0;});
 
   if (items.length === 0) { toast('작업 항목을 입력해주세요'); return; }
 
@@ -1363,7 +1363,7 @@ function submitInvoice() {
   })
   .then(function(r){return r.json();})
   .then(function(res) {
-    if (btn) { btn.disabled = false; btn.textContent = '📄 구글 시트로 견적서 생성'; }
+    if (btn) { btn.disabled = false; btn.textContent = '구글 시트로 견적서 생성'; }
     var resultEl = document.getElementById('inv-result');
     if (res.ok) {
       toast('견적서 생성 완료!');
@@ -1384,7 +1384,7 @@ function submitInvoice() {
     }
   })
   .catch(function(err) {
-    if (btn) { btn.disabled = false; btn.textContent = '📄 구글 시트로 견적서 생성'; }
+    if (btn) { btn.disabled = false; btn.textContent = '구글 시트로 견적서 생성'; }
     toast('연결 실패');
   });
 }
