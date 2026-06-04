@@ -327,7 +327,7 @@ select.fi option{background:var(--sur2)}
           <div class="row2" style="margin-bottom:8px">
             <div class="fg">
               <label class="fl">프로젝트명</label>
-              <input class="fi sm" id="inv-project" placeholder="예: LEGENDARY_2차">
+              <input class="fi sm" id="inv-project" placeholder="예: 미야오 신규 앨범">
             </div>
             <div class="fg">
               <label class="fl">아티스트</label>
@@ -408,6 +408,23 @@ select.fi option{background:var(--sur2)}
       <div class="row2"><div class="fg"><label class="fl">계좌</label><input class="fi sm" id="sd-bank" value="IBK기업은행 600-05678-04-011"></div><div class="fg"><label class="fl">예금주</label><input class="fi sm" id="sd-depositor" value="(주)핏치컴퍼니"></div></div>
     </div>
     <div class="md-f"><button class="btn btn-g" onclick="closeMo('mo-sender')">닫기</button><button class="btn btn-p" onclick="saveSender()">저장</button></div>
+  </div>
+</div>
+
+<!-- 직접입력 모달 -->
+<div class="mo" id="mo-direct">
+  <div class="md" style="max-width:360px">
+    <div class="md-h"><span class="md-t" id="mo-direct-title">직접 입력</span><button class="xb" onclick="closeMo('mo-direct')">✕</button></div>
+    <div class="md-b">
+      <div class="fg">
+        <label class="fl" id="mo-direct-label">입력</label>
+        <input class="fi" id="mo-direct-input" placeholder="" onkeydown="if(event.key==='Enter')confirmDirectInput()">
+      </div>
+    </div>
+    <div class="md-f">
+      <button class="btn btn-g" onclick="closeMo('mo-direct')">취소</button>
+      <button class="btn btn-p" onclick="confirmDirectInput()">확인</button>
+    </div>
   </div>
 </div>
 
@@ -1039,6 +1056,24 @@ function saveSender() {
   closeMo('mo-sender');
   toast('발송처 정보 저장됐어요');
 }
+
+var _directCallback = null;
+function openDirectInput(title, label, placeholder, callback) {
+  _directCallback = callback;
+  document.getElementById('mo-direct-title').textContent = title;
+  document.getElementById('mo-direct-label').textContent = label;
+  document.getElementById('mo-direct-input').placeholder = placeholder || '';
+  document.getElementById('mo-direct-input').value = '';
+  openMo('mo-direct');
+  setTimeout(function(){ document.getElementById('mo-direct-input').focus(); }, 100);
+}
+function confirmDirectInput() {
+  var val = document.getElementById('mo-direct-input').value.trim();
+  if (!val) return;
+  closeMo('mo-direct');
+  if (_directCallback) _directCallback(val);
+  _directCallback = null;
+}
 // ── 견적서 ──
 var INV_ITEMS = [];
 var INV_ITEM_ID = 0;
@@ -1088,39 +1123,38 @@ function initInvoiceTab() {
 
 function onInvManagerChange() {
   if (gv('inv-manager') !== '__direct__') return;
-  var val = prompt('담당자명을 직접 입력해주세요');
-  if (val) {
+  openDirectInput('담당자 직접 입력', '담당자명', '담당자명 입력', function(val) {
     var sel = document.getElementById('inv-manager');
     var opt = document.createElement('option');
     opt.value = val; opt.textContent = val; opt.selected = true;
     sel.insertBefore(opt, sel.lastChild);
     sel.value = val;
-  }
+  });
 }
 function onInvArtistChange() {
   if (gv('inv-artist') !== '__direct__') return;
-  var val = prompt('아티스트명을 직접 입력해주세요');
-  if (val) {
+  openDirectInput('아티스트 직접 입력', '아티스트명', '아티스트명 입력', function(val) {
     var sel = document.getElementById('inv-artist');
     var opt = document.createElement('option');
     opt.value = val; opt.textContent = val; opt.selected = true;
     sel.insertBefore(opt, sel.lastChild);
     sel.value = val;
-  }
+  });
 }
 
 function onInvClientDirectCheck() {
   if (gv('inv-client') === '__direct__') {
-    var val = prompt('거래처명을 직접 입력해주세요');
-    if (val) {
+    openDirectInput('거래처 직접 입력', '거래처명', '거래처명 입력', function(val) {
       var sel = document.getElementById('inv-client');
       var opt = document.createElement('option');
       opt.value = val; opt.textContent = val; opt.selected = true;
       sel.insertBefore(opt, sel.lastChild);
       sel.value = val;
-    }
+      onInvClientChange();
+    });
+  } else {
+    onInvClientChange();
   }
-  onInvClientChange();
 }
 function onInvClientChange() {
   var agMap = buildAgMap();
@@ -1182,16 +1216,17 @@ function getPriceVal(id) {
 }
 function onInvAgencyDirectCheck() {
   if (gv('inv-agency') === '__direct__') {
-    var val = prompt('소속사명을 직접 입력해주세요');
-    if (val) {
+    openDirectInput('소속사 직접 입력', '소속사명', '소속사명 입력', function(val) {
       var sel = document.getElementById('inv-agency');
       var opt = document.createElement('option');
       opt.value = val; opt.textContent = val; opt.selected = true;
       sel.insertBefore(opt, sel.lastChild);
       sel.value = val;
-    }
+      onInvAgencyChange();
+    });
+  } else {
+    onInvAgencyChange();
   }
-  onInvAgencyChange();
 }
 function onInvAgencyChange() {
   // 모든 항목의 작업유형 드롭다운 갱신
@@ -1220,7 +1255,7 @@ function addInvItem() {
   var html = '<div id="inv-item-'+id+'" style="padding:10px 0;border-bottom:1px solid var(--bdr)">'
     // Description
     +'<div style="margin-bottom:6px">'
-      +'<input class="fi sm" id="inv-desc-'+id+'" placeholder="Description (예: 1차 / LEGENDARY / 태환)" style="width:100%" oninput="calcInvTotal()">'
+      +'<input class="fi sm" id="inv-desc-'+id+'" placeholder="예: 모노코어 블랙착 1순위 루카 (상세히 작성)" style="width:100%" oninput="calcInvTotal()">'
     +'</div>'
     // 유형 + 컷수 + 단가 + 합산
     +'<div style="display:grid;grid-template-columns:1fr 80px 90px 100px;gap:6px;margin-bottom:6px;align-items:center">'
@@ -1269,14 +1304,15 @@ function onInvTypeChange(id) {
   var typeName = typeSel.value;
   // 직접입력 선택시 프롬프트
   if (typeName === '__direct__') {
-    var val = prompt('작업유형을 직접 입력해주세요');
-    if (val) {
+    openDirectInput('작업유형 직접 입력', '작업유형', '작업유형 입력', function(val) {
       var opt = document.createElement('option');
       opt.value = val; opt.textContent = val; opt.selected = true;
       typeSel.insertBefore(opt, typeSel.lastChild);
       typeSel.value = val;
-      typeName = val;
-    } else { return; }
+      // 단가 자동입력 없이 calcInvTotal만
+      calcInvTotal();
+    });
+    return;
   }
   var agency = gv('inv-agency');
   var rows = RATES_RAW[agency] || [];
