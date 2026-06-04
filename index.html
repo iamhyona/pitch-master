@@ -299,22 +299,39 @@ select.fi option{background:var(--sur2)}
       <div id="tab-invoice" class="tab-panel">
         <div id="inv-sync-bar" class="sync-bar" style="display:none"></div>
 
-        <!-- 기본 정보 -->
+        <!-- 발송처 정보 -->
+        <div style="background:var(--sur);border:1px solid var(--bdr);border-radius:12px;padding:14px 16px;margin-bottom:10px">
+          <div style="display:flex;align-items:center;justify-content:space-between">
+            <div>
+              <div style="font-size:10px;font-weight:700;color:var(--txt3);text-transform:uppercase;margin-bottom:2px">발송처</div>
+              <div style="font-size:13px;font-weight:700" id="sender-preview">(주)핏치컴퍼니</div>
+            </div>
+            <button class="btn btn-g" style="height:26px;font-size:11px" onclick="openMo('mo-sender')">확인 / 편집</button>
+          </div>
+        </div>
+
+        <!-- 수신처 정보 -->
         <div style="background:var(--sur);border:1px solid var(--bdr);border-radius:12px;padding:16px;margin-bottom:10px">
-          <div style="font-size:10px;font-weight:700;color:var(--txt3);text-transform:uppercase;margin-bottom:12px">기본 정보</div>
+          <div style="font-size:10px;font-weight:700;color:var(--txt3);text-transform:uppercase;margin-bottom:12px">수신처 정보</div>
           <div class="row2" style="margin-bottom:8px">
             <div class="fg">
               <label class="fl">거래처 *</label>
-              <select class="fi sm" id="inv-client" onchange="onInvClientChange()"></select>
+              <select class="fi sm" id="inv-client" onchange="onInvClientDirectCheck()"></select>
             </div>
             <div class="fg">
               <label class="fl">담당자</label>
-              <select class="fi sm" id="inv-manager"></select>
+              <select class="fi sm" id="inv-manager" onchange="onInvManagerChange()"></select>
             </div>
           </div>
-          <div class="fg" style="margin-bottom:8px">
-            <label class="fl">프로젝트명 *</label>
-            <input class="fi sm" id="inv-project" placeholder="예: LEGENDARY_2차">
+          <div class="row2" style="margin-bottom:8px">
+            <div class="fg">
+              <label class="fl">프로젝트명 *</label>
+              <input class="fi sm" id="inv-project" placeholder="예: LEGENDARY_2차">
+            </div>
+            <div class="fg">
+              <label class="fl">아티스트</label>
+              <select class="fi sm" id="inv-artist" onchange="onInvArtistChange()"></select>
+            </div>
           </div>
           <div class="row2" style="margin-bottom:8px">
             <div class="fg">
@@ -332,11 +349,20 @@ select.fi option{background:var(--sur2)}
           </div>
         </div>
 
+        <!-- 단가 기준 소속사 -->
+        <div style="background:var(--sur);border:1px solid var(--bdr);border-radius:12px;padding:16px;margin-bottom:10px">
+          <div style="font-size:10px;font-weight:700;color:var(--txt3);text-transform:uppercase;margin-bottom:10px">단가 기준 소속사</div>
+          <select class="fi sm" id="inv-agency" onchange="onInvAgencyDirectCheck()"></select>
+        </div>
+
         <!-- 작업 항목 -->
         <div style="background:var(--sur);border:1px solid var(--bdr);border-radius:12px;padding:16px;margin-bottom:10px">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
             <div style="font-size:10px;font-weight:700;color:var(--txt3);text-transform:uppercase">작업 항목</div>
-            <button class="btn btn-g" style="height:26px;font-size:11px" onclick="addInvItem()">+ 항목 추가</button>
+            <div style="display:flex;gap:6px">
+              <button class="btn btn-g" style="height:26px;font-size:11px" onclick="removeLastInvItem()">항목 삭제</button>
+              <button class="btn btn-p" style="height:26px;font-size:11px" onclick="addInvItem()">항목 추가</button>
+            </div>
           </div>
           <div id="inv-items"></div>
         </div>
@@ -358,12 +384,29 @@ select.fi option{background:var(--sur2)}
         </div>
 
         <!-- 생성 버튼 -->
-        <button class="btn btn-p" style="width:100%;height:44px;font-size:14px" onclick="createInvoice()">
-          📄 견적서 구글시트 생성
+        <button class="btn btn-p" style="width:100%;height:44px;font-size:14px" onclick="submitInvoice()">
+          견적서 구글시트 생성
         </button>
+        <div id="inv-result" style="margin-top:12px;display:none"></div>
       </div>
 
     </div>
+  </div>
+</div>
+
+<!-- 발송처 모달 -->
+<div class="mo" id="mo-sender">
+  <div class="md">
+    <div class="md-h"><span class="md-t">발송처 정보</span><button class="xb" onclick="closeMo('mo-sender')">✕</button></div>
+    <div class="md-b">
+      <div class="row2"><div class="fg"><label class="fl">회사명</label><input class="fi sm" id="sd-company" value="(주)핏치컴퍼니"></div><div class="fg"><label class="fl">대표명</label><input class="fi sm" id="sd-ceo" value="김현수"></div></div>
+      <div class="fg"><label class="fl">사업자등록번호</label><input class="fi sm" id="sd-biz" value="476-81-03260"></div>
+      <div class="fg"><label class="fl">주소</label><input class="fi sm" id="sd-addr" value="서울특별시 서초구 사임당로8길 13, 4층 402호 K243호"></div>
+      <div class="fg"><label class="fl">이메일</label><input class="fi sm" id="sd-email" value="pitchcompany@naver.com"></div>
+      <div class="fg"><label class="fl">연락처</label><input class="fi sm" id="sd-tel" value="010-5021-9811 / 010-4664-4552"></div>
+      <div class="row2"><div class="fg"><label class="fl">계좌</label><input class="fi sm" id="sd-bank" value="IBK기업은행 600-05678-04-011"></div><div class="fg"><label class="fl">예금주</label><input class="fi sm" id="sd-depositor" value="(주)핏치컴퍼니"></div></div>
+    </div>
+    <div class="md-f"><button class="btn btn-g" onclick="closeMo('mo-sender')">닫기</button><button class="btn btn-p" onclick="saveSender()">저장</button></div>
   </div>
 </div>
 
@@ -475,7 +518,7 @@ function postSheet(action, data) {
 
 // ── 구글 시트 읽기 ──
 function loadSheetData(){
-  showSyncBar('loading','↻ 구글 시트에서 불러오는 중...');
+  showSyncBar('loading','구글 시트에서 불러오는 중...');
   fetch(AS_URL+'?t='+Date.now(), {method:'GET', redirect:'follow'})
     .then(function(r){return r.json();})
     .catch(function(){return null;})
@@ -557,9 +600,10 @@ function loadSheetData(){
           var pid   = String(r.priceId||'').trim();
           var cname = String(r['회사명']||r.AGENCY_NAME||'').trim();
           var proj  = String(r['작업구분']||r.PROJECT_NAME||'').trim();
-          var base  = parseFloat(String(r['청구단가']||r.PREMIUM_PRICE||r.BASE_PRICE||'0').replace(/,/g,''))||0;
+          var rawBase = String(r['청구단가']||r.PREMIUM_PRICE||r.BASE_PRICE||'');
+          var base = isNaN(rawBase.replace(/,/g,'')) ? rawBase : (parseFloat(rawBase.replace(/,/g,''))||0);
           if(!pid||!proj) return;
-          priceMap[pid]={cname:cname,proj:proj,base:base};
+          priceMap[pid]={cname:cname,proj:proj,base:base,baseRaw:rawBase};
         });
 
         var LITTERS=['김현수','박현아','강영순','최현경','이은지','권미향','김슬기','기타'];
@@ -578,7 +622,10 @@ function loadSheetData(){
           var p=priceMap[pid];
           if(!byCompany[p.cname]) byCompany[p.cname]=[];
           var litVals=LITTERS.map(function(nm){
-            return (payByPrice[pid]&&payByPrice[pid][nm]!=null)?payByPrice[pid][nm]:Math.round(p.base*0.8);
+            if(payByPrice[pid]&&payByPrice[pid][nm]!=null) return payByPrice[pid][nm];
+            // base가 텍스트(긴급 등)면 지급단가 0
+            if(typeof p.base !== 'number') return 0;
+            return Math.round(p.base*0.8);
           });
           byCompany[p.cname].push([p.proj,p.base].concat(litVals));
         });
@@ -592,6 +639,8 @@ function loadSheetData(){
         showSyncBar('success','✓ 시트 연동 완료');
         setTimeout(hideSyncBar,2500);
         buildRateTabs(); renderAll();
+        // 견적서 탭이 열려있으면 재초기화 (작업유형 갱신)
+        if (CUR === 'invoice') initInvoiceTab();
       } else {
         showSyncBar('error','⚠ 시트 연결 실패 — 로컬 데이터로 표시 중');
         setTimeout(hideSyncBar,3000);
@@ -959,6 +1008,36 @@ function editLt(id){if(!canEdit())return;var i=DB.litters.findIndex(function(l){
 function delLt(id){if(!canEdit())return;if(!confirm('삭제할까요?'))return;var l=DB.litters.find(function(x){return x.id===id;});DB.litters=DB.litters.filter(function(x){return x.id!==id;});saveDB();renderAll();toast('삭제됐어요');if(l)postSheet('delete_litter',{retoucherId:l.id});}
 
 
+
+var SENDER_INFO = {
+  company:   '(주)핏치컴퍼니',
+  ceo:       '김현수',
+  biz:       '476-81-03260',
+  addr:      '서울특별시 서초구 사임당로8길 13, 4층 402호 K243호',
+  email:     'pitchcompany@naver.com',
+  tel:       '010-5021-9811 / 010-4664-4552',
+  bank:      'IBK기업은행 600-05678-04-011',
+  depositor: '(주)핏치컴퍼니'
+};
+try { var _sd=localStorage.getItem('pm_sender'); if(_sd) SENDER_INFO=JSON.parse(_sd); } catch(e){}
+
+function saveSender() {
+  SENDER_INFO = {
+    company:   document.getElementById('sd-company').value,
+    ceo:       document.getElementById('sd-ceo').value,
+    biz:       document.getElementById('sd-biz').value,
+    addr:      document.getElementById('sd-addr').value,
+    email:     document.getElementById('sd-email').value,
+    tel:       document.getElementById('sd-tel').value,
+    bank:      document.getElementById('sd-bank').value,
+    depositor: document.getElementById('sd-depositor').value,
+  };
+  try { localStorage.setItem('pm_sender', JSON.stringify(SENDER_INFO)); } catch(e){}
+  var el = document.getElementById('sender-preview');
+  if (el) el.textContent = SENDER_INFO.company;
+  closeMo('mo-sender');
+  toast('발송처 정보 저장됐어요');
+}
 // ── 견적서 ──
 var INV_ITEMS = [];
 var INV_ITEM_ID = 0;
@@ -970,64 +1049,149 @@ function initInvoiceTab() {
   var agMap = buildAgMap();
   var agNames = Object.keys(agMap).sort(function(a,b){return b.localeCompare(a,'ko');});
   agSel.innerHTML = '<option value="">거래처 선택</option>'
-    + agNames.map(function(n){return '<option value="'+esc(n)+'">'+esc(n)+'</option>';}).join('');
+    + agNames.map(function(n){return '<option value="'+esc(n)+'">'+esc(n)+'</option>';}).join('')
+    + '<option value="__direct__">직접 입력</option>';
 
-  // 소속사 드롭다운
+  // 소속사 드롭다운 + 첫번째 자동 선택
   var agencySel = document.getElementById('inv-agency');
   if (agencySel) {
     var agencies = Object.keys(RATES_RAW).sort(function(a,b){return b.localeCompare(a,'ko');});
     agencySel.innerHTML = agencies.map(function(k){
       return '<option value="'+esc(k)+'">'+esc(k)+'</option>';
-    }).join('');
+    }).join('') + '<option value="__direct__">직접 입력</option>';
+    // 첫번째 소속사 자동 선택
+    if (agencies.length > 0 && !agencySel.value) {
+      agencySel.value = agencies[0];
+    }
   }
 
-  // 오늘 날짜 기본값
+  // 오늘 날짜 기본값 (작성일 + 검수완료일)
   var today = new Date().toISOString().slice(0,10);
   var dateEl = document.getElementById('inv-date');
   if (dateEl && !dateEl.value) dateEl.value = today;
+  var writeEl = document.getElementById('inv-write');
+  if (writeEl && !writeEl.value) writeEl.value = today;
+  var doneEl = document.getElementById('inv-done');
+  if (doneEl && !doneEl.value) doneEl.value = today;
 
-  // 항목 없으면 1개 추가
+  // 항목 없으면 1개 추가 (소속사 선택 후 추가해야 작업유형이 채워짐)
   if (INV_ITEMS.length === 0) addInvItem();
+  else {
+    // 기존 항목 작업유형 갱신
+    onInvAgencyChange();
+  }
 
   calcInvTotal();
 }
 
+
+function onInvManagerChange() {
+  if (gv('inv-manager') !== '__direct__') return;
+  var val = prompt('담당자명을 직접 입력해주세요');
+  if (val) {
+    var sel = document.getElementById('inv-manager');
+    var opt = document.createElement('option');
+    opt.value = val; opt.textContent = val; opt.selected = true;
+    sel.insertBefore(opt, sel.lastChild);
+    sel.value = val;
+  }
+}
+function onInvArtistChange() {
+  if (gv('inv-artist') !== '__direct__') return;
+  var val = prompt('아티스트명을 직접 입력해주세요');
+  if (val) {
+    var sel = document.getElementById('inv-artist');
+    var opt = document.createElement('option');
+    opt.value = val; opt.textContent = val; opt.selected = true;
+    sel.insertBefore(opt, sel.lastChild);
+    sel.value = val;
+  }
+}
+
+function onInvClientDirectCheck() {
+  if (gv('inv-client') === '__direct__') {
+    var val = prompt('거래처명을 직접 입력해주세요');
+    if (val) {
+      var sel = document.getElementById('inv-client');
+      var opt = document.createElement('option');
+      opt.value = val; opt.textContent = val; opt.selected = true;
+      sel.insertBefore(opt, sel.lastChild);
+      sel.value = val;
+    }
+  }
+  onInvClientChange();
+}
 function onInvClientChange() {
   var agMap = buildAgMap();
   var name = gv('inv-client');
   var ag = agMap[name];
 
-  // 담당자 드롭다운
+  // 담당자 드롭다운 (직접입력 옵션 포함)
   var mgSel = document.getElementById('inv-manager');
   if (mgSel) {
-    if (!ag) { mgSel.innerHTML = '<option value="">담당자 선택</option>'; }
-    else {
-      mgSel.innerHTML = '<option value="">담당자 선택</option>'
-        + (ag.contacts||[]).filter(function(c){return c.manager;}).map(function(c){
-            return '<option value="'+esc(c.manager)+'">'+esc(c.manager)+(c.dept?' ('+c.dept+')':'')+'</option>';
-          }).join('');
-    }
+    var contacts = ag ? (ag.contacts||[]).filter(function(c){return c.manager;}) : [];
+    mgSel.innerHTML = '<option value="">담당자 선택</option>'
+      + contacts.map(function(c){
+          return '<option value="'+esc(c.manager)+'">'+esc(c.manager)+(c.dept?' ('+c.dept+')':'')+'</option>';
+        }).join('')
+      + '<option value="__direct__">직접 입력</option>';
   }
 
-  // 아티스트 드롭다운 (inv-artist를 select로 변경)
+  // 아티스트 드롭다운 (직접입력 옵션 포함)
   var artists = ag && ag.artists ? ag.artists.split(',').map(function(s){return s.trim();}).filter(Boolean) : [];
   var artSel = document.getElementById('inv-artist');
   if (artSel) {
     artSel.innerHTML = '<option value="">아티스트 선택</option>'
-      + artists.map(function(a){return '<option value="'+esc(a)+'">'+esc(a)+'</option>';}).join('');
+      + artists.map(function(a){return '<option value="'+esc(a)+'">'+esc(a)+'</option>';}).join('')
+      + '<option value="__direct__">직접 입력</option>';
   }
 
-  // 소속사 드롭다운도 거래처에 맞는 소속사 자동 선택
-  // (단가표 키와 거래처명이 다를 수 있으므로 유사 매칭)
+  // 소속사 자동 매칭 후 작업유형 즉시 갱신
   var agencySel = document.getElementById('inv-agency');
   if (agencySel && name) {
     var agencies = Object.keys(RATES_RAW);
-    // 거래처명과 같은 소속사 찾기
-    var matched = agencies.find(function(a){return a===name || name.includes(a) || a.includes(name);});
-    if (matched) agencySel.value = matched;
+    // 완전일치 우선, 그 다음 공백무시 일치
+    var matched = agencies.find(function(a){return a===name;})
+      || agencies.find(function(a){return a.replace(/\s/g,'')===name.replace(/\s/g,'');});
+    if (matched) {
+      agencySel.value = matched;
+    } else {
+      // 없으면 직접입력 선택
+      agencySel.value = '__direct__';
+    }
+    onInvAgencyChange();
   }
 }
 
+
+
+function onInvPriceInput(id) {
+  var el = document.getElementById('inv-price-'+id);
+  if (!el) return;
+  // 숫자만 추출
+  var raw = el.value.replace(/[^0-9]/g, '');
+  var num = parseInt(raw, 10) || 0;
+  el.value = num ? num.toLocaleString('ko-KR') : '';
+  calcInvTotal();
+}
+function getPriceVal(id) {
+  var el = document.getElementById('inv-price-'+id);
+  if (!el) return 0;
+  return parseInt((el.value||'').replace(/[^0-9]/g,''), 10) || 0;
+}
+function onInvAgencyDirectCheck() {
+  if (gv('inv-agency') === '__direct__') {
+    var val = prompt('소속사명을 직접 입력해주세요');
+    if (val) {
+      var sel = document.getElementById('inv-agency');
+      var opt = document.createElement('option');
+      opt.value = val; opt.textContent = val; opt.selected = true;
+      sel.insertBefore(opt, sel.lastChild);
+      sel.value = val;
+    }
+  }
+  onInvAgencyChange();
+}
 function onInvAgencyChange() {
   // 모든 항목의 작업유형 드롭다운 갱신
   INV_ITEMS.forEach(function(item) {
@@ -1036,7 +1200,8 @@ function onInvAgencyChange() {
     var agency = gv('inv-agency');
     var rows = RATES_RAW[agency] || [];
     sel.innerHTML = '<option value="">작업유형 선택</option>'
-      + rows.map(function(r){return '<option value="'+esc(r[0])+'">'+esc(r[0])+'</option>';}).join('');
+      + rows.map(function(r){return '<option value="'+esc(r[0])+'">'+esc(r[0])+'</option>';}).join('')
+      + '<option value="__direct__">직접 입력</option>';
   });
   calcInvTotal();
 }
@@ -1048,20 +1213,22 @@ function addInvItem() {
   var agency = gv('inv-agency') || '';
   var rows = RATES_RAW[agency] || [];
   var typeOpts = '<option value="">작업유형 선택</option>'
-    + rows.map(function(r){return '<option value="'+esc(r[0])+'">'+esc(r[0])+'</option>';}).join('');
+    + rows.map(function(r){return '<option value="'+esc(r[0])+'">'+esc(r[0])+'</option>';}).join('')
+    + '<option value="__direct__">직접 입력</option>';
 
   var html = '<div id="inv-item-'+id+'" style="padding:10px 0;border-bottom:1px solid var(--bdr)">'
     // Description
     +'<div style="margin-bottom:6px">'
       +'<input class="fi sm" id="inv-desc-'+id+'" placeholder="Description (예: 1차 / LEGENDARY / 태환)" style="width:100%" oninput="calcInvTotal()">'
     +'</div>'
-    // 유형 + 컷수
-    +'<div style="display:grid;grid-template-columns:1fr 80px 80px;gap:6px;margin-bottom:6px">'
+    // 유형 + 컷수 + 단가 + 합산
+    +'<div style="display:grid;grid-template-columns:1fr 80px 90px 100px;gap:6px;margin-bottom:6px;align-items:center">'
       +'<select class="fi sm" id="inv-type-'+id+'" onchange="onInvTypeChange('+id+')">'+typeOpts+'</select>'
       +'<input class="fi sm" id="inv-qty-'+id+'" type="number" placeholder="컷수" min="1" style="text-align:right" oninput="calcInvTotal()">'
-      +'<input class="fi sm" id="inv-price-'+id+'" type="number" placeholder="단가" style="text-align:right;color:var(--gold)" oninput="calcInvTotal()" readonly>'
+      +'<input class="fi sm" id="inv-price-'+id+'" type="text" placeholder="단가" style="text-align:right;color:var(--txt)" oninput="onInvPriceInput('+id+')">'
+      +'<div style="font-size:13px;font-weight:700;color:var(--txt);text-align:right;padding:0 4px" id="inv-amount-'+id+'">0</div>'
     +'</div>'
-    // 긴급/고급 + 소계 + 삭제
+    // 긴급/고급 + 소계 (X버튼 제거, 합산금액 단가 옆으로 이동)
     +'<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">'
       +'<label style="display:flex;align-items:center;gap:4px;font-size:11px;cursor:pointer">'
         +'<input type="checkbox" id="inv-urgent-'+id+'" onchange="calcInvTotal()"> 긴급 (+25%)'
@@ -1070,9 +1237,6 @@ function addInvItem() {
         +'<input type="checkbox" id="inv-premium-'+id+'" onchange="onInvPremiumChange('+id+')">'
         +' 고급단가'
       +'</label>'
-      +'<span style="flex:1"></span>'
-      +'<span style="font-size:12px;font-weight:700;color:var(--gold)" id="inv-amount-'+id+'">0</span>'
-      +'<button onclick="removeInvItem('+id+')" style="background:none;border:none;color:var(--danger);cursor:pointer;font-size:14px;padding:2px 4px">✕</button>'
     +'</div>'
   +'</div>';
 
@@ -1085,6 +1249,12 @@ function addInvItem() {
   calcInvTotal();
 }
 
+
+function removeLastInvItem() {
+  if (INV_ITEMS.length === 0) return;
+  var last = INV_ITEMS[INV_ITEMS.length - 1];
+  removeInvItem(last.id);
+}
 function removeInvItem(id) {
   INV_ITEMS = INV_ITEMS.filter(function(i){return i.id !== id;});
   var el = document.getElementById('inv-item-'+id);
@@ -1093,17 +1263,33 @@ function removeInvItem(id) {
 }
 
 function onInvTypeChange(id) {
+  var typeSel = document.getElementById('inv-type-'+id);
+  if (!typeSel) return;
+  var typeName = typeSel.value;
+  // 직접입력 선택시 프롬프트
+  if (typeName === '__direct__') {
+    var val = prompt('작업유형을 직접 입력해주세요');
+    if (val) {
+      var opt = document.createElement('option');
+      opt.value = val; opt.textContent = val; opt.selected = true;
+      typeSel.insertBefore(opt, typeSel.lastChild);
+      typeSel.value = val;
+      typeName = val;
+    } else { return; }
+  }
   var agency = gv('inv-agency');
   var rows = RATES_RAW[agency] || [];
-  var typeName = document.getElementById('inv-type-'+id) ? document.getElementById('inv-type-'+id).value : '';
   var row = rows.find(function(r){return r[0] === typeName;});
-  if (!row) return;
+  if (!row) { calcInvTotal(); return; }
 
   var isPremium = document.getElementById('inv-premium-'+id) && document.getElementById('inv-premium-'+id).checked;
-  // row[1] = 기본단가(청구단가)
-  var price = row[1] || 0;
+  // row[1]=기본단가, 텍스트면(긴급 등) 0
+  var basePrice = parseFloat(row[1]) || 0;
+  var price = isPremium ? (parseFloat(row[4]) || basePrice) : basePrice;
   var priceEl = document.getElementById('inv-price-'+id);
-  if (priceEl) priceEl.value = price;
+  if (priceEl) {
+    priceEl.value = price ? Number(price).toLocaleString('ko-KR') : '';
+  }
   calcInvTotal();
 }
 
@@ -1113,7 +1299,7 @@ function onInvPremiumChange(id) {
 
 function getItemAmount(id) {
   var qty   = parseFloat((document.getElementById('inv-qty-'+id)||{}).value)||0;
-  var price = parseFloat((document.getElementById('inv-price-'+id)||{}).value)||0;
+  var price = getPriceVal(id);
   var urgent= document.getElementById('inv-urgent-'+id) && document.getElementById('inv-urgent-'+id).checked;
   var amount = qty * price;
   if (urgent) amount = Math.round(amount * 1.25);
@@ -1147,7 +1333,7 @@ function submitInvoice() {
     return {
       desc:      (document.getElementById('inv-desc-'+item.id)||{}).value || '',
       qty:       parseFloat((document.getElementById('inv-qty-'+item.id)||{}).value)||0,
-      unitPrice: parseFloat((document.getElementById('inv-price-'+item.id)||{}).value)||0,
+      unitPrice: getPriceVal(item.id),
       urgent:    !!(document.getElementById('inv-urgent-'+item.id)||{}).checked,
       premium:   !!(document.getElementById('inv-premium-'+item.id)||{}).checked,
     };
