@@ -1610,6 +1610,13 @@ function pmCols() { return ALL_COLS.filter(function (c) { return !pmHidden(c); }
 function pmClient(x) { x = String(x || '').trim(); return PM.clients.filter(function (c) { return c.disp === x || c.key === x || c.id === x; })[0] || null; }
 function pmClientName(c) { return c ? (c.ko && c.en ? c.ko + '(' + c.en + ')' : (c.ko || c.en || c.disp)) : ''; }
 function pmTaxMail(c) { var m = String(c && c.memo || '').match(/계산서[^@\s]*\s*([\w.+-]+@[\w.-]+\.\w+)/); return m ? m[1] : ''; }
+// 2026-10-11: 담당자·아티스트별 계산서 수신메일 (담당자 탭 메모에 '세금계산서 수신메일: 주소'로 적어둔 경우) — 예: 앤팀 → arju@hybecorp.com
+function pmMemoMail(t) { var m = String(t || '').match(/계산서[^@]*?([\w.+-]+@[\w.-]+\.\w+)/); return m ? m[1] : ''; }
+function pmArtistTaxMail(c, a) {
+  if (!c || !a) return '';
+  var k = PM.contacts.filter(function (x) { var mm = String(x.memo || ''); return x.client === c.disp && pmMemoMail(mm) && ((a.en && mm.indexOf(a.en) >= 0) || (a.ko && mm.indexOf(a.ko) >= 0)); })[0];
+  return k ? pmMemoMail(k.memo) : '';
+}
 
 // ── 시트 → 화면 데이터 ──
 function pmApply(d) {
@@ -1967,7 +1974,7 @@ function pfFillArtist() {
 }
 function pfFillClient() {
   var c = pmClient(pfV('pf-client'));
-  pfSet('pf-cname', pmClientName(c)); pfSet('pf-ceo', c ? c.ceo : ''); pfSet('pf-biz', c ? c.biz : ''); pfSet('pf-taxmail', pmTaxMail(c));
+  pfSet('pf-cname', pmClientName(c)); pfSet('pf-ceo', c ? c.ceo : ''); pfSet('pf-biz', c ? c.biz : ''); pfSet('pf-taxmail', pmArtistTaxMail(c, PF.artist) || pmTaxMail(c));
   pfMgrList(c ? c.disp : '');
   pfFillMgr();
 }
@@ -1978,6 +1985,7 @@ function pfFillMgr() {
   var k = c && mgr ? PM.contacts.filter(function (x) { return x.client === c.disp && x.name === mgr; })[0] : null;
   var em = pfEl('pf-email');
   if (k) { em.value = k.email; em.dataset.auto = '1'; } else if (em.dataset.auto === '1') { em.value = ''; em.dataset.auto = '0'; }
+  if (c) pfSet('pf-taxmail', (k && pmMemoMail(k.memo)) || pmArtistTaxMail(c, PF.artist) || pmTaxMail(c));
   pfEl('pf-save-wrap').hidden = !(c && mgr && !k);
 }
 function pfFillVendor() {
