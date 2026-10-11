@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>PITCH</title>
 <meta name="theme-color" content="#f2f4f6">
+<meta name="format-detection" content="telephone=no,email=no,address=no,date=no">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Asta+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
@@ -962,22 +963,23 @@ function renderLt(){
   var cards='';var sd=[];
   slice.forEach(function(l,i){
     sd.push(l);
-    var acctStr=l.bank&&l.acct?l.bank+' '+l.acct:(l.bank||'-');
-    var subPreview=l.email||acctStr;
-    cards+='<div class="mc" id="ltm'+i+'">'
-      +'<div class="mc-head" id="ltmh'+i+'" style="cursor:'+(detail?'pointer':'default')+'">'
-        +'<div class="mc-info"><div class="mc-name">'+esc(l.name)+'</div><div class="mc-sub">'+esc(subPreview)+'</div></div>'
-        +'<div class="mc-right"><span class="tag '+(l.tax==='사업자'?'t-g':'t-t')+'">'+esc(l.tax)+'</span>'+(detail?'<span class="mc-chv">⌄</span>':'')+'</div>'
+    // 2026-10-12: 미리보기 = (원천)주민등록번호 / (사업자)사업자번호 · 계좌 · 메일, 연락처·주소·대표명은 토글로. 모두 왼쪽 정렬, 구분선 없음
+    var biz=l.tax==='사업자';
+    var row=function(k,v,id,extra){return '<div class="lt-r"><span class="lt-k">'+k+'</span><span class="lt-v">'+(extra||'')+'<span class="copyable" id="'+id+'">'+esc(v||'-')+'</span></span></div>';};
+    cards+='<div class="mc lt-c" id="ltm'+i+'">'
+      +'<div class="lt-h"><span class="mc-name">'+esc(l.name)+'</span><span class="tag '+(biz?'t-g':'t-t')+'">'+esc(l.tax)+'</span></div>'
+      +(detail?'<div class="lt-p">'
+        +row(biz?'사업자번호':'주민번호',l.regId,'ltmc-rid'+i)
+        +row('계좌',l.acct||(l.bank?'':'-'),'ltmc-acct'+i,l.bank?'<span class="bank-tag">'+esc(l.bank)+'</span>':'')
+        +row('메일',l.email,'ltmc-email'+i)
       +'</div>'
-      +(detail?'<div class="mc-body">'
-        +'<div class="mc-row"><span class="mc-k">주민/사업자번호</span><span class="mc-v" id="ltmc-rid'+i+'">'+esc(l.regId||'-')+'</span></div>'
-        +'<div class="mc-row"><span class="mc-k">계좌</span><span class="mc-v" style="display:flex;align-items:center;gap:6px;justify-content:flex-end">'+(l.bank?'<span class="bank-tag">'+esc(l.bank)+'</span>':'')+'<span id="ltmc-acct'+i+'" style="cursor:pointer;padding:2px 4px;border-radius:3px;transition:all .15s">'+(l.acct||'-')+'</span></span></div>'
-        +'<div class="mc-row"><span class="mc-k">주소</span><span class="mc-v" id="ltmc-addr'+i+'">'+esc(l.addr||'-')+'</span></div>'
-        +'<div class="mc-row-left"><span class="mc-k">연락처</span><span class="mc-v" style="text-align:left;flex:1" id="ltmc-tel'+i+'">'+esc(l.tel||'-')+'</span></div>'
-        +'<div class="mc-row-left"><span class="mc-k">이메일</span><span class="mc-v" style="text-align:left;flex:1" id="ltmc-email'+i+'">'+esc(l.email||'-')+'</span></div>'
-        +(l.ceo?'<div class="mc-row"><span class="mc-k">대표명</span><span class="mc-v" id="ltmc-ceo'+i+'">'+esc(l.ceo)+'</span></div>':'')
+      +'<button class="lt-tg" id="ltmh'+i+'"><span>연락처 · 주소'+(l.ceo?' · 대표명':'')+'</span><span class="mc-chv">⌄</span></button>'
+      +'<div class="mc-body lt-p lt-more">'
+        +row('연락처',l.tel,'ltmc-tel'+i)
+        +row('주소',l.addr,'ltmc-addr'+i)
+        +(l.ceo?row('대표명',l.ceo,'ltmc-ceo'+i):'')
         +(canEdit()?'<div class="mc-actions"><button class="ab ed" id="lted'+i+'">✎</button><button class="ab dl" id="ltdl'+i+'">✕</button></div>':'')
-      +'</div>':'')
+      +'</div>':'<div class="lt-p">'+row('메일',l.email,'ltmc-email'+i)+'</div>')
       +'</div>';
   });
   document.getElementById('mc-lt').innerHTML=cards||'<div style="padding:24px;text-align:center;color:var(--txt3);font-size:12px">리터쳐가 없어요</div>';
@@ -2512,6 +2514,19 @@ td{overflow-wrap:anywhere}
 .wo-wl{display:flex;flex-wrap:wrap;gap:4px;min-width:0}
 .wo-wl .wo-w{margin:0}
 .wo-ago{flex:none;font-size:11px;color:var(--faint)}
+/* 2026-10-12: 리터쳐 카드 */
+.lt-c{padding:16px 18px 6px}
+.lt-h{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.lt-p{display:flex;flex-direction:column;gap:6px;padding-bottom:10px}
+.lt-r{display:flex;align-items:center;gap:12px;font-size:14px;min-height:24px}
+.lt-k{flex:none;width:72px;font-size:12px;font-weight:600;color:var(--txt3)}
+.lt-v{flex:1;min-width:0;display:flex;align-items:center;gap:6px;flex-wrap:wrap;color:var(--txt);overflow-wrap:anywhere;text-align:left}
+.lt-v .copyable{padding:1px 0;text-decoration:none}
+.lt-tg{display:flex;align-items:center;justify-content:space-between;width:100%;border:0;border-top:1px solid var(--line);background:none;padding:10px 0 8px;font-family:inherit;font-size:12px;font-weight:600;color:var(--txt3);cursor:pointer}
+.lt-c.open .lt-tg .mc-chv{transform:rotate(180deg)}
+.lt-c .mc-body.lt-more{border-top:0;padding:2px 0 10px;display:none}
+.lt-c.open .mc-body.lt-more{display:flex}
+.lt-c.open{box-shadow:none}
 </style>
 <script>
 // 2026-10-12: 편집 버튼이 동그라미 아이콘이 되면서 글자 대신 켜짐(검정) 상태로 표시
