@@ -172,7 +172,7 @@ select.fi option{background:var(--sur2)}
 <div id="login-screen">
   <div class="login-box">
     <div class="login-logo">PITCH <span style="color:var(--txt2);font-weight:400">MASTER</span></div>
-    <div class="login-sub">접속 유형을 선택하고 비밀번호를 입력해주세요</div>
+    <div class="login-sub">비밀번호를 입력해주세요</div>
     <div class="login-role-btns">
       <button class="role-btn" onclick="selectRole('guest',this)">게스트</button>
       <button class="role-btn" onclick="selectRole('admin',this)">관리자</button>
@@ -534,7 +534,7 @@ select.fi option{background:var(--sur2)}
 <div class="toast" id="toast"></div>
 
 <script>
-var PW = {guest:'guest', admin:'0090'};
+var PW = {}; // 2026-10-11: 비밀번호는 서버에서 확인
 
 // ── 새 Apps Script URL ──
 var AS_URL = 'https://script.google.com/macros/s/AKfycbwGMvP30yzgdcmW--fa1eZC2aSbXz6AsyN0q4P3yxeqt6mgsxJ5MH91inqV35kP9l3i/exec';
@@ -1566,6 +1566,485 @@ function submitInvoice() {
 var _tt;
 function toast(msg){var el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');clearTimeout(_tt);_tt=setTimeout(function(){el.classList.remove('show');},2200);}
 document.addEventListener('keydown',function(e){if(e.key==='Escape')document.querySelectorAll('.mo.open').forEach(function(m){m.classList.remove('open');});});
+</script>
+<script>
+/* ═════════════════════════════════════════════════════════════════════
+   2026-10-11  PITCH_DB 연동 (01_거래처마스터 · 02_단가마스터 · 03_청구서 · 04_지급내역서)
+   - 데이터: 거래처마스터 스크립트 웹앱 (?api=pm)
+   - 저장: 새 행 추가만 · 기존 칸은 빈 값으로 지우지 않음 · 삭제 = '활성' 체크 해제
+   - 단가: 02_단가마스터에서 직접 수정 (여기서는 조회만)
+   - 권한: 게스트(비밀번호 핏치) = 관리자(비밀번호 관리)와 같음. 단, 게스트에게는 강영순 하위 작업자
+           (박현아·박슬기·박종배) 세부내역만 표시하지 않음
+   - 비밀번호는 코드에 없음: 서버(거래처마스터 스크립트 속성 PM_PW_ADMIN · PM_PW_GUEST)가 확인
+   ═════════════════════════════════════════════════════════════════════ */
+AS_URL = 'https://script.google.com/macros/s/AKfycbxLa9jGkHXvy6pMzeYs58O3siUf4_n_9w1OMVEM2ERDnyqjtn_I_HlPnl2FlKlIpyVH-A/exec';
+var PM_RATE_SHEET = 'https://docs.google.com/spreadsheets/d/1q1HeJGniMvTbSvUjp-QUeY_vmZv05HmvyrDvelbGcAE/edit';
+var PM_HIDE = ['박현아', '박슬기', '박종배'];
+// 로그인: 비밀번호는 서버에서 확인하고, 이 기기에는 로그인 정보만 기억 (로그아웃하면 지움)
+var PM_K = '';
+PW = { guest: true, admin: true };
+(function () { try { var a = JSON.parse(localStorage.getItem('pm_auth') || 'null'); if (a && a.k) PM_K = a.k; else localStorage.removeItem('pm_auth'); } catch (e) {} })();
+function pmQ() { return '&k=' + encodeURIComponent(PM_K); }
+function pmAuthFail(d) { if (d && d.auth === false) { toast('다시 로그인해주세요'); doLogout(); return true; } return false; }
+function doLogin() {
+  var pw = document.getElementById('login-pw').value.trim(), err = document.getElementById('login-err');
+  if (!pw) { err.textContent = '비밀번호를 입력해주세요'; return; }
+  err.textContent = '확인 중...';
+  fetch(AS_URL + '?api=pm&auth=1&k=' + encodeURIComponent(pw) + '&t=' + Date.now()).then(function (r) { return r.json(); }).catch(function () { return null; }).then(function (d) {
+    if (!d) { err.textContent = '연결 실패 — 잠시 후 다시 시도해주세요'; return; }
+    if (!d.ok) { err.textContent = '비밀번호가 틀렸어요'; document.getElementById('login-pw').value = ''; document.getElementById('login-pw').focus(); return; }
+    err.textContent = ''; PM_K = pw; SESSION.role = d.role; SESSION.editMode = false; selRole = d.role;
+    try { localStorage.setItem('pm_auth', JSON.stringify({ role: d.role, k: pw, t: Date.now() })); } catch (e) {}
+    document.getElementById('login-screen').classList.add('hidden'); document.getElementById('app').style.display = 'flex';
+    applyRoleUI(); buildRateTabs(); renderAll(); loadSheetData();
+  });
+}
+var _pmLogout = doLogout;
+doLogout = function () { PM_K = ''; try { localStorage.removeItem('pm_v2'); } catch (e) {} _pmLogout(); };
+var PM = { clients: [], contacts: [], artists: [], members: [], vendors: [], prem: {}, loaded: false };
+try { var _pmc = JSON.parse(localStorage.getItem('pm_v2') || 'null'); if (_pmc && _pmc.clients) { PM = _pmc; PM.loaded = false; } } catch (e) {}
+
+function pmGuest() { return SESSION.role === 'guest'; }
+function pmHidden(name) { return pmGuest() && PM_HIDE.indexOf(String(name || '').trim()) >= 0; }
+function pmCols() { return ALL_COLS.filter(function (c) { return !pmHidden(c); }); }
+function pmClient(x) { x = String(x || '').trim(); return PM.clients.filter(function (c) { return c.disp === x || c.key === x || c.id === x; })[0] || null; }
+function pmClientName(c) { return c ? (c.ko && c.en ? c.ko + '(' + c.en + ')' : (c.ko || c.en || c.disp)) : ''; }
+function pmTaxMail(c) { var m = String(c && c.memo || '').match(/계산서[^@\s]*\s*([\w.+-]+@[\w.-]+\.\w+)/); return m ? m[1] : ''; }
+
+// ── 시트 → 화면 데이터 ──
+function pmApply(d) {
+  PM.clients = d.clients || []; PM.contacts = d.contacts || []; PM.artists = d.artists || [];
+  PM.members = d.members || []; PM.vendors = d.vendors || []; PM.prem = {};
+  if (d.workers && d.workers.length) ALL_COLS = d.workers.slice();
+  var ag = [];
+  PM.clients.forEach(function (c) {
+    var cts = PM.contacts.filter(function (k) { return k.client === c.disp; });
+    var base = { clientId: c.id, key: c.key, name: c.disp, ko: c.ko, en: c.en, ceo: c.ceo, biz: c.biz, artists: c.artists, rateTab: c.rateTab };
+    if (!cts.length) ag.push(Object.assign({ id: 'cl:' + c.id, manager: '', email: '', tel: '', dept: '' }, base));
+    cts.forEach(function (k) { ag.push(Object.assign({ id: k.id, manager: k.name, email: k.email, tel: k.tel, dept: k.dept }, base)); });
+  });
+  DB.agencies = ag;
+  DB.litters = PM.vendors.map(function (v) { return { id: v.id, tax: v.tax, name: v.name, regId: v.regId, addr: v.addr, bank: v.bank, acct: v.acct, email: v.email, tel: v.tel, ceo: v.ceo }; });
+  RATES_RAW = {};
+  Object.keys(d.rates || {}).forEach(function (tab) {
+    PM.prem[tab] = {};
+    RATES_RAW[tab] = d.rates[tab].map(function (r) {
+      PM.prem[tab][r.cat] = r.prem;
+      return [r.cat, r.base].concat(ALL_COLS.map(function (w) { return r.pay[w] != null ? r.pay[w] : 0; }));
+    });
+  });
+  selLitters = new Set(ALL_COLS);
+}
+function loadSheetData() {
+  showSyncBar('loading', 'PITCH_DB에서 불러오는 중...');
+  fetch(AS_URL + '?api=pm' + pmQ() + '&t=' + Date.now(), { method: 'GET', redirect: 'follow' })
+    .then(function (r) { return r.json(); }).catch(function () { return null; })
+    .then(function (d) {
+      if (pmAuthFail(d)) return;
+      if (!d || !d.ok) { showSyncBar('error', '⚠ PITCH_DB 연결 실패 — 마지막으로 불러온 데이터로 표시 중'); setTimeout(hideSyncBar, 3000); return; }
+      pmApply(d); PM.loaded = true;
+      try { localStorage.setItem('pm_v2', JSON.stringify({ clients: PM.clients, contacts: PM.contacts, artists: PM.artists, members: PM.members, vendors: PM.vendors, rates: d.rates, workers: d.workers })); } catch (e) {}
+      saveDB(); SHEET_LOADED = true;
+      showSyncBar('success', '✓ PITCH_DB 연동 완료'); setTimeout(hideSyncBar, 2000);
+      pmLitterBtns(); buildRateTabs(); renderAll();
+    });
+}
+(function () { try { var c = JSON.parse(localStorage.getItem('pm_v2') || 'null'); if (c && c.rates) pmApply(c); } catch (e) {} })();
+
+// ── 시트 저장 (새 API) ──
+function postSheet(action, data, cb) {
+  fetch(AS_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ action: action, data: data, k: PM_K }) })
+    .then(function (r) { return r.json(); })
+    .then(function (res) {
+      if (pmAuthFail(res)) return;
+      if (res.ok) { toast(res.exists ? '이미 있는 항목이라 바뀐 칸만 반영했어요' : 'PITCH_DB에 저장됐어요'); if (cb) cb(res); loadSheetData(); }
+      else toast('저장 실패: ' + (res.error || ''));
+    })
+    .catch(function () { toast('PITCH_DB 연결 실패'); });
+}
+
+// ── 권한 ──
+function canEdit() { return !!SESSION.role && SESSION.editMode; }
+function canSeeDetail() { return !!SESSION.role; }
+function applyRoleUI() {
+  var isAdmin = SESSION.role === 'admin';
+  var c = isAdmin ? ['rgba(59,130,246,.12)', 'var(--acc2)'] : ['rgba(167,139,250,.12)', 'var(--purple)'];
+  document.getElementById('role-tag').innerHTML = '<span style="display:inline-flex;align-items:center;padding:2px 8px;border-radius:5px;font-size:10px;font-weight:700;background:' + c[0] + ';color:' + c[1] + '">' + (isAdmin ? '관리자' : '게스트') + '</span>';
+  document.getElementById('edit-mode-btn').style.display = '';
+  ['tab-btn-rates-bill', 'tab-btn-rates-pay', 'tab-btn-dash', 'tab-btn-invoice', 'tab-btn-taxbill'].forEach(function (id) { var el = document.getElementById(id); if (el) el.style.display = ''; });
+  pmLitterBtns(); updateEditUI();
+}
+function updateEditUI() {
+  var show = canEdit();
+  ['btn-add-ag', 'btn-add-lt'].forEach(function (id) { var el = document.getElementById(id); if (el) el.style.display = show ? '' : 'none'; });
+  ['btn-edit-rate', 'btn-edit-rate-bill'].forEach(function (id) {
+    var el = document.getElementById(id); if (!el) return;
+    el.style.display = ''; el.textContent = '단가마스터 열기'; el.onclick = function () { window.open(PM_RATE_SHEET, '_blank'); };
+  });
+}
+function switchTab(t) {
+  document.querySelectorAll('.tab').forEach(function (b) { b.classList.toggle('active', b.dataset.tab === t); });
+  document.querySelectorAll('.tab-panel').forEach(function (p) { p.classList.toggle('active', p.id === 'tab-' + t); });
+  CUR = t; agP = 0; ltP = 0; rtBillP = 0; rtPayP = 0;
+  if (t === 'rates-bill' || t === 'rates-pay' || t === 'invoice') buildRateTabs();
+  renderAll();
+}
+// 게스트: 숨김 작업자 제외 · 주민번호·계좌 가림
+function pmLitterView() {
+  return DB.litters.filter(function (l) { return !pmHidden(l.name); });
+}
+var _pmRenderLt = renderLt, _pmRenderDash = renderDash;
+renderLt = function () { var keep = DB.litters; DB.litters = pmLitterView(); try { _pmRenderLt(); } finally { DB.litters = keep; } var n = document.getElementById('guest-lt-notice'); if (n) n.style.display = 'none'; var a = document.getElementById('guest-ag-notice'); if (a) a.style.display = 'none'; };
+renderDash = function () { var keep = DB.litters; DB.litters = pmLitterView(); try { _pmRenderDash(); } finally { DB.litters = keep; } };
+var _pmRenderAg = renderAg;
+renderAg = function () { _pmRenderAg(); var a = document.getElementById('guest-ag-notice'); if (a) a.style.display = 'none'; };
+function pmLitterBtns() {
+  var first = document.querySelector('.rate-litter-btn'); if (!first) return;
+  var box = first.parentNode;
+  box.innerHTML = '<button class="rate-litter-btn" data-litter="all" onclick="switchLitter(\'all\',this)">전체</button>' +
+    pmCols().map(function (c) { return '<button class="rate-litter-btn" data-litter="' + esc(c) + '" onclick="switchLitter(\'' + esc(c) + '\',this)">' + esc(c) + '</button>'; }).join('');
+  box.querySelectorAll('.rate-litter-btn').forEach(function (b) { b.classList.toggle('on', b.dataset.litter === 'all' ? pmCols().every(function (c) { return selLitters.has(c); }) : selLitters.has(b.dataset.litter)); });
+}
+function switchLitter(litter) {
+  rtPayP = 0; var cols = pmCols();
+  if (litter === 'all') selLitters = new Set(ALL_COLS);
+  else { if (selLitters.has(litter)) { selLitters.delete(litter); if (!cols.some(function (c) { return selLitters.has(c); })) selLitters = new Set(ALL_COLS); } else selLitters.add(litter); }
+  pmLitterBtns(); renderPay();
+}
+function renderPay() {
+  var rows = RATES_RAW[rtF] || [];
+  var activeCols = pmCols().filter(function (nm) { return selLitters.has(nm); });
+  var html = '<div class="rate-table-box"><table><thead><tr><th>항목</th><th style="text-align:right">기본단가</th>' +
+    activeCols.map(function (nm) { return '<th style="text-align:right">' + esc(nm) + '</th>'; }).join('') + '</tr></thead><tbody>';
+  rows.forEach(function (r) {
+    html += '<tr><td class="proj-nm">' + esc(r[0]) + '</td><td class="base-val">' + wn(r[1]) + '</td>' +
+      activeCols.map(function (nm) { return '<td class="rate-val">' + wn(r[ALL_COLS.indexOf(nm) + 2]) + '</td>'; }).join('') + '</tr>';
+  });
+  html += '</tbody></table></div>';
+  document.getElementById('mc-pay').innerHTML = rows.length ? html : '<div style="padding:24px;text-align:center;color:var(--txt3);font-size:12px">데이터 없음</div>';
+  document.getElementById('pi-rt-pay').textContent = ''; document.getElementById('pb-rt-pay').innerHTML = '';
+}
+function openRateEditMo() { window.open(PM_RATE_SHEET, '_blank'); }
+
+// ── 거래처·외주처 저장 → 01_거래처마스터 ──
+function saveAg() {
+  if (!canEdit()) return;
+  var name = gv('ag-name'); if (!name) { toast('거래처명을 입력해주세요'); return; }
+  var c = pmClient(name) || PM.clients.filter(function (x) { return x.ko === name || x.en === name || pmClientName(x) === name; })[0];
+  if (!c) { toast('새 거래처는 01_거래처마스터 거래처 탭에서 추가해주세요'); return; }
+  var cur = EI >= 0 ? DB.agencies[EI] : null;
+  postSheet('pm_update_client', { id: c.id, ceo: gv('ag-ceo'), biz: gv('ag-biz'), artists: gv('ag-artists') });
+  var mgr = gv('ag-manager');
+  if (mgr) {
+    var isCt = cur && cur.id && cur.id.indexOf('cl:') !== 0 && cur.manager === mgr;
+    postSheet(isCt ? 'pm_update_contact' : 'pm_add_contact', { id: isCt ? cur.id : '', client: c.disp, name: mgr, email: gv('ag-email'), tel: gv('ag-tel') });
+  }
+  closeMo('mo-ag');
+}
+function delAg(id) {
+  if (!canEdit()) return;
+  if (String(id).indexOf('cl:') === 0) { toast('거래처는 01_거래처마스터에서 비활성화해주세요'); return; }
+  if (!confirm('이 담당자를 목록에서 숨길까요? (시트 행은 지우지 않고 활성 체크만 해제)')) return;
+  postSheet('pm_off_contact', { id: id });
+}
+function saveLt() {
+  if (!canEdit()) return;
+  var name = gv('lt-name'); if (!name) { toast('이름을 입력해주세요'); return; }
+  var cur = EI >= 0 ? DB.litters[EI] : null;
+  var data = { id: cur ? cur.id : '', name: name, tax: document.getElementById('lt-tax').value, regId: gv('lt-regid'), addr: gv('lt-addr'), ceo: gv('lt-ceo'),
+               bank: document.getElementById('lt-bank').value, acct: gv('lt-acct'), email: gv('lt-email'), tel: gv('lt-tel') };
+  postSheet(cur ? 'pm_update_vendor' : 'pm_add_vendor', data);
+  closeMo('mo-lt');
+}
+function delLt(id) {
+  if (!canEdit()) return;
+  if (!confirm('이 외주처를 목록에서 숨길까요? (시트 행은 지우지 않고 활성 체크만 해제)')) return;
+  postSheet('pm_off_vendor', { id: id });
+}
+
+// ── 견적서(청구서) → _청구서 템플릿 · 03_청구서/<거래처> ──
+function initInvoiceTab() {
+  var agSel = document.getElementById('inv-client'); if (!agSel) return;
+  var cur = agSel.value;
+  agSel.innerHTML = '<option value="">거래처 선택</option>' + PM.clients.map(function (c) { return '<option value="' + esc(c.disp) + '">' + esc(c.disp) + '</option>'; }).join('');
+  if (cur) agSel.value = cur;
+  var agencySel = document.getElementById('inv-agency');
+  if (agencySel) {
+    var keep = agencySel.value, tabs = Object.keys(RATES_RAW);
+    agencySel.innerHTML = tabs.map(function (k) { return '<option value="' + esc(k) + '">' + esc(k) + '</option>'; }).join('') + '<option value="">단가표 없음 (직접 입력)</option>';
+    agencySel.value = keep || tabs[0] || '';
+  }
+  var today = tbToday();
+  ['inv-write', 'inv-done', 'inv-date'].forEach(function (id) { var el = document.getElementById(id); if (el && !el.value) el.value = today; });
+  if (INV_ITEMS.length === 0) addInvItem(); else onInvAgencyChange();
+  calcInvTotal();
+}
+function onInvClientDirectCheck() { onInvClientChange(); }
+function onInvClientChange() {
+  var c = pmClient(gv('inv-client'));
+  var mg = document.getElementById('inv-manager');
+  if (mg) mg.innerHTML = '<option value="">담당자 선택</option>' + PM.contacts.filter(function (k) { return c && k.client === c.disp; })
+    .map(function (k) { return '<option value="' + esc(k.name) + '">' + esc(k.name) + (k.dept ? ' (' + esc(k.dept) + ')' : '') + '</option>'; }).join('') + '<option value="__direct__">직접 입력</option>';
+  var ar = document.getElementById('inv-artist');
+  if (ar) ar.innerHTML = '<option value="">아티스트 선택</option>' + PM.artists.filter(function (a) { return c && a.client === c.disp; })
+    .map(function (a) { return '<option value="' + esc(a.disp) + '">' + esc(a.disp) + '</option>'; }).join('') + '<option value="__direct__">직접 입력</option>';
+  var ag = document.getElementById('inv-agency');
+  if (ag && c) { ag.value = c.rateTab || ''; onInvAgencyChange(); }
+}
+function onInvTypeChange(id) {
+  var typeSel = document.getElementById('inv-type-' + id); if (!typeSel) return;
+  if (typeSel.value === '__direct__') { openDirectInput('작업유형 직접 입력', '작업유형', '작업유형 입력', function (val) { var o = document.createElement('option'); o.value = val; o.textContent = val; typeSel.insertBefore(o, typeSel.lastChild); typeSel.value = val; calcInvTotal(); }); return; }
+  var tab = gv('inv-agency'), row = (RATES_RAW[tab] || []).filter(function (r) { return r[0] === typeSel.value; })[0];
+  if (!row) { calcInvTotal(); return; }
+  var prem = document.getElementById('inv-premium-' + id) && document.getElementById('inv-premium-' + id).checked;
+  var price = prem ? ((PM.prem[tab] || {})[row[0]] || row[1]) : row[1];
+  var p = document.getElementById('inv-price-' + id); if (p) p.value = price ? Number(price).toLocaleString('ko-KR') : '';
+  var ds = document.getElementById('inv-desc-' + id); if (ds && !ds.value) ds.value = row[0];
+  calcInvTotal();
+}
+function getItemAmount(id) {
+  var qty = parseFloat((document.getElementById('inv-qty-' + id) || {}).value) || 0, price = getPriceVal(id);
+  var urgent = document.getElementById('inv-urgent-' + id) && document.getElementById('inv-urgent-' + id).checked;
+  return urgent ? qty * price * 1.25 : qty * price;
+}
+function calcInvTotal() {
+  var sub = 0;
+  INV_ITEMS.forEach(function (it) { var a = getItemAmount(it.id); sub += a; var el = document.getElementById('inv-amount-' + it.id); if (el) el.textContent = tbWon(a); });
+  var vat = sub * 0.1; // 부가세 반올림 안 함
+  var s = document.getElementById('inv-subtotal'), v = document.getElementById('inv-vat'), t = document.getElementById('inv-total');
+  if (s) s.textContent = tbWon(sub); if (v) v.textContent = tbWon(vat); if (t) t.textContent = tbWon(sub + vat);
+}
+function submitInvoice() {
+  var client = gv('inv-client'); if (!client) { toast('거래처를 선택해주세요'); return; }
+  var items = INV_ITEMS.map(function (it) {
+    return { desc: (document.getElementById('inv-desc-' + it.id) || {}).value || '', type: (document.getElementById('inv-type-' + it.id) || {}).value || '',
+             qty: parseFloat((document.getElementById('inv-qty-' + it.id) || {}).value) || 0, unitPrice: getPriceVal(it.id),
+             urgent: !!(document.getElementById('inv-urgent-' + it.id) || {}).checked };
+  }).filter(function (i) { return i.qty > 0; });
+  if (!items.length) { toast('작업 항목을 입력해주세요'); return; }
+  var btn = document.querySelector('#tab-invoice button[onclick="submitInvoice()"]');
+  if (btn) { btn.disabled = true; btn.textContent = '생성 중...'; }
+  var payload = { client: client, project: gv('inv-project'), manager: gv('inv-manager') === '__direct__' ? '' : gv('inv-manager'), artist: gv('inv-artist'),
+                  writeDate: gv('inv-write') || gv('inv-date') || tbToday(), workLink: gv('inv-link'), items: items };
+  fetch(AS_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ action: 'pm_create_invoice', data: payload, k: PM_K }) })
+    .then(function (r) { return r.json(); })
+    .then(function (res) {
+      if (btn) { btn.disabled = false; btn.textContent = '구글 시트로 견적서 생성'; }
+      var el = document.getElementById('inv-result'); if (!el) return; el.style.display = 'block';
+      if (res.ok) {
+        toast('견적서 생성 완료!');
+        el.innerHTML = '<div style="background:rgba(52,211,153,.08);border:1px solid rgba(52,211,153,.2);border-radius:10px;padding:14px 16px"><div style="font-size:12px;font-weight:700;color:var(--grn);margin-bottom:8px">✓ 03_청구서/' + esc(res.folder) + ' 에 만들었어요</div><div style="font-size:11px;color:var(--txt2);margin-bottom:10px">' + esc(res.name) + '</div><a href="' + res.url + '" target="_blank" class="btn btn-p" style="display:inline-flex;text-decoration:none">구글 시트 열기 →</a></div>';
+      } else {
+        toast('생성 실패: ' + (res.error || ''));
+        el.innerHTML = '<div style="background:rgba(255,95,95,.08);border:1px solid rgba(255,95,95,.2);border-radius:10px;padding:12px 16px;font-size:12px;color:var(--danger)">오류: ' + esc(res.error || '') + '</div>';
+      }
+    })
+    .catch(function () { if (btn) { btn.disabled = false; btn.textContent = '구글 시트로 견적서 생성'; } toast('연결 실패'); });
+}
+
+/* ───── 발행·지급 문구 (카톡용) : 세금계산서 발행 / 외주용역 지급 ───── */
+// 금액 읽기: 10000 · 10,000원 · 1만원 · 1만 5천원 · 2.5만 · 238천원
+function pmMoney(s) {
+  s = String(s == null ? '' : s).replace(/[,\s원₩]/g, '');
+  if (!s) return 0;
+  if (/^[\d.]+$/.test(s)) return Number(s) || 0;
+  var total = 0, m, re = /([\d.]+)(억|만|천|백)?/g, unit = { '억': 1e8, '만': 1e4, '천': 1e3, '백': 1e2 };
+  var big = s.match(/^([\d.]+)?억(.*)$/);
+  if (big) { total += (Number(big[1] || 1)) * 1e8; s = big[2]; }
+  var man = s.match(/^([\d.천백]+)?만(.*)$/);
+  if (man) { total += pmMoneySmall(man[1] || '1') * 1e4; s = man[2]; }
+  total += pmMoneySmall(s);
+  return Math.round(total * 100) / 100;
+}
+function pmMoneySmall(s) {
+  if (!s) return 0; var t = 0, m;
+  if ((m = s.match(/^([\d.]+)?천(.*)$/))) { t += Number(m[1] || 1) * 1000; s = m[2]; }
+  if ((m = s.match(/^([\d.]+)?백(.*)$/))) { t += Number(m[1] || 1) * 100; s = m[2]; }
+  if (s && /^[\d.]+$/.test(s)) t += Number(s);
+  return t;
+}
+function pmWithholding(amt) { var x = Math.round(amt * 0.033 * 100) / 100; return Math.ceil(x / 10 - 1e-9) * 10; } // 원천세 3.3% · 1원 단위 올림(536→540)
+function pmNorm(x) { return String(x || '').replace(/\s+/g, '').toLowerCase(); }
+// 아티스트명/멤버명 → 아티스트 · 거래처
+function pmFindArtist(q) {
+  var n = pmNorm(tbN(q) || q); if (!n) return null;
+  var hit = PM.artists.filter(function (a) { return [a.ko, a.en, a.label, a.disp].some(function (v) { return v && (pmNorm(v) === n || pmNorm(tbN(v)) === n); }); });
+  if (!hit.length) {
+    var mem = PM.members.filter(function (m) { return pmNorm(m.name) === n; });
+    if (mem.length) hit = PM.artists.filter(function (a) { return mem.some(function (m) { return m.artist === a.disp; }); });
+  }
+  if (!hit.length) hit = PM.artists.filter(function (a) { return [a.ko, a.en, a.label].some(function (v) { return v && pmNorm(v).indexOf(n) === 0; }); });
+  return hit.length ? { artist: hit[0], all: hit } : null;
+}
+var PF = { mode: 'tax' };
+function pfEl(id) { return document.getElementById(id); }
+function pfV(id) { var e = pfEl(id); return e ? e.value.trim() : ''; }
+function pfSet(id, v) { var e = pfEl(id); if (e) e.value = v == null ? '' : v; }
+function initTaxBill() {
+  var box = pfEl('tab-taxbill'); if (!box) return;
+  if (!box.dataset.pf) {
+    box.dataset.pf = '1';
+    box.innerHTML =
+      '<div class="tb-box"><div style="display:flex;gap:6px;margin-bottom:10px">' +
+        '<button class="btn btn-p" id="pf-m-tax" type="button" onclick="pfMode(\'tax\')">세금계산서 발행</button>' +
+        '<button class="btn btn-g" id="pf-m-pay" type="button" onclick="pfMode(\'pay\')">외주용역 지급</button>' +
+        '<button class="btn btn-g" type="button" style="margin-left:auto" onclick="pfDocs()">청구서·지급내역서에서 불러오기</button></div>' +
+        '<label class="fl" for="pf-quick" id="pf-quick-l">아티스트(또는 멤버), 담당자, 공급가액</label>' +
+        '<input class="fi" id="pf-quick" autocomplete="off">' +
+        '<div class="tb-hint" id="pf-hint"></div>' +
+        '<div id="pf-docs" style="display:none;margin-top:10px"><select class="fi sm" id="pf-doc" style="width:100%"></select></div></div>' +
+      '<div class="tb-box" id="pf-form"></div>' +
+      '<div class="tb-box"><div class="tb-head"><span class="fl" style="margin:0" id="pf-out-l">발행 요청 문구</span><button class="btn btn-p" id="pf-copy" type="button">복사</button></div>' +
+        '<textarea class="fi tb-out" id="pf-out" rows="11" spellcheck="false"></textarea>' +
+        '<div class="tb-hint">문구를 직접 고쳐서 복사해도 돼요. 입력칸을 바꾸면 다시 만들어져요.</div></div>';
+    pfEl('pf-quick').addEventListener('input', pfQuick);
+    pfEl('pf-copy').addEventListener('click', pfCopy);
+    pfEl('pf-doc').addEventListener('change', function () { pfLoadDoc(this.value); });
+  }
+  pfMode(PF.mode, true);
+}
+function pfMode(m, keep) {
+  PF.mode = m;
+  pfEl('pf-m-tax').className = 'btn ' + (m === 'tax' ? 'btn-p' : 'btn-g');
+  pfEl('pf-m-pay').className = 'btn ' + (m === 'pay' ? 'btn-p' : 'btn-g');
+  pfEl('pf-quick-l').textContent = m === 'tax' ? '아티스트(또는 멤버), 담당자, 공급가액' : '아티스트(또는 멤버), 리터쳐, 공급가액';
+  pfEl('pf-quick').placeholder = m === 'tax' ? '예) 앤팀, 문성언, 2349000' : '예) 에이엔, 강영순, 23만8천원';
+  pfEl('pf-out-l').textContent = m === 'tax' ? '계산서 발행 요청 문구' : '외주비용 지급 문구';
+  var f = function (id, label, attr) { return '<div class="fg"><label class="fl" for="' + id + '">' + label + '</label><input class="fi sm" id="' + id + '"' + (attr || '') + '></div>'; };
+  var html = m === 'tax'
+    ? '<div class="row2">' + f('pf-artist', '아티스트') + f('pf-work', '작업', ' value="리터칭"') + '</div>' +
+      '<div class="row2"><div class="fg"><label class="fl" for="pf-client">거래처</label><select class="fi sm" id="pf-client"></select></div>' + f('pf-cname', '계산서 거래처명') + '</div>' +
+      '<div class="row2">' + f('pf-ceo', '대표자') + f('pf-biz', '사업자등록번호') + '</div>' +
+      '<div class="row2">' + f('pf-mgr', '담당자', ' list="pf-mgr-list"') + f('pf-email', '메일주소', ' inputmode="email"') + '</div><datalist id="pf-mgr-list"></datalist>' +
+      '<div class="row2">' + f('pf-taxmail', '계산서 수신메일 (있을 때만)') + f('pf-date', '청구일자', ' type="date"') + '</div>' +
+      '<label class="tb-save" id="pf-save-wrap" hidden><input type="checkbox" id="pf-save" checked> 새 담당자예요. 복사할 때 01_거래처마스터 담당자 탭에 추가</label>' +
+      '<div class="row2">' + f('pf-amt', '공급가액', ' inputmode="numeric"') + '<div class="fg"></div></div>'
+    : '<div class="row2">' + f('pf-artist', '아티스트') + f('pf-work', '작업', ' value="리터칭"') + '</div>' +
+      '<div class="row2">' + f('pf-mgr', '거래처 담당자 (선택)', ' list="pf-mgr-list"') + f('pf-note', '추가 설명 (선택, 예: 일본)') + '</div><datalist id="pf-mgr-list"></datalist>' +
+      '<div class="row2"><div class="fg"><label class="fl" for="pf-vendor">지급처</label><select class="fi sm" id="pf-vendor"></select></div>' + f('pf-tax', '세금구분') + '</div>' +
+      '<div class="row2">' + f('pf-reg', '주민등록번호 / 사업자등록번호') + f('pf-corp', '회사명 (사업자만)') + '</div>' +
+      '<div class="row2">' + f('pf-bank', '은행') + f('pf-acct', '계좌번호') + '</div>' +
+      '<div class="row2">' + f('pf-amt', '공급가액', ' inputmode="numeric"') + '<div class="fg"></div></div>';
+  pfEl('pf-form').innerHTML = html;
+  if (m === 'tax') {
+    pfEl('pf-client').innerHTML = '<option value="">거래처 선택</option>' + PM.clients.map(function (c) { return '<option value="' + esc(c.disp) + '">' + esc(pmClientName(c)) + '</option>'; }).join('');
+    pfEl('pf-client').addEventListener('change', function () { pfFillClient(); pfBuild(); });
+    pfSet('pf-date', tbToday());
+  } else {
+    pfEl('pf-vendor').innerHTML = '<option value="">지급처 선택</option>' + PM.vendors.filter(function (v) { return !pmHidden(v.name); }).map(function (v) { return '<option value="' + esc(v.name) + '">' + esc(v.name) + ' · ' + esc(v.tax) + '</option>'; }).join('');
+    pfEl('pf-vendor').addEventListener('change', function () { pfFillVendor(); pfBuild(); });
+  }
+  pfEl('pf-form').querySelectorAll('input').forEach(function (e) { e.addEventListener('input', function () { if (e.id === 'pf-mgr') pfFillMgr(); if (e.id === 'pf-artist') pfFillArtist(); pfBuild(); }); });
+  pfEl('pf-amt').addEventListener('blur', function () { var n = pmMoney(this.value); this.value = n ? tbWon(n) : ''; pfBuild(); });
+  if (!keep) pfEl('pf-quick').value = '';
+  pfQuick();
+}
+function pfQuick() {
+  var parts = pfV('pf-quick').split(/(?<!\d),|,(?!\d{3}(?!\d))|[，\t\/]|\s{2,}/).map(function (x) { return x.trim(); }).filter(Boolean);
+  var hint = pfEl('pf-hint');
+  if (!parts.length) { hint.classList.remove('warn'); hint.textContent = '쉼표로 구분해서 넣으면 나머지는 PITCH_DB에서 찾아 채워요. 금액은 10000 · 10,000원 · 1만원 모두 돼요.'; pfBuild(); return; }
+  pfSet('pf-artist', parts[0] || '');
+  if (PF.mode === 'tax') pfSet('pf-mgr', parts[1] || ''); else { var vn = (parts[1] || '').trim(), sel = pfEl('pf-vendor'); if (vn) sel.value = PM.vendors.some(function (v) { return v.name === vn && !pmHidden(v.name); }) ? vn : ''; }
+  var amt = pmMoney(parts[2] || ''); pfSet('pf-amt', amt ? tbWon(amt) : '');
+  var msg = pfFillArtist();
+  if (PF.mode === 'pay') { pfFillVendor(); if (parts[1] && !pfV('pf-vendor')) msg += ' · "' + parts[1] + '" 지급처를 못 찾았어요'; }
+  pfFillMgr();
+  hint.classList.toggle('warn', /못 찾/.test(msg)); hint.textContent = msg;
+  pfBuild();
+}
+function pfFillArtist() {
+  var q = pfV('pf-artist'), r = pmFindArtist(q), msg = '';
+  if (!q) return '';
+  if (r) {
+    PF.artist = r.artist;
+    if (PF.mode === 'tax') {
+      var mgr = pfV('pf-mgr'), byMgr = mgr ? PM.contacts.filter(function (k) { return k.name === mgr && r.all.some(function (a) { return a.client === k.client; }); })[0] : null;
+      pfEl('pf-client').value = byMgr ? byMgr.client : r.artist.client; pfFillClient();
+    }
+    msg = (r.artist.ko || r.artist.disp) + ' → ' + pmClientName(pmClient(r.artist.client)) + (r.all.length > 1 ? ' (여러 거래처: ' + r.all.map(function (a) { return a.client; }).join(', ') + ')' : '');
+  } else { PF.artist = null; msg = '"' + q + '" 아티스트·멤버를 못 찾았어요' + (PF.mode === 'tax' ? '. 거래처를 골라 주세요.' : ''); }
+  return msg;
+}
+function pfFillClient() {
+  var c = pmClient(pfV('pf-client'));
+  pfSet('pf-cname', pmClientName(c)); pfSet('pf-ceo', c ? c.ceo : ''); pfSet('pf-biz', c ? c.biz : ''); pfSet('pf-taxmail', pmTaxMail(c));
+  pfMgrList(c ? c.disp : '');
+  pfFillMgr();
+}
+function pfMgrList(disp) { var dl = pfEl('pf-mgr-list'); if (dl) dl.innerHTML = PM.contacts.filter(function (k) { return !disp || k.client === disp; }).map(function (k) { return '<option value="' + esc(k.name) + '">'; }).join(''); }
+function pfFillMgr() {
+  if (PF.mode === 'pay') { if (PF.artist) pfMgrList(PF.artist.client); return; }
+  var c = pmClient(pfV('pf-client')), mgr = pfV('pf-mgr');
+  var k = c && mgr ? PM.contacts.filter(function (x) { return x.client === c.disp && x.name === mgr; })[0] : null;
+  var em = pfEl('pf-email');
+  if (k) { em.value = k.email; em.dataset.auto = '1'; } else if (em.dataset.auto === '1') { em.value = ''; em.dataset.auto = '0'; }
+  pfEl('pf-save-wrap').hidden = !(c && mgr && !k);
+}
+function pfFillVendor() {
+  var v = PM.vendors.filter(function (x) { return x.name === pfV('pf-vendor'); })[0];
+  var biz = v && /사업자/.test(v.tax);
+  pfSet('pf-tax', v ? v.tax : ''); pfSet('pf-reg', v ? v.regId : ''); pfSet('pf-corp', v && biz ? v.ceo : '');
+  pfSet('pf-bank', v ? v.bank : ''); pfSet('pf-acct', v ? v.acct : '');
+}
+function pfTitleArtist() { var q = pfV('pf-artist'); return PF.artist && PF.artist.ko ? PF.artist.ko : q; }
+function pfText() {
+  var amt = pmMoney(pfV('pf-amt')), d = pfV('pf-date').replace(/-/g, '.'), t = '<' + [pfTitleArtist(), pfV('pf-work') || '리터칭'].filter(Boolean).join(' ');
+  if (PF.mode === 'tax') {
+    var vat = amt * 0.1, out = t + ' 계산서 발행>\n' +
+      '-거래처명: ' + pfV('pf-cname') + '\n-대표자: ' + pfV('pf-ceo') + '\n-사업자등록번호: ' + pfV('pf-biz') + '\n-담당자: ' + pfV('pf-mgr') + '\n-메일주소: ' + pfV('pf-email') + '\n';
+    var tm = pfV('pf-taxmail'); if (tm && tm !== pfV('pf-email')) out += '-계산서 수신메일: ' + tm + '\n';
+    return out + '-청구일자: ' + d + '\n-공급가액: ' + tbWon(amt) + '원\n-부가세: ' + tbWon(vat) + '원\n-최종지급액\n' + tbWon(amt + vat) + '원 (vat 10% 포함)';
+  }
+  var head = t + [pfV('pf-mgr'), pfV('pf-note')].filter(Boolean).map(function (x) { return ' ' + x; }).join('') + ' 외주비용 지급>\n';
+  var bankLine = '-(은행) 계좌번호: (' + pfV('pf-bank') + ') ' + pfV('pf-acct') + '\n';
+  if (/사업자/.test(pfV('pf-tax'))) {
+    var v2 = amt * 0.1; // 부가세는 반올림 안 함
+    return head + '-지급처: ' + pfV('pf-vendor') + '\n-사업자등록번호: ' + pfV('pf-reg') + '\n-회사명 (대표자): ' + pfV('pf-corp') + ' (' + pfV('pf-vendor') + ')\n' + bankLine +
+      '-공급가액: ' + tbWon(amt) + '원\n-부가세: ' + tbWon(v2) + '원\n-최종지급액\n' + tbWon(amt + v2) + '원 (vat 10% 포함)';
+  }
+  var wt = pmWithholding(amt);
+  return head + '-지급처: ' + pfV('pf-vendor') + '\n-주민등록번호: ' + pfV('pf-reg') + '\n' + bankLine +
+    '-공급가액: ' + tbWon(amt) + '원\n-원천세: -' + tbWon(wt) + '원\n-최종지급액: \n' + tbWon(amt - wt) + '원 (3.3% 차감)';
+}
+function pfBuild() { var o = pfEl('pf-out'); if (o) o.value = pfText(); }
+function pfCopy() {
+  if (PF.mode === 'tax') {
+    var c = pmClient(pfV('pf-client')), mgr = pfV('pf-mgr');
+    if (!pfEl('pf-save-wrap').hidden && pfEl('pf-save').checked && c && mgr) { postSheet('pm_add_contact', { client: c.disp, name: mgr, email: pfV('pf-email') }); pfEl('pf-save-wrap').hidden = true; }
+  }
+  cp(pfEl('pf-out').value, null);
+}
+// 청구서·지급내역서에서 불러오기 (읽기만)
+function pfDocs() {
+  var wrap = pfEl('pf-docs'), sel = pfEl('pf-doc');
+  wrap.style.display = ''; sel.innerHTML = '<option>불러오는 중...</option>';
+  fetch(AS_URL + '?api=pm&docs=1' + pmQ() + '&t=' + Date.now()).then(function (r) { return r.json(); }).then(function (d) {
+    var want = PF.mode === 'tax' ? 'invoice' : 'pay';
+    var list = (d.docs || []).filter(function (x) { return x.type === want && !(pmGuest() && PM_HIDE.some(function (h) { return x.name.indexOf('<' + h + '>') >= 0; })); });
+    sel.innerHTML = '<option value="">' + (want === 'invoice' ? '청구서(견적서)' : '지급내역서') + ' 선택 (최근 수정순)</option>' + list.map(function (x) { return '<option value="' + x.id + '">' + esc(x.name.replace(/^\[PITCH\]/, '')) + '</option>'; }).join('');
+  }).catch(function () { sel.innerHTML = '<option>불러오기 실패</option>'; });
+}
+function pfLoadDoc(id) {
+  if (!id) return; var hint = pfEl('pf-hint'); hint.textContent = '파일 읽는 중...';
+  fetch(AS_URL + '?api=pm&doc=' + encodeURIComponent(id) + pmQ() + '&t=' + Date.now()).then(function (r) { return r.json(); }).then(function (o) {
+    if (!o.ok) { hint.textContent = '읽기 실패: ' + (o.error || ''); return; }
+    pfEl('pf-quick').value = '';
+    pfSet('pf-artist', o.artist); pfFillArtist();
+    if (o.type === 'invoice') {
+      var c = PM.clients.filter(function (x) { return x.key === o.clientKey || x.label === o.client || x.disp === o.client; })[0];
+      if (c) { pfEl('pf-client').value = c.disp; pfFillClient(); }
+      pfSet('pf-mgr', o.contact); pfFillMgr(); if (o.date) pfSet('pf-date', o.date);
+    } else {
+      pfSet('pf-note', o.note); pfEl('pf-vendor').value = PM.vendors.some(function (v) { return v.name === o.worker; }) ? o.worker : ''; pfFillVendor();
+      if (o.rate > 0) pfSet('pf-tax', '사업자'); else if (o.rate < 0) pfSet('pf-tax', '원천세');
+    }
+    pfSet('pf-amt', o.sub ? tbWon(o.sub) : '');
+    hint.classList.remove('warn'); hint.textContent = o.name.replace(/^\[PITCH\]/, '') + ' 에서 불러왔어요 (공급가액 ' + tbWon(o.sub || 0) + '원)';
+    pfBuild();
+  }).catch(function () { hint.textContent = '읽기 실패'; });
+}
+(function () { var t = document.getElementById('tab-btn-taxbill'); if (t) t.textContent = '발행·지급 문구'; })();
+
 </script>
 <script>
 // 2026-10-11: 한 번 로그인하면 이 기기·브라우저에서는 로그아웃 전까지 비밀번호 없이 바로 접속
