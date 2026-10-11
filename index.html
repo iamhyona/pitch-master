@@ -172,17 +172,13 @@ select.fi option{background:var(--sur2)}
 <div id="login-screen">
   <div class="login-box">
     <div class="login-logo">PITCH <span style="color:var(--txt2);font-weight:400">MASTER</span></div>
-    <div class="login-sub">비밀번호를 입력해주세요</div>
-    <div class="login-role-btns">
-      <button class="role-btn" onclick="selectRole('guest',this)">게스트</button>
-      <button class="role-btn" onclick="selectRole('admin',this)">관리자</button>
-    </div>
-    <div class="login-pw-wrap" id="login-pw-wrap">
+    <div class="login-sub">비밀번호만 입력하면 게스트·관리자가 자동으로 구분돼요</div>
+    <div class="login-pw-wrap show" id="login-pw-wrap">
       <input class="fi" id="login-pw" type="password" placeholder="비밀번호" style="letter-spacing:.15em" onkeydown="if(event.key==='Enter')doLogin()">
       <button class="btn btn-p" onclick="doLogin()" style="flex-shrink:0;height:40px;padding:0 16px">확인</button>
     </div>
     <div class="login-err" id="login-err"></div>
-    <button class="login-btn" id="login-btn" onclick="doLogin()" disabled>접속</button>
+    <button class="login-btn" id="login-btn" onclick="doLogin()">접속</button>
   </div>
 </div>
 
@@ -1600,7 +1596,7 @@ function doLogin() {
   });
 }
 var _pmLogout = doLogout;
-doLogout = function () { PM_K = ''; try { localStorage.removeItem('pm_v2'); } catch (e) {} _pmLogout(); };
+doLogout = function () { PM_K = ''; try { localStorage.removeItem('pm_v2'); } catch (e) {} _pmLogout(); var w = document.getElementById('login-pw-wrap'); if (w) w.classList.add('show'); var b = document.getElementById('login-btn'); if (b) b.disabled = false; }; // 2026-10-11: 역할 버튼 없이 비밀번호만
 var PM = { clients: [], contacts: [], artists: [], members: [], vendors: [], prem: {}, loaded: false };
 try { var _pmc = JSON.parse(localStorage.getItem('pm_v2') || 'null'); if (_pmc && _pmc.clients) { PM = _pmc; PM.loaded = false; } } catch (e) {}
 
