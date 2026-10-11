@@ -969,6 +969,7 @@ function renderLt(){
     cards+='<div class="mc lt-c" id="ltm'+i+'">'
       +'<div class="lt-h"><span class="mc-name">'+esc(l.name)+'</span><span class="tag '+(biz?'t-g':'t-t')+'">'+esc(l.tax)+'</span></div>'
       +(detail?'<div class="lt-p">'
+        +(biz&&l.corp?row('사업자명',l.corp,'ltmc-corp'+i):'')
         +row(biz?'사업자번호':'주민번호',l.regId,'ltmc-rid'+i,biz&&l.ceo?'<span class="copyable" id="ltmc-ceo'+i+'">'+esc(l.ceo)+'</span><span style="color:var(--faint)">/</span>':'')
         +row('계좌',l.acct||(l.bank?'':'-'),'ltmc-acct'+i,l.bank?'<span class="bank-tag">'+esc(l.bank)+'</span>':'')
         +row('메일',l.email,'ltmc-email'+i)
@@ -992,6 +993,7 @@ function renderLt(){
       var emailEl=document.getElementById('ltmc-email'+i);if(emailEl&&l.email)(function(v,el){el.addEventListener('click',function(){cp(v,el);});})(l.email,emailEl);
       var telEl=document.getElementById('ltmc-tel'+i);if(telEl&&l.tel)(function(v,el){el.addEventListener('click',function(){cp(v,el);});})(l.tel,telEl);
       var addrEl=document.getElementById('ltmc-addr'+i);if(addrEl&&l.addr)(function(v,el){el.addEventListener('click',function(){cp(v,el);});})(l.addr,addrEl);
+      if(l.corp){var pEl=document.getElementById('ltmc-corp'+i);if(pEl)(function(v,el){el.addEventListener('click',function(){cp(v,el);});})(l.corp,pEl);}
       if(l.ceo){var cEl=document.getElementById('ltmc-ceo'+i);if(cEl)(function(v,el){el.addEventListener('click',function(){cp(v,el);});})(l.ceo,cEl);}
       if(canEdit()){
         var ed=document.getElementById('lted'+i);var dl=document.getElementById('ltdl'+i);
@@ -1637,7 +1639,7 @@ function pmApply(d) {
     cts.forEach(function (k) { ag.push(Object.assign({ id: k.id, manager: k.name, email: k.email, tel: k.tel, dept: k.dept }, base)); });
   });
   DB.agencies = ag;
-  DB.litters = PM.vendors.map(function (v) { return { id: v.id, tax: v.tax, name: v.name, regId: v.regId, addr: v.addr, bank: v.bank, acct: v.acct, email: v.email, tel: v.tel, ceo: v.ceo }; });
+  DB.litters = PM.vendors.map(function (v) { return { id: v.id, tax: v.tax, name: v.name, regId: v.regId, addr: v.addr, bank: v.bank, acct: v.acct, email: v.email, tel: v.tel, ceo: v.ceo, corp: v.corp }; });
   RATES_RAW = {};
   Object.keys(d.rates || {}).forEach(function (tab) {
     PM.prem[tab] = {};
