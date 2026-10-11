@@ -3,7 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>Pitch Master</title>
+<title>PITCH</title>
+<meta name="theme-color" content="#f2f4f6">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Asta+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
 :root{
@@ -171,11 +173,10 @@ select.fi option{background:var(--sur2)}
 
 <div id="login-screen">
   <div class="login-box">
-    <div class="login-logo">PITCH <span style="color:var(--txt2);font-weight:400">MASTER</span></div>
+    <div class="login-logo">PITCH</div>
     <div class="login-sub"></div>
     <div class="login-pw-wrap show" id="login-pw-wrap">
       <input class="fi" id="login-pw" type="password" placeholder="비밀번호" style="letter-spacing:.15em" onkeydown="if(event.key==='Enter')doLogin()">
-      <button class="btn btn-p" onclick="doLogin()" style="flex-shrink:0;height:40px;padding:0 16px">확인</button>
     </div>
     <div class="login-err" id="login-err"></div>
     <button class="login-btn" id="login-btn" onclick="doLogin()">접속</button>
@@ -184,12 +185,15 @@ select.fi option{background:var(--sur2)}
 
 <div id="app" style="display:none">
   <header>
-    <div class="logo" onclick="switchTab('dash')">PITCH<span> MASTER</span></div>
-    <span id="role-tag"></span>
-    <button class="btn btn-g" id="edit-mode-btn" onclick="toggleEditMode()" style="display:none">편집하기</button>
-    <a href="https://docs.google.com/spreadsheets/d/16NnrXF6ZuqlzfQTaxP29vmONL5h9cLr4sLXhWyDmYVg/edit" target="_blank" class="btn btn-g">시트 열기</a>
-    <button class="btn btn-g" id="pw-set-btn" onclick="pmPwOpen()" style="display:none">비밀번호</button>
-    <button class="btn btn-g" onclick="doLogout()">로그아웃</button>
+    <div class="hd">
+      <div class="hl"><button class="brand" onclick="switchTab('dash')">PITCH</button><span id="role-tag"></span></div>
+      <div class="hr">
+        <button class="ib" id="edit-mode-btn" onclick="toggleEditMode()" style="display:none" aria-label="편집하기" title="편집하기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg></button>
+        <a class="ib" href="https://docs.google.com/spreadsheets/d/16NnrXF6ZuqlzfQTaxP29vmONL5h9cLr4sLXhWyDmYVg/edit" target="_blank" aria-label="시트 열기" title="시트 열기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M3 9h18M3 15h18M9 3v18"/></svg></a>
+        <button class="ib" id="pw-set-btn" onclick="pmPwOpen()" style="display:none" aria-label="비밀번호 바꾸기" title="비밀번호 바꾸기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="15" r="4"/><path d="M10.8 12.2L20 3M17 6l3 3M14 9l2 2"/></svg></button>
+        <button class="ib" onclick="doLogout()" aria-label="로그아웃" title="로그아웃"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5M21 12H9"/></svg></button>
+      </div>
+    </div>
   </header>
   <div class="tabs-wrapper">
     <div class="tabs">
@@ -2105,18 +2109,12 @@ function pmPwSave() {
 .wo-empty{padding:22px 16px;text-align:center;color:var(--txt3);font-size:12px}
 .md.wide{max-width:1000px}
 /* 2026-10-12: 모바일 정리 — 헤더 버튼 줄바꿈, 날짜칸·버튼줄이 박스 밖으로 튀어나가지 않게 */
-.logo,.logo span,#role-tag span{white-space:nowrap}
 .row2>*,.fg{min-width:0}
 .fi{min-width:0;max-width:100%}
 input[type=date].fi{-webkit-appearance:none;appearance:none;display:block;min-height:34px;line-height:1.3;text-align:left}
 input[type=date].fi::-webkit-date-and-time-value{text-align:left}
 @media(max-width:640px){
-  header{flex-wrap:wrap;height:auto;padding:10px 16px;row-gap:8px;column-gap:6px}
-  header .logo{flex:1 1 calc(100% - 60px)}
-  #role-tag{flex:0 0 auto}
-  header .btn{flex:1 1 64px;min-width:0;height:30px;padding:0 6px;font-size:11px}
   #tab-taxbill .tb-box button[style*="margin-left:auto"]{margin-left:0!important}
-  .ci{padding:18px 16px 80px}
   .md-b{padding:12px}
   .tc-t .wo-sub{display:none}
 }
@@ -2380,6 +2378,137 @@ var _woRenderDash = renderDash;
 renderDash = function () { _woRenderDash(); if (!WO.loaded && !WO.loading && PM_K) woLoad(false); else woRender(); };
 var _woLogout = doLogout;
 doLogout = function () { WO = { items: [], folders: [], root: '', folder: '', q: '', loaded: false, loading: false, cur: null, tab: 0, opts: null }; closeMo('mo-wo'); _woLogout(); };
+</script>
+<style>
+/* ═══ 2026-10-12: 루틴·SCHEDULE·가계부·PROOF와 같은 밝은 디자인으로 통일 ═══ */
+:root{
+  --bg:#f2f4f6;--sur:#fff;--sur2:#f2f4f6;--bdr:#e5e8eb;--line:#e5e8eb;
+  --acc:#3182f6;--acc2:#3182f6;--danger:#ef4444;
+  --txt:#191f28;--txt2:#4e5968;--txt3:#8b95a1;--faint:#b0b8c1;--chip:#f2f4f6;
+  --grn:#10b981;--gold:#d97706;--teal:#0891b2;--purple:#7c5cff;
+}
+html,body{background:var(--bg);color:var(--txt);font-family:'Pretendard Variable',Pretendard,-apple-system,sans-serif;font-size:15px;letter-spacing:-0.01em;color-scheme:light}
+button,input,select,textarea,.btn,.fi,.ft,.srch input,.role-btn,.login-btn,.rate-litter-btn,.rate-agency-select,.wo-chip,.wo-srch,.wo-t input{font-family:inherit!important;letter-spacing:inherit}
+
+/* 상단: 이름 + 동그라미 아이콘 버튼 */
+header{position:relative;display:block;height:auto;background:var(--bg);border:0;padding:calc(10px + env(safe-area-inset-top)) 16px 0}
+header .hd{display:flex;align-items:center;justify-content:space-between;height:44px;max-width:700px;margin:0 auto;gap:8px}
+header .hl{display:flex;align-items:center;gap:8px;min-width:0}
+.brand{border:0;background:none;padding:0;font-size:19px;font-weight:800;letter-spacing:.06em;color:var(--txt);cursor:pointer}
+#role-tag span{background:var(--card,#fff)!important;color:var(--sub,#4e5968)!important;border-radius:999px!important;padding:3px 9px!important;font-size:11px!important;font-weight:700!important;white-space:nowrap}
+header .hr{display:flex;align-items:center;gap:5px;flex:none}
+.ib{width:38px;height:38px;border:0;border-radius:50%;background:#fff;display:inline-flex;align-items:center;justify-content:center;color:var(--txt2);padding:0;flex:none;cursor:pointer;text-decoration:none}
+.ib svg{width:18px;height:18px}
+.ib.on{background:var(--txt);color:#fff}
+
+/* 메뉴 탭 */
+.tabs-wrapper{background:var(--bg);border:0;padding:0 16px}
+.tabs{max-width:700px;margin:6px auto 0;padding:0;gap:20px;border-bottom:1px solid var(--line);min-width:0}
+.tab{padding:12px 0 10px;height:auto;font-size:13px;font-weight:700;letter-spacing:.02em;color:var(--faint);border-bottom:2px solid transparent;margin-bottom:-1px}
+.tab:hover{color:var(--txt2)}
+.tab.active{color:var(--txt);border-bottom-color:var(--txt)}
+.ci{padding:16px 16px 110px}
+
+/* 카드 */
+.tc,.mc,.sc,.tb-box,.rate-agency-box,.rate-litter-box,.rate-table-box,.login-box{background:#fff;border:0!important;border-radius:20px}
+.mc.open{box-shadow:0 0 0 2px var(--txt) inset}
+.tc-h{padding:16px 18px;border-bottom:1px solid var(--line)}
+.tc-t{font-size:16px;font-weight:800}
+.mc-head{padding:16px 18px}.mc-name{font-size:15px;font-weight:700}.mc-sub{font-size:12px}
+.mc-body{border-top:1px solid var(--line);padding:12px 18px}
+.mc-row,.mc-row-left,.mc-contact,.mc-actions{border-color:var(--line)!important}
+.mc-k{font-size:12px;text-transform:none}.mc-v{font-size:14px}
+.sc{padding:18px 20px}.sc-l{font-size:12px;font-weight:600;text-transform:none;color:var(--txt3)}.sc-v{font-size:24px;font-weight:800;color:var(--txt)!important}
+.tb-box{padding:20px;gap:12px}
+.rate-agency-label,.rate-litter-label{font-size:12px;text-transform:none;padding:16px 18px 8px}
+.rate-agency-wrap{padding:0 18px 16px}.rate-litter-wrap{padding:0 18px 14px}
+.stats{gap:8px}
+
+/* 표 */
+table{font-size:13px}
+th{background:#f9fafb;color:var(--txt3);font-size:11px;font-weight:700;text-transform:none;border-bottom:1px solid var(--line);padding:9px 14px}
+td{border-bottom:1px solid var(--line);padding:11px 14px}
+tr.dash-row:hover td,.wo-row:hover td{background:#f9fafb}
+.nm{font-size:14px}
+
+/* 입력칸 */
+.fl{font-size:12px;font-weight:600;text-transform:none;color:var(--txt3);margin:0 0 5px 2px}
+.fi,.rate-agency-select,.srch{background:var(--chip);border:0;border-radius:12px;color:var(--txt);font-size:15px;padding:11px 12px;min-height:44px}
+.fi.sm{font-size:15px;padding:10px 12px;min-height:42px}
+.fi:focus,.rate-agency-select:focus{box-shadow:0 0 0 2px var(--acc) inset;border:0}
+.fi::placeholder{color:var(--faint)}
+select.fi,.rate-agency-select{-webkit-appearance:none;appearance:none;background:var(--chip) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%238b95a1' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") no-repeat right 12px center;padding-right:34px}
+select.fi option,.rate-agency-select option{background:#fff;color:var(--txt)}
+.srch{height:44px;padding:0 14px}.srch input{font-size:15px}
+textarea.fi{line-height:1.6}
+
+/* 버튼 */
+.btn{height:36px;padding:0 14px;border-radius:10px;font-size:13px;font-weight:700}
+.btn-p{background:var(--txt);color:#fff}.btn-p:hover{background:#333d4b}
+.btn-g{background:var(--chip);color:var(--txt2);border:0}.btn-g:hover{color:var(--txt);background:#e5e8eb}
+.btn-danger{background:#fef2f2;color:var(--danger)}
+.login-btn{height:52px;border-radius:14px;background:var(--txt);font-size:16px}
+.ab{border:0;background:var(--chip);border-radius:50%;width:32px;height:32px}
+.ft{font-size:13px;padding:6px 12px;border-radius:999px}.ft.on{background:var(--txt);color:#fff}
+.pg{border-top:1px solid var(--line)}.pg-btn{border-radius:8px;width:30px;height:30px}.pg-btn.on{background:var(--txt)}
+.rate-litter-btn{background:var(--chip);border:0;border-radius:999px;padding:8px 13px;font-size:13px;color:var(--txt2)}
+.rate-litter-btn.on{background:var(--txt);color:#fff;border:0}
+.wo-chip{background:var(--chip);border:0;border-radius:999px;padding:7px 12px;font-size:13px;color:var(--txt2)}
+.wo-chip.on{background:var(--txt);color:#fff}.wo-chip.on b{color:rgba(255,255,255,.7)}
+.wo-srch{background:var(--chip);border:0;border-radius:999px;height:34px;font-size:14px}
+.wo-bar{padding:12px 18px;border-bottom:1px solid var(--line)}
+.wo-w{background:var(--chip);color:var(--txt2);font-size:11px;padding:2px 7px;border-radius:999px}
+.wo-info div{background:var(--chip);border-radius:12px}
+.wo-warn{background:#fef2f2;border:0;color:#dc2626;border-radius:12px}
+.wo-tw{border:1px solid var(--line);border-radius:14px}
+.wo-t input:focus{background:#fff;border-color:var(--acc)}
+.wo-t input.ch{background:#e8f3ff}
+.wo-ws label{background:var(--chip);border-radius:999px;padding:7px 12px;font-size:13px}
+.tag{border-radius:999px;font-size:11px;padding:2px 8px}
+.bank-tag{background:var(--chip);border-radius:999px}
+
+/* 팝업: 가운데 카드, 휴대폰에서는 아래에서 올라오는 시트 */
+.mo{background:rgba(0,0,0,.4)}
+.md{background:#fff;border:0;border-radius:24px}
+.md-h{padding:22px 20px 0}.md-t{font-size:20px;font-weight:800}
+.md-b{padding:16px 20px 20px;gap:12px}.md-f{padding:0 20px 20px}
+.xb{font-size:20px;color:var(--txt3)}
+@media(max-width:640px){
+  .mo{align-items:flex-end;padding:0}
+  .md{max-width:none!important;border-radius:24px 24px 0 0;max-height:92dvh;padding-bottom:env(safe-area-inset-bottom)}
+}
+
+/* 알림·안내 */
+.toast{background:rgba(25,31,40,.92);color:#fff;border:0;border-radius:14px;font-size:14px;padding:12px 18px;bottom:calc(30px + env(safe-area-inset-bottom))}
+.sync-bar{border:0;border-radius:12px;background:#e8f3ff;color:var(--acc)}
+.sync-bar.error{background:#fef2f2;color:var(--danger)}.sync-bar.success{background:#ecfdf5;color:var(--grn)}
+.guest-notice{background:#f5f3ff;border:0;border-radius:12px}
+
+/* 로그인 */
+#login-screen{background:var(--bg)}
+.login-box{padding:32px 24px;border-radius:24px}
+.login-logo{font-family:inherit;font-size:24px;font-weight:800;letter-spacing:.06em;color:var(--txt);margin-bottom:20px}
+.login-pw-wrap .fi{height:52px;font-size:16px}
+td{overflow-wrap:anywhere}
+.tc-t{white-space:nowrap}
+.tc-h .btn{height:32px;padding:0 11px;font-size:12px}
+.wo-info{grid-template-columns:repeat(auto-fill,minmax(140px,1fr))}
+.wo-row td:last-child{white-space:nowrap}
+@media(max-width:640px){
+  .wo-srch{flex:1 1 100%;max-width:none}
+  div[id^="inv-item-"] > div[style*="grid-template-columns:1fr 80px"]{grid-template-columns:1fr 1fr auto!important}
+  select[id^="inv-type-"]{grid-column:1/-1}
+}
+</style>
+<script>
+// 2026-10-12: 편집 버튼이 동그라미 아이콘이 되면서 글자 대신 켜짐(검정) 상태로 표시
+toggleEditMode = function () {
+  SESSION.editMode = !SESSION.editMode;
+  var btn = document.getElementById('edit-mode-btn');
+  btn.classList.toggle('on', SESSION.editMode);
+  btn.title = SESSION.editMode ? '편집 끝내기' : '편집하기'; btn.setAttribute('aria-label', btn.title);
+  updateEditUI(); renderAll(); toast(SESSION.editMode ? '편집 모드 켜짐' : '편집 모드 꺼짐');
+};
 </script>
 </body>
 </html>
