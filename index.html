@@ -967,14 +967,13 @@ function renderLt(){
     var biz=l.tax==='사업자';
     var row=function(k,v,id,extra){return '<div class="lt-r"><span class="lt-k">'+k+'</span><span class="lt-v">'+(extra||'')+'<span class="copyable" id="'+id+'">'+esc(v||'-')+'</span></span></div>';};
     cards+='<div class="mc lt-c" id="ltm'+i+'">'
-      +'<div class="lt-h"><span class="mc-name">'+esc(l.name)+'</span><span class="tag '+(biz?'t-g':'t-t')+'">'+esc(l.tax)+'</span></div>'
+      +'<div class="lt-h"><span class="mc-name">'+esc(l.name)+'</span><span class="tag '+(biz?'t-g':'t-t')+'">'+esc(l.tax)+'</span>'+(detail?'<button class="lt-tg" id="ltmh'+i+'" aria-label="추가정보 열기"><span class="mc-chv">⌄</span></button>':'')+'</div>'
       +(detail?'<div class="lt-p">'
         +(biz&&l.corp?row('사업자명',l.corp,'ltmc-corp'+i):'')
         +row(biz?'사업자번호':'주민번호',l.regId,'ltmc-rid'+i,biz&&l.ceo?'<span class="copyable" id="ltmc-ceo'+i+'">'+esc(l.ceo)+'</span><span style="color:var(--faint)">/</span>':'')
         +row('계좌',l.acct||(l.bank?'':'-'),'ltmc-acct'+i,l.bank?'<span class="bank-tag">'+esc(l.bank)+'</span>':'')
         +row('메일',l.email,'ltmc-email'+i)
       +'</div>'
-      +'<button class="lt-tg" id="ltmh'+i+'"><span>연락처 · 주소'+(!biz&&l.ceo?' · 대표명':'')+'</span><span class="mc-chv">⌄</span></button>'
       +'<div class="mc-body lt-p lt-more">'
         +row('연락처',l.tel,'ltmc-tel'+i)
         +row('주소',l.addr,'ltmc-addr'+i)
@@ -2524,9 +2523,10 @@ td{overflow-wrap:anywhere}
 .lt-k{flex:none;width:72px;font-size:12px;font-weight:600;color:var(--txt3)}
 .lt-v{flex:1;min-width:0;display:flex;align-items:center;gap:6px;flex-wrap:wrap;color:var(--txt);overflow-wrap:anywhere;text-align:left}
 .lt-v .copyable{padding:1px 0;text-decoration:none}
-.lt-tg{display:flex;align-items:center;justify-content:space-between;width:100%;border:0;background:none;padding:6px 0 8px;font-family:inherit;font-size:12px;font-weight:600;color:var(--txt3);cursor:pointer}
+.lt-tg{margin-left:auto;width:32px;height:32px;border:0;border-radius:50%;background:var(--chip);display:flex;align-items:center;justify-content:center;padding:0;color:var(--txt2);cursor:pointer}
+.lt-tg .mc-chv{font-size:14px;line-height:1;transition:transform .2s}
 .lt-c.open .lt-tg .mc-chv{transform:rotate(180deg)}
-.lt-c .mc-body.lt-more{border-top:0;padding:2px 0 10px;display:none}
+.lt-c .mc-body.lt-more{border-top:0;padding:0 0 10px;margin-top:-4px;display:none}
 .lt-c.open .mc-body.lt-more{display:flex}
 .lt-c.open{box-shadow:none}
 </style>
