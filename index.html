@@ -2525,5 +2525,101 @@ toggleEditMode = function () {
   updateEditUI(); renderAll(); toast(SESSION.editMode ? '편집 모드 켜짐' : '편집 모드 꺼짐');
 };
 </script>
+<style>
+/* 2026-10-12: 작업내역서 상세 — 모바일 레이아웃 (표 대신 줄 카드) */
+.md.wide{max-width:560px}
+.wd-sum{display:flex;flex-direction:column;gap:3px;margin-top:-6px}
+.wd-p{font-size:16px;font-weight:700;color:var(--txt);overflow-wrap:anywhere}
+.wd-m{font-size:13px;color:var(--txt3);overflow-wrap:anywhere}
+.wd-m small{font-size:11px;margin-left:1px}
+.wd-links{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
+.wd-links a{display:inline-flex;align-items:center;gap:4px;height:32px;padding:0 12px;border-radius:999px;background:var(--chip);color:var(--txt2);font-size:13px;font-weight:600;text-decoration:none}
+.wd-tabs{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;margin:0 -20px;padding:2px 20px}
+.wd-tabs::-webkit-scrollbar{display:none}
+.wd-tabs .wo-chip{flex:none}
+.wd-add{position:relative;flex:none;display:inline-flex;align-items:center;background:#fff!important;box-shadow:0 0 0 1px var(--line) inset;color:var(--txt3)!important}
+.wd-add select{position:absolute;inset:0;opacity:0;width:100%;cursor:pointer;font-size:16px}
+.wd-tot{display:flex;align-items:baseline;justify-content:space-between;gap:10px;padding:2px 2px 0}
+.wd-tot b{font-size:18px;font-weight:800}
+.wd-tot span{font-size:13px;color:var(--txt3);text-align:right}
+.wd-row{background:var(--chip);border-radius:16px;padding:12px}
+.wd-rh{display:flex;align-items:center;gap:8px}
+.wd-n{flex:none;width:22px;height:22px;border-radius:50%;background:#fff;color:var(--txt3);font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center}
+.wd-row input{border:0;outline:0;font-family:inherit;color:var(--txt);-webkit-appearance:none;appearance:none;min-width:0}
+.wd-name{flex:1;background:transparent;font-size:16px;font-weight:700;padding:4px 2px}
+.wd-name::placeholder,.wd-memo::placeholder{color:var(--faint);font-weight:500}
+.wd-g{display:grid;grid-template-columns:repeat(6,1fr);gap:5px;margin-top:10px}
+.wd-g label{display:flex;flex-direction:column;align-items:center;gap:3px;min-width:0}
+.wd-g label span{font-size:10px;font-weight:600;color:var(--txt3)}
+.wd-g input{width:100%;height:38px;border-radius:10px;background:#fff;text-align:center;font-size:16px;font-weight:700;padding:0}
+.wd-g input:placeholder-shown{color:var(--faint)}
+.wd-memo{width:100%;margin-top:8px;height:38px;border-radius:10px;background:#fff;padding:0 12px;font-size:14px}
+.wd-row input.ch{background:#e8f3ff!important}
+.wd-row input:focus{box-shadow:0 0 0 2px var(--acc) inset}
+.wd-row input:disabled{color:var(--txt3)}
+.wd-more{border:0;background:#fff;box-shadow:0 0 0 1px var(--line) inset;border-radius:14px;height:46px;font-size:14px;font-weight:700;color:var(--txt2);cursor:pointer;font-family:inherit}
+.wd-bar{position:sticky;bottom:0;margin:4px -20px -20px;padding:12px 20px calc(16px + env(safe-area-inset-bottom));background:linear-gradient(rgba(255,255,255,0),#fff 30%)}
+.wd-save{width:100%;height:52px;border:0;border-radius:14px;background:var(--txt);color:#fff;font-size:16px;font-weight:700;font-family:inherit;cursor:pointer}
+.wd-save:disabled{opacity:.35;cursor:default}
+</style>
+<script>
+// 2026-10-12: 작업내역서 상세를 휴대폰에 맞게 다시 배치 — 요약 2줄 · 작업자 칩(가로 스크롤) · 줄마다 카드(폴더명 + 인원별 컷수 + 합성컷 메모) · 아래 고정 저장 버튼
+function woD8(s) { var m = String(s || '').match(/^(\d{4})-(\d{2})-(\d{2})\((.)\)/); return m ? m[1].slice(2) + '.' + m[2] + '.' + m[3] + ' <small>' + m[4] + '</small>' : esc(s || ''); }
+function woChanged() { var n = 0; (WO.cur && WO.cur.tabs || []).forEach(function (t) { t.rows.forEach(function (r) { r.e.forEach(function (x, j) { if (String(x).trim() !== String(r.v[j] || '').trim()) n++; }); }); }); return n; }
+function woTotText(t, d) {
+  var tt = woTot(t), parts = [];
+  for (var c = 1; c <= 11; c++) if (tt.s[c]) parts.push(esc(((d.head || [])[c + 1] || '')) + ' ' + tt.s[c]);
+  return '<b>합계 ' + tt.all + '컷</b><span>' + (parts.join(' · ') || '아직 없음') + '</span>';
+}
+woDetail = function () {
+  var d = WO.cur, b = document.getElementById('wo-d-body'); if (!d || !d.tabs) return;
+  var I = d.info || {}, it = WO.items.filter(function (x) { return x.id === d.id; })[0];
+  var art = String(I['아티스트명'] || '').match(/\(([^)]*)\)\s*$/);
+  document.getElementById('wo-d-title').textContent = (art && art[1]) || (it && it.artist) || I['아티스트명'] || '작업내역서';
+  var h = '<div class="wd-sum"><div class="wd-p">' + esc(I['프로젝트명'] || (it && it.title) || '') + '</div>' +
+    '<div class="wd-m">' + [esc(I['거래처'] || ''), woD8(I['요청일']), I['담당자'] ? '담당 ' + esc(I['담당자']) : ''].filter(String).join(' · ') + '</div>' +
+    '<div class="wd-links">' + (d.link ? '<a href="' + esc(d.link) + '" target="_blank">작업 폴더 ↗</a>' : '') + '<a href="' + esc(d.url) + '" target="_blank">시트 열기 ↗</a></div></div>';
+  (d.warn || []).forEach(function (w) { h += '<div class="wo-warn">⚠ ' + esc(w) + '</div>'; });
+  h += '<div class="wd-tabs">' + d.tabs.map(function (t, i) { return '<button class="wo-chip' + (i === WO.tab ? ' on' : '') + '" onclick="woTab(' + i + ')">' + esc(t.name) + '<b>' + woTot(t).all + '</b></button>'; }).join('') +
+    '<label class="wo-chip wd-add">+ 작업자<select id="wo-addw" onchange="woAddWorker()"><option value=""></option></select></label></div>';
+  var t = d.tabs[WO.tab];
+  if (!t) { h += '<div class="wo-empty">작업자가 없어요. 위의 + 작업자로 추가해주세요.</div>'; b.innerHTML = h; woFillAddW(); return; }
+  if (t.sh == null) { var f = t.rows.reduce(function (m, r, i) { return r.v.some(function (x) { return String(x).trim(); }) ? i + 1 : m; }, 0); t.sh = Math.min(Math.max(f + 1, 1), t.rows.length) || 1; }
+  var head = d.head || [];
+  h += '<div class="wd-tot" id="wd-tot">' + woTotText(t, d) + '</div>';
+  for (var i = 0; i < t.sh && i < t.rows.length; i++) {
+    var r = t.rows[i], ch = function (j) { return String(r.e[j]).trim() !== String(r.v[j] || '').trim() ? ' ch' : ''; }, dis = function (j) { return r.f && r.f[j] ? ' disabled title="수식 칸이라 시트에서만 고칠 수 있어요"' : ''; };
+    h += '<div class="wd-row"><div class="wd-rh"><span class="wd-n">' + (i + 1) + '</span><input class="wd-name' + ch(0) + '" placeholder="' + esc(head[1] || '맡은 작업 폴더명') + '" value="' + esc(r.e[0]) + '"' + dis(0) + ' oninput="woEdit(' + i + ',0,this)"></div><div class="wd-g">';
+    for (var c = 1; c <= 11; c++) h += '<label><span>' + esc(head[c + 1] || '') + '</span><input class="' + ch(c).trim() + '" inputmode="numeric" placeholder="·" value="' + esc(r.e[c]) + '"' + dis(c) + ' oninput="woEdit(' + i + ',' + c + ',this)"></label>';
+    h += '</div><input class="wd-memo' + ch(12) + '" placeholder="' + esc(head[13] || '합성컷(합성멤버)') + ' 메모" value="' + esc(r.e[12]) + '"' + dis(12) + ' oninput="woEdit(' + i + ',12,this)"></div>';
+  }
+  h += '<button class="wd-more" onclick="woMoreRows()">+ 줄 추가</button>';
+  var n = woChanged();
+  h += '<div class="wd-bar"><button class="wd-save" id="wo-save" onclick="woSave()"' + (n ? '' : ' disabled') + '>' + (n ? n + '칸 저장' : '저장') + '</button></div>';
+  b.innerHTML = h; woFillAddW();
+};
+woEdit = function (i, j, el) {
+  var t = WO.cur.tabs[WO.tab], r = t.rows[i]; r.e[j] = el.value;
+  el.classList.toggle('ch', String(el.value).trim() !== String(r.v[j] || '').trim());
+  var tot = document.getElementById('wd-tot'); if (tot) tot.innerHTML = woTotText(t, WO.cur);
+  var chip = document.querySelectorAll('#wo-d-body .wd-tabs .wo-chip')[WO.tab]; if (chip && chip.querySelector('b')) chip.querySelector('b').textContent = woTot(t).all;
+  var n = woChanged(), sv = document.getElementById('wo-save'); if (sv) { sv.disabled = !n; sv.textContent = n ? n + '칸 저장' : '저장'; }
+};
+woMoreRows = function () {
+  var t = WO.cur.tabs[WO.tab];
+  if (t.sh >= t.rows.length) t.rows.push({ v: Array(13).fill(''), e: Array(13).fill(''), f: [], add: true });
+  t.sh++; woDetail();
+  var rs = document.querySelectorAll('#wo-d-body .wd-row'); if (rs.length) { var last = rs[rs.length - 1]; last.scrollIntoView({ block: 'center', behavior: 'smooth' }); var nm = last.querySelector('.wd-name'); if (nm) nm.focus(); }
+};
+woFillAddW = function () {
+  woOptsLoad(function (o) {
+    var s = document.getElementById('wo-addw'); if (!s || !WO.cur || !WO.cur.tabs) return;
+    var have = WO.cur.tabs.map(function (t) { return t.name; });
+    s.innerHTML = '<option value="">작업자 고르기</option>' + o.vendors.filter(function (w) { return have.indexOf(w) < 0; }).map(function (w) { return '<option>' + esc(w) + '</option>'; }).join('');
+  });
+};
+var _woAddW0 = woAddWorker;
+woAddWorker = function () { _woAddW0(); var s = document.getElementById('wo-addw'); if (s) s.value = ''; };
+</script>
 </body>
 </html>
