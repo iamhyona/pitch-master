@@ -187,7 +187,7 @@ select.fi option{background:var(--sur2)}
     <div class="logo" onclick="switchTab('dash')">PITCH<span> MASTER</span></div>
     <span id="role-tag"></span>
     <button class="btn btn-g" id="edit-mode-btn" onclick="toggleEditMode()" style="display:none">편집하기</button>
-    <a href="https://docs.google.com/spreadsheets/d/1MbIwOfrSilPEBjgY3uqVwDca-5Dg6NjRaAUPy4R888s/edit" target="_blank" class="btn btn-g">시트 열기</a>
+    <a href="https://docs.google.com/spreadsheets/d/16NnrXF6ZuqlzfQTaxP29vmONL5h9cLr4sLXhWyDmYVg/edit" target="_blank" class="btn btn-g">시트 열기</a>
     <button class="btn btn-g" id="pw-set-btn" onclick="pmPwOpen()" style="display:none">비밀번호</button>
     <button class="btn btn-g" onclick="doLogout()">로그아웃</button>
   </header>
@@ -1895,7 +1895,7 @@ function initTaxBill() {
   if (!box.dataset.pf) {
     box.dataset.pf = '1';
     box.innerHTML =
-      '<div class="tb-box"><div style="display:flex;gap:6px;margin-bottom:10px">' +
+      '<div class="tb-box"><div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px">' +
         '<button class="btn btn-p" id="pf-m-tax" type="button" onclick="pfMode(\'tax\')">세금계산서 발행</button>' +
         '<button class="btn btn-g" id="pf-m-pay" type="button" onclick="pfMode(\'pay\')">외주용역 지급</button>' +
         '<button class="btn btn-g" type="button" style="margin-left:auto" onclick="pfDocs()">청구서·지급내역서에서 불러오기</button></div>' +
@@ -2104,6 +2104,22 @@ function pmPwSave() {
 .wo-sub{font-size:11px;color:var(--txt3)}
 .wo-empty{padding:22px 16px;text-align:center;color:var(--txt3);font-size:12px}
 .md.wide{max-width:1000px}
+/* 2026-10-12: 모바일 정리 — 헤더 버튼 줄바꿈, 날짜칸·버튼줄이 박스 밖으로 튀어나가지 않게 */
+.logo,.logo span,#role-tag span{white-space:nowrap}
+.row2>*,.fg{min-width:0}
+.fi{min-width:0;max-width:100%}
+input[type=date].fi{-webkit-appearance:none;appearance:none;display:block;min-height:34px;line-height:1.3;text-align:left}
+input[type=date].fi::-webkit-date-and-time-value{text-align:left}
+@media(max-width:640px){
+  header{flex-wrap:wrap;height:auto;padding:10px 16px;row-gap:8px;column-gap:6px}
+  header .logo{flex:1 1 calc(100% - 60px)}
+  #role-tag{flex:0 0 auto}
+  header .btn{flex:1 1 64px;min-width:0;height:30px;padding:0 6px;font-size:11px}
+  #tab-taxbill .tb-box button[style*="margin-left:auto"]{margin-left:0!important}
+  .ci{padding:18px 16px 80px}
+  .md-b{padding:12px}
+  .tc-t .wo-sub{display:none}
+}
 .wo-info{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:8px}
 .wo-info div{background:var(--sur2);border-radius:8px;padding:8px 10px;min-width:0}
 .wo-info span{display:block;font-size:10px;color:var(--txt3);font-weight:600}
