@@ -208,6 +208,11 @@ select.fi option{background:var(--sur2)}
       <!-- 대시보드 -->
       <div id="tab-dash" class="tab-panel active">
         <div id="sync-bar" class="sync-bar" style="display:none"></div>
+        <div class="tc" id="wo-box">
+          <div class="tc-h" style="flex-wrap:wrap"><span class="tc-t">작업내역서 <span class="wo-sub" style="font-weight:400">· 구글드라이브 02_작업내역서</span></span><button class="btn btn-g" style="height:26px;font-size:11px" onclick="woLoad(true)" title="드라이브에서 다시 불러오기">↻</button><a class="btn btn-g" id="wo-drive" href="https://drive.google.com/drive/folders/1loq0Q5v2gHT1aekgjh49PUfhdFyPMHvn" target="_blank" style="height:26px;font-size:11px;text-decoration:none">드라이브 ↗</a><button class="btn btn-p" style="height:26px;font-size:11px" onclick="woNew()">+ 새 작업내역서</button></div>
+          <div class="wo-bar" id="wo-folders"></div>
+          <div class="wo-list" id="wo-list"></div>
+        </div>
         <div class="stats">
           <div class="sc a"><div class="sc-l">거래처</div><div class="sc-v" id="s-ag">0</div></div>
           <div class="sc t"><div class="sc-l">리터쳐</div><div class="sc-v" id="s-lt">0</div></div>
@@ -2083,6 +2088,282 @@ function pmPwSave() {
       closeMo('mo-pw'); toast('비밀번호를 바꿨어요' + (g ? ' · 핏치' : '') + (a ? ' · 관리' : ''));
     });
 }
+</script>
+<style>
+/* 2026-10-12: 대시보드 ↔ 02_작업내역서 폴더 */
+.wo-bar{display:flex;gap:6px;flex-wrap:wrap;padding:10px 16px;border-bottom:1px solid var(--bdr)}
+.wo-chip{padding:4px 10px;border-radius:999px;border:1px solid var(--bdr);background:transparent;color:var(--txt2);font-size:11px;font-family:'Asta Sans',sans-serif;cursor:pointer;white-space:nowrap}
+.wo-chip b{font-weight:600;color:var(--txt3);margin-left:4px}
+.wo-chip.on{background:rgba(59,130,246,.12);border-color:var(--acc);color:var(--acc2)}
+.wo-chip.on b{color:var(--acc2)}
+.wo-srch{flex:1;min-width:120px;max-width:220px;background:var(--sur2);border:1px solid var(--bdr);border-radius:7px;padding:0 10px;height:28px;color:var(--txt);font-size:12px;font-family:'Asta Sans',sans-serif;outline:none}
+.wo-list{max-height:420px;overflow:auto}
+.wo-row{cursor:pointer}.wo-row:hover td{background:var(--sur2)}
+.wo-row td{padding:9px 14px;border-bottom:1px solid var(--bdr);font-size:12px;vertical-align:top}
+.wo-w{display:inline-block;padding:1px 6px;border-radius:4px;background:var(--sur2);color:var(--txt2);font-size:10px;margin:1px 3px 1px 0;white-space:nowrap}
+.wo-sub{font-size:11px;color:var(--txt3)}
+.wo-empty{padding:22px 16px;text-align:center;color:var(--txt3);font-size:12px}
+.md.wide{max-width:1000px}
+.wo-info{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:8px}
+.wo-info div{background:var(--sur2);border-radius:8px;padding:8px 10px;min-width:0}
+.wo-info span{display:block;font-size:10px;color:var(--txt3);font-weight:600}
+.wo-info p{font-size:12px;overflow-wrap:anywhere}
+.wo-warn{background:rgba(255,95,95,.1);border:1px solid rgba(255,95,95,.35);color:#ffb4b4;border-radius:8px;padding:8px 10px;font-size:12px}
+.wo-tabs{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.wo-tw{overflow-x:auto;border:1px solid var(--bdr);border-radius:8px}
+.wo-t{border-collapse:collapse;width:100%;min-width:760px}
+.wo-t th{padding:6px 4px;text-align:center;font-size:10px}
+.wo-t th:first-child{text-align:left;padding-left:8px}
+.wo-t td{padding:3px;border-bottom:1px solid var(--bdr)}
+.wo-t input{width:100%;background:transparent;border:1px solid transparent;border-radius:5px;color:var(--txt);font-size:12px;font-family:'Asta Sans',sans-serif;padding:5px 6px;outline:none;text-align:center}
+.wo-t input.l{text-align:left}
+.wo-t input:focus{border-color:var(--acc);background:var(--sur2)}
+.wo-t input.ch{background:rgba(59,130,246,.14)}
+.wo-t input:disabled{color:var(--txt3)}
+.wo-t tr.tot td{font-size:12px;font-weight:700;text-align:center;color:var(--acc2);padding:7px 4px}
+.wo-t tr.tot td:first-child{text-align:left;padding-left:8px}
+.wo-ws{display:flex;flex-wrap:wrap;gap:6px}
+.wo-ws label{display:inline-flex;align-items:center;gap:4px;font-size:12px;color:var(--txt2);background:var(--sur2);border-radius:6px;padding:4px 8px;cursor:pointer}
+</style>
+<div class="mo" id="mo-wo">
+  <div class="md wide">
+    <div class="md-h"><span class="md-t" id="wo-d-title">작업내역서</span><button class="xb" onclick="woClose()">✕</button></div>
+    <div class="md-b" id="wo-d-body"></div>
+  </div>
+</div>
+<div class="mo" id="mo-wo-new">
+  <div class="md">
+    <div class="md-h"><span class="md-t">새 작업내역서</span><button class="xb" onclick="closeMo('mo-wo-new')">✕</button></div>
+    <div class="md-b" id="wo-n-body"></div>
+  </div>
+</div>
+<script>
+// 2026-10-12 (현아): 대시보드가 구글드라이브 02_작업내역서 폴더와 동기화 — 소속사 폴더 → 프로젝트별 작업내역 보기·작성
+//  - 목록·내용은 서버(거래처마스터 스크립트)가 드라이브에서 바로 읽음 (2분 캐시, ↻로 바로 새로고침)
+//  - 저장은 화면에서 바꾼 칸만. 그 사이 시트에서 누가 고친 칸은 덮어쓰지 않고 알려줌
+//  - 핏치 모드에서는 강영순 하위 작업자(박현아·박슬기·박종배) 탭이 안 보임 (서버에서 걸러서 보냄)
+var WO = { items: [], folders: [], root: '', folder: '', q: '', loaded: false, loading: false, cur: null, tab: 0, opts: null };
+var WO_DRIVE = 'https://drive.google.com/drive/folders/';
+function woGet(qs, cb) {
+  fetch(AS_URL + '?api=pm' + qs + pmQ() + '&t=' + Date.now()).then(function (r) { return r.json(); }).catch(function () { return null; })
+    .then(function (d) { if (pmAuthFail(d)) return; cb(d || { ok: false, error: '연결 실패 — 잠시 후 다시 시도해주세요' }); });
+}
+function woPost(action, data, cb) {
+  fetch(AS_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ action: action, data: data, k: PM_K }) })
+    .then(function (r) { return r.json(); }).catch(function () { return null; })
+    .then(function (d) { if (pmAuthFail(d)) return; cb(d || { ok: false, error: '연결 실패 — 잠시 후 다시 시도해주세요' }); });
+}
+function woDate(d6) { return /^\d{6}$/.test(d6 || '') ? d6.slice(0, 2) + '.' + d6.slice(2, 4) + '.' + d6.slice(4) : '-'; }
+function woAgo(t) {
+  var m = Math.round((Date.now() - t) / 60000);
+  if (m < 1) return '방금'; if (m < 60) return m + '분 전'; if (m < 1440) return Math.round(m / 60) + '시간 전';
+  var d = new Date(t); return (d.getMonth() + 1) + '/' + d.getDate();
+}
+function woLoad(fresh) {
+  if (!PM_K || WO.loading) return;
+  WO.loading = true; woRender();
+  woGet('&wo=list' + (fresh ? '&fresh=1' : ''), function (d) {
+    WO.loading = false;
+    if (!d.ok) { WO.err = d.error || '불러오지 못했어요'; woRender(); return; }
+    WO.err = ''; WO.items = d.items || []; WO.folders = d.folders || []; WO.root = d.root || ''; WO.loaded = true; woRender();
+  });
+}
+function woView() {
+  var q = WO.q.trim().toLowerCase();
+  return WO.items.filter(function (x) {
+    if (WO.folder && x.folder !== WO.folder) return false;
+    if (!q) return true;
+    return [x.clientKey, x.artist, x.title, x.date6, (x.workers || []).join(' ')].join(' ').toLowerCase().indexOf(q) >= 0;
+  });
+}
+function woRender() {
+  var box = document.getElementById('wo-box'); if (!box) return;
+  var fb = document.getElementById('wo-folders'), lb = document.getElementById('wo-list');
+  var fl = WO.folders.filter(function (f) { return f.n > 0 || f.name === WO.folder; });
+  fb.innerHTML = '<button class="wo-chip' + (WO.folder ? '' : ' on') + '" onclick="woFolder(\'\')">전체<b>' + WO.items.length + '</b></button>' +
+    fl.map(function (f) { return '<button class="wo-chip' + (WO.folder === f.name ? ' on' : '') + '" data-f="' + esc(f.name) + '" onclick="woFolder(this.dataset.f)">' + esc(f.name) + '<b>' + f.n + '</b></button>'; }).join('') +
+    '<input class="wo-srch" id="wo-q" placeholder="아티스트·프로젝트·작업자 검색" value="' + esc(WO.q) + '" oninput="WO.q=this.value;woRenderList()">';
+  var dl = document.getElementById('wo-drive');
+  if (dl) { var cf = WO.folders.filter(function (f) { return f.name === WO.folder; })[0]; dl.href = WO_DRIVE + (cf ? cf.id : WO.root || '1loq0Q5v2gHT1aekgjh49PUfhdFyPMHvn'); }
+  woRenderList();
+}
+function woRenderList() {
+  var lb = document.getElementById('wo-list'); if (!lb) return;
+  if (WO.loading && !WO.items.length) { lb.innerHTML = '<div class="wo-empty">드라이브에서 작업내역서를 불러오는 중...</div>'; return; }
+  if (WO.err && !WO.items.length) { lb.innerHTML = '<div class="wo-empty">⚠ ' + esc(WO.err) + '</div>'; return; }
+  var v = woView();
+  if (!v.length) { lb.innerHTML = '<div class="wo-empty">' + (WO.loaded ? '작업내역서가 없어요' : '') + '</div>'; return; }
+  lb.innerHTML = '<table style="width:100%;table-layout:fixed"><thead><tr><th style="width:74px">요청일</th><th style="width:28%">아티스트 · 프로젝트</th><th>작업자</th><th style="width:64px">수정</th></tr></thead><tbody>' +
+    v.map(function (x) {
+      return '<tr class="wo-row" data-id="' + esc(x.id) + '" onclick="woOpen(this.dataset.id)"><td>' + woDate(x.date6) + '</td>' +
+        '<td><div style="font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + esc(x.artist) + '</div><div class="wo-sub" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + esc(x.clientKey) + ' · ' + esc(x.title) + '</div></td>' +
+        '<td>' + (x.workers || []).map(function (w) { return '<span class="wo-w">' + esc(w) + '</span>'; }).join('') + '</td>' +
+        '<td class="wo-sub">' + woAgo(x.t) + '</td></tr>';
+    }).join('') + '</tbody></table>';
+}
+function woFolder(f) { WO.folder = f || ''; woRender(); }
+
+// ── 작업내역서 한 건 보기·작성 ──
+function woClose() {
+  if (woDirty() && !confirm('저장하지 않은 수정이 있어요. 닫을까요?')) return;
+  closeMo('mo-wo'); WO.cur = null;
+}
+function woOpen(id) {
+  if (WO.cur && WO.cur.id !== id && woDirty() && !confirm('저장하지 않은 수정이 있어요. 다른 작업내역서를 열까요?')) return;
+  WO.cur = { id: id, loading: true }; WO.tab = 0;
+  var it = WO.items.filter(function (x) { return x.id === id; })[0];
+  document.getElementById('wo-d-title').textContent = it ? it.artist + ' · ' + it.title : '작업내역서';
+  document.getElementById('wo-d-body').innerHTML = '<div class="wo-empty">불러오는 중...</div>';
+  openMo('mo-wo');
+  woGet('&wo=' + encodeURIComponent(id), function (d) {
+    if (!WO.cur || WO.cur.id !== id) return;
+    if (!d.ok) { document.getElementById('wo-d-body').innerHTML = '<div class="wo-empty">⚠ ' + esc(d.error || '불러오지 못했어요') + '</div>'; return; }
+    d.tabs.forEach(function (t) { t.rows.forEach(function (r) { r.e = r.v.slice(); }); t.show = Math.max(t.rows.reduce(function (m, r, i) { return r.v.some(function (x) { return String(x).trim(); }) ? i + 1 : m; }, 0) + 3, 5); });
+    WO.cur = d; woDetail();
+  });
+}
+function woDirty() {
+  return !!(WO.cur && WO.cur.tabs && WO.cur.tabs.some(function (t) { return t.rows.some(function (r) { return r.e.some(function (x, j) { return String(x).trim() !== String(r.v[j] || '').trim(); }); }); }));
+}
+function woTot(t) {
+  var s = []; for (var c = 1; c <= 11; c++) s[c] = 0;
+  t.rows.forEach(function (r) { for (var c = 1; c <= 11; c++) s[c] += Number(String(r.e[c] || '').replace(/[^\d.\-]/g, '')) || 0; });
+  var all = 0; for (c = 1; c <= 11; c++) all += s[c];
+  return { s: s, all: all };
+}
+function woDetail() {
+  var d = WO.cur, b = document.getElementById('wo-d-body'); if (!d || !d.tabs) return;
+  var keys = ['거래처', '아티스트명', '요청일', '프로젝트명', '담당자'];
+  var h = '<div class="wo-info">' + keys.map(function (k) { return '<div><span>' + k + '</span><p>' + esc(d.info[k] || '-') + '</p></div>'; }).join('') +
+    '<div><span>작업 폴더 링크</span><p>' + (d.link ? '<a href="' + esc(d.link) + '" target="_blank" style="color:var(--acc2)">열기 ↗</a>' : '<span style="color:var(--txt3)">없음</span>') + '</p></div></div>';
+  (d.warn || []).forEach(function (w) { h += '<div class="wo-warn">⚠ ' + esc(w) + '</div>'; });
+  h += '<div class="wo-tabs">' + d.tabs.map(function (t, i) { return '<button class="wo-chip' + (i === WO.tab ? ' on' : '') + '" onclick="woTab(' + i + ')">' + esc(t.name) + '<b>' + woTot(t).all + '컷</b></button>'; }).join('') +
+    '<span style="flex:1"></span><select class="fi sm" id="wo-addw" style="width:auto;height:30px;padding:0 8px"><option value="">+ 작업자 추가</option></select>' +
+    '<button class="btn btn-g" onclick="woAddWorker()">추가</button>' +
+    '<a class="btn btn-g" href="' + esc(d.url) + '" target="_blank" style="text-decoration:none">시트 열기 ↗</a></div>';
+  var t = d.tabs[WO.tab];
+  if (!t) { h += '<div class="wo-empty">작업자 탭이 없어요. 위에서 작업자를 추가해주세요.</div>'; b.innerHTML = h; woFillAddW(); return; }
+  var head = (d.head || []).slice(1);
+  h += '<div class="wo-tw"><table class="wo-t"><thead><tr>' + head.map(function (x, j) { return '<th style="' + (j === 0 ? 'width:22%' : j === 12 ? 'width:16%' : '') + '">' + esc(x) + '</th>'; }).join('') + '</tr></thead><tbody>';
+  for (var i = 0; i < Math.min(t.show, t.rows.length); i++) {
+    var r = t.rows[i];
+    h += '<tr>' + r.e.map(function (x, j) {
+      var ch = String(x).trim() !== String(r.v[j] || '').trim();
+      return '<td><input class="' + (j === 0 || j === 12 ? 'l' : '') + (ch ? ' ch' : '') + '" ' + (r.f && r.f[j] ? 'disabled title="수식 칸이라 시트에서만 고칠 수 있어요"' : '') +
+        (j >= 1 && j <= 11 ? ' inputmode="numeric"' : '') + ' value="' + esc(x) + '" oninput="woEdit(' + i + ',' + j + ',this)"></td>';
+    }).join('') + '</tr>';
+  }
+  var tt = woTot(t);
+  h += '<tr class="tot"><td>합계 ' + tt.all + '컷</td>' + tt.s.slice(1).map(function (x) { return '<td>' + (x || '') + '</td>'; }).join('') + '<td></td></tr></tbody></table></div>';
+  h += '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><button class="btn btn-g" onclick="woMoreRows()">+ 행 추가</button>' +
+    '<span class="wo-sub" style="flex:1">파란 칸 = 아직 저장 안 한 수정 · 저장하면 시트에 바로 반영돼요</span>' +
+    '<button class="btn btn-p" id="wo-save" onclick="woSave()">저장</button></div>';
+  b.innerHTML = h; woFillAddW();
+}
+function woTab(i) { WO.tab = i; woDetail(); }
+function woEdit(i, j, el) {
+  var t = WO.cur.tabs[WO.tab], r = t.rows[i]; r.e[j] = el.value;
+  el.classList.toggle('ch', String(el.value).trim() !== String(r.v[j] || '').trim());
+  var tt = woTot(t), tr = el.closest('table').querySelector('tr.tot');
+  if (tr) tr.innerHTML = '<td>합계 ' + tt.all + '컷</td>' + tt.s.slice(1).map(function (x) { return '<td>' + (x || '') + '</td>'; }).join('') + '<td></td>';
+  var chip = document.querySelectorAll('#wo-d-body .wo-tabs .wo-chip')[WO.tab]; if (chip) chip.querySelector('b').textContent = tt.all + '컷';
+}
+function woMoreRows() {
+  var t = WO.cur.tabs[WO.tab];
+  if (t.show >= t.rows.length) for (var k = 0; k < 3; k++) t.rows.push({ v: Array(13).fill(''), e: Array(13).fill(''), f: [], add: true });
+  t.show += 3; woDetail();
+}
+function woSave() {
+  var d = WO.cur, jobs = [];
+  d.tabs.forEach(function (t) {
+    var rows = [];
+    t.rows.forEach(function (r, i) { if (r.e.some(function (x, j) { return String(x).trim() !== String(r.v[j] || '').trim(); })) rows.push({ i: i, old: r.v, val: r.e }); });
+    if (rows.length) jobs.push({ tab: t.name, rows: rows });
+  });
+  if (!jobs.length) { toast('바뀐 칸이 없어요'); return; }
+  var btn = document.getElementById('wo-save'); if (btn) { btn.disabled = true; btn.textContent = '저장 중...'; }
+  var n = 0, skip = [], errs = [];
+  (function next() {
+    var j = jobs.shift();
+    if (!j) {
+      if (errs.length) toast('저장 실패: ' + errs.join(' / '));
+      else if (skip.length) alert(n + '칸 저장했어요.\n\n아래 칸은 그 사이 시트에서 바뀌어서 덮어쓰지 않았어요 (시트 값 유지):\n' + skip.join('\n'));
+      else toast(n + '칸 저장했어요 · 시트에 반영됨');
+      var id = d.id; WO.cur = null; woOpen(id); WO.loaded = false; woLoad(true); return;
+    }
+    woPost('pm_wo_save', { id: d.id, tab: j.tab, rows: j.rows }, function (res) {
+      if (!res.ok) errs.push(j.tab + ': ' + (res.error || ''));
+      else { n += res.changed || 0; (res.skipped || []).forEach(function (s) { skip.push('· ' + j.tab + ' ' + (s.i + 1) + '번째 줄 「' + ((d.head || [])[s.c + 1] || '') + '」 → 지금 시트 값: ' + (s.now || '(빈칸)')); }); }
+      next();
+    });
+  })();
+}
+function woOptsLoad(cb) {
+  if (WO.opts) { cb(WO.opts); return; }
+  woGet('&wo=opts', function (d) { if (d.ok) { WO.opts = d.opts; cb(d.opts); } else toast(d.error || '목록을 불러오지 못했어요'); });
+}
+function woFillAddW() {
+  woOptsLoad(function (o) {
+    var s = document.getElementById('wo-addw'); if (!s || !WO.cur || !WO.cur.tabs) return;
+    var have = WO.cur.tabs.map(function (t) { return t.name; });
+    s.innerHTML = '<option value="">+ 작업자 추가</option>' + o.vendors.filter(function (w) { return have.indexOf(w) < 0; }).map(function (w) { return '<option>' + esc(w) + '</option>'; }).join('');
+  });
+}
+function woAddWorker() {
+  var w = (document.getElementById('wo-addw') || {}).value; if (!w) { toast('추가할 작업자를 골라주세요'); return; }
+  if (woDirty() && !confirm('저장하지 않은 수정은 사라져요. 먼저 저장하려면 취소를 눌러주세요.')) return;
+  if (!confirm(w + ' 탭을 이 작업내역서에 추가할까요? (파일 이름의 <작업자>에도 추가돼요)')) return;
+  toast(w + ' 탭 추가 중...');
+  var id = WO.cur.id;
+  woPost('pm_wo_add_worker', { id: id, worker: w }, function (res) {
+    if (!res.ok) { toast('추가 실패: ' + (res.error || '')); return; }
+    toast(w + ' 탭을 추가했어요'); WO.cur = null; woOpen(id); WO.loaded = false; woLoad(true);
+  });
+}
+
+// ── 새 작업내역서 (거래처마스터 메뉴의 '작업내역서 만들기'와 같은 방식: 템플릿 복사 → 02_작업내역서/<소속사> 폴더) ──
+function woNew() {
+  document.getElementById('wo-n-body').innerHTML = '<div class="wo-empty">목록 불러오는 중...</div>';
+  openMo('mo-wo-new');
+  woOptsLoad(function (o) {
+    var kst = new Date(Date.now() + 9 * 3600000), d6 = String(kst.getUTCFullYear()).slice(2) + ('0' + (kst.getUTCMonth() + 1)).slice(-2) + ('0' + kst.getUTCDate()).slice(-2);
+    document.getElementById('wo-n-body').innerHTML =
+      '<div class="fg"><label class="fl">거래처</label><select class="fi sm" id="won-c" onchange="woNewClient()"><option value="">선택</option>' + o.clients.map(function (c) { return '<option>' + esc(c.disp) + '</option>'; }).join('') + '</select></div>' +
+      '<div class="fg"><label class="fl">아티스트</label><select class="fi sm" id="won-a"><option value="">거래처를 먼저 골라주세요</option></select></div>' +
+      '<div class="fg"><label class="fl">요청일 (YYMMDD)</label><input class="fi sm" id="won-d" inputmode="numeric" maxlength="6" value="' + d6 + '"></div>' +
+      '<div class="fg"><label class="fl">프로젝트명</label><input class="fi sm" id="won-p" placeholder="예: C자켓"></div>' +
+      '<div class="fg"><label class="fl">담당자</label><input class="fi sm" id="won-k" list="won-kl" placeholder="거래처 담당자"><datalist id="won-kl"></datalist></div>' +
+      '<div class="fg"><label class="fl">작업자</label><div class="wo-ws">' + o.vendors.map(function (w) { return '<label><input type="checkbox" value="' + esc(w) + '">' + esc(w) + '</label>'; }).join('') + '</div></div>' +
+      '<div class="login-err" id="won-err"></div><button class="login-btn" id="won-go" onclick="woCreate()">만들기</button>';
+  });
+}
+function woNewClient() {
+  var o = WO.opts, c = document.getElementById('won-c').value;
+  var ck = (o.clients.filter(function (x) { return x.disp === c; })[0] || {}).key;
+  var as = o.artists.filter(function (a) { return String(a.clientsDisp || '').split(',').map(function (s) { return s.trim(); }).indexOf(c) >= 0; });
+  document.getElementById('won-a').innerHTML = '<option value="">선택</option>' + as.map(function (a) { return '<option>' + esc(a.disp) + '</option>'; }).join('');
+  document.getElementById('won-kl').innerHTML = o.contacts.filter(function (k) { return k.client === c || k.client === ck; }).map(function (k) { return '<option value="' + esc(k.name) + '">'; }).join('');
+}
+function woCreate() {
+  var g = function (id) { return (document.getElementById(id).value || '').trim(); }, err = document.getElementById('won-err');
+  var p = { client: g('won-c'), artist: g('won-a'), date: g('won-d'), project: g('won-p'), contact: g('won-k'),
+            workers: Array.prototype.map.call(document.querySelectorAll('#wo-n-body .wo-ws input:checked'), function (x) { return x.value; }) };
+  if (!p.client || !p.artist) { err.textContent = '거래처와 아티스트를 골라주세요'; return; }
+  if (!/^\d{6}$/.test(p.date)) { err.textContent = '요청일은 6자리 숫자(예: 261012)로 적어주세요'; return; }
+  if (!p.project) { err.textContent = '프로젝트명을 적어주세요'; return; }
+  if (!p.workers.length && !confirm('작업자 없이 만들까요? (나중에 추가할 수 있어요)')) return;
+  var btn = document.getElementById('won-go'); btn.disabled = true; btn.textContent = '만드는 중... (10~30초)'; err.textContent = '';
+  woPost('pm_wo_create', p, function (res) {
+    btn.disabled = false; btn.textContent = '만들기';
+    if (!res.ok) { err.textContent = res.error || '만들지 못했어요'; return; }
+    closeMo('mo-wo-new'); toast('02_작업내역서/' + (res.folder || '') + ' 에 만들었어요');
+    WO.loaded = false; woLoad(true); if (res.id) woOpen(res.id);
+  });
+}
+var _woRenderDash = renderDash;
+renderDash = function () { _woRenderDash(); if (!WO.loaded && !WO.loading && PM_K) woLoad(false); else woRender(); };
+var _woLogout = doLogout;
+doLogout = function () { WO = { items: [], folders: [], root: '', folder: '', q: '', loaded: false, loading: false, cur: null, tab: 0, opts: null }; closeMo('mo-wo'); _woLogout(); };
 </script>
 </body>
 </html>
