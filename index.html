@@ -197,7 +197,7 @@ select.fi option{background:var(--sur2)}
   </header>
   <div class="tabs-wrapper">
     <div class="tabs">
-      <div class="tab active" data-tab="dash" id="tab-btn-dash">대시보드</div>
+      <div class="tab active" data-tab="dash" id="tab-btn-dash">작업내역</div>
       <div class="tab" data-tab="agencies">거래처</div>
       <div class="tab" data-tab="litt">리터쳐</div>
       <div class="tab" data-tab="rates-bill" id="tab-btn-rates-bill">청구단가</div>
@@ -217,7 +217,7 @@ select.fi option{background:var(--sur2)}
           <div class="wo-bar" id="wo-folders"></div>
           <div class="wo-list" id="wo-list"></div>
         </div>
-        <div class="stats">
+        <div class="stats" style="display:none">
           <div class="sc a"><div class="sc-l">거래처</div><div class="sc-v" id="s-ag">0</div></div>
           <div class="sc t"><div class="sc-l">리터쳐</div><div class="sc-v" id="s-lt">0</div></div>
         </div>
@@ -2167,6 +2167,7 @@ function woPost(action, data, cb) {
     .then(function (r) { return r.json(); }).catch(function () { return null; })
     .then(function (d) { if (pmAuthFail(d)) return; cb(d || { ok: false, error: '연결 실패 — 잠시 후 다시 시도해주세요' }); });
 }
+function woDateW(d6) { if (!/^\d{6}$/.test(d6 || '')) return '-'; var d = new Date(2000 + +d6.slice(0, 2), +d6.slice(2, 4) - 1, +d6.slice(4)); return woDate(d6) + ' <small>' + '일월화수목금토'.charAt(d.getDay()) + '</small>'; }
 function woDate(d6) { return /^\d{6}$/.test(d6 || '') ? d6.slice(0, 2) + '.' + d6.slice(2, 4) + '.' + d6.slice(4) : '-'; }
 function woAgo(t) {
   var m = Math.round((Date.now() - t) / 60000);
@@ -2207,13 +2208,13 @@ function woRenderList() {
   if (WO.err && !WO.items.length) { lb.innerHTML = '<div class="wo-empty">⚠ ' + esc(WO.err) + '</div>'; return; }
   var v = woView();
   if (!v.length) { lb.innerHTML = '<div class="wo-empty">' + (WO.loaded ? '작업내역서가 없어요' : '') + '</div>'; return; }
-  lb.innerHTML = '<table style="width:100%;table-layout:fixed"><thead><tr><th style="width:74px">요청일</th><th style="width:28%">아티스트 · 프로젝트</th><th>작업자</th><th style="width:64px">수정</th></tr></thead><tbody>' +
-    v.map(function (x) {
-      return '<tr class="wo-row" data-id="' + esc(x.id) + '" onclick="woOpen(this.dataset.id)"><td>' + woDate(x.date6) + '</td>' +
-        '<td><div style="font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + esc(x.artist) + '</div><div class="wo-sub" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + esc(x.clientKey) + ' · ' + esc(x.title) + '</div></td>' +
-        '<td>' + (x.workers || []).map(function (w) { return '<span class="wo-w">' + esc(w) + '</span>'; }).join('') + '</td>' +
-        '<td class="wo-sub">' + woAgo(x.t) + '</td></tr>';
-    }).join('') + '</tbody></table>';
+  // 2026-10-12: 표 대신 한 줄씩 카드 목록 (폰에서 글자 잘림 없게)
+  lb.innerHTML = v.map(function (x) {
+    return '<div class="wo-item" data-id="' + esc(x.id) + '" onclick="woOpen(this.dataset.id)">' +
+      '<div class="wo-l1"><b>' + esc(x.artist) + '</b><span class="wo-dt">' + woDateW(x.date6) + '</span></div>' +
+      '<div class="wo-l2">' + esc(x.clientKey) + ' · ' + esc(x.title) + '</div>' +
+      '<div class="wo-l3"><span class="wo-wl">' + (x.workers || []).map(function (w) { return '<span class="wo-w">' + esc(w) + '</span>'; }).join('') + '</span><span class="wo-ago">' + woAgo(x.t) + ' 수정</span></div></div>';
+  }).join('');
 }
 function woFolder(f) { WO.folder = f || ''; woRender(); }
 
@@ -2396,7 +2397,7 @@ header .hd{display:flex;align-items:center;justify-content:space-between;height:
 header .hl{display:flex;align-items:center;gap:8px;min-width:0}
 .brand{border:0;background:none;padding:0;font-size:19px;font-weight:800;letter-spacing:.06em;color:var(--txt);cursor:pointer}
 #role-tag span{background:var(--card,#fff)!important;color:var(--sub,#4e5968)!important;border-radius:999px!important;padding:3px 9px!important;font-size:11px!important;font-weight:700!important;white-space:nowrap}
-header .hr{display:flex;align-items:center;gap:5px;flex:none}
+header .hr{display:flex;align-items:center;gap:5px;flex:none;border:0;margin:0}
 .ib{width:38px;height:38px;border:0;border-radius:50%;background:#fff;display:inline-flex;align-items:center;justify-content:center;color:var(--txt2);padding:0;flex:none;cursor:pointer;text-decoration:none}
 .ib svg{width:18px;height:18px}
 .ib.on{background:var(--txt);color:#fff}
@@ -2499,6 +2500,20 @@ td{overflow-wrap:anywhere}
   div[id^="inv-item-"] > div[style*="grid-template-columns:1fr 80px"]{grid-template-columns:1fr 1fr auto!important}
   select[id^="inv-type-"]{grid-column:1/-1}
 }
+/* 2026-10-12: 작업내역 목록 */
+.wo-list{max-height:none}
+.wo-item{padding:14px 18px;border-bottom:1px solid var(--line);cursor:pointer}
+.wo-item:last-child{border-bottom:0}
+.wo-item:active,.wo-item:hover{background:#f9fafb}
+.wo-l1{display:flex;align-items:baseline;justify-content:space-between;gap:10px}
+.wo-l1 b{font-size:16px;font-weight:700;min-width:0;overflow-wrap:anywhere}
+.wo-dt{flex:none;font-size:14px;font-weight:600;color:var(--txt2)}
+.wo-dt small{font-size:11px;font-weight:500;color:var(--txt3);margin-left:2px}
+.wo-l2{font-size:13px;color:var(--txt3);margin-top:2px;overflow-wrap:anywhere}
+.wo-l3{display:flex;align-items:flex-end;justify-content:space-between;gap:10px;margin-top:8px}
+.wo-wl{display:flex;flex-wrap:wrap;gap:4px;min-width:0}
+.wo-wl .wo-w{margin:0}
+.wo-ago{flex:none;font-size:11px;color:var(--faint)}
 </style>
 <script>
 // 2026-10-12: 편집 버튼이 동그라미 아이콘이 되면서 글자 대신 켜짐(검정) 상태로 표시
