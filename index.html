@@ -914,17 +914,15 @@ function renderAg(){
     }).join('');
     cards+='<div class="mc" id="agm'+i+'">'
       +'<div class="mc-head" id="agmh'+i+'" style="align-items:flex-start;padding:14px 16px 10px">'
+        // 2026-10-12: 미리보기 = 거래처명 / 대표명 · 사업자번호 (아티스트명은 표시 안 함)
         +'<div class="mc-info" style="flex:1;min-width:0">'
-          +'<div class="mc-name">'+esc(a.name)+'</div>'
-          +(a.artists?'<div class="mc-sub" style="margin-top:3px">'+esc(a.artists)+'</div>':'')
-        +'</div>'
-        +'<div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px;flex-shrink:0;margin-left:10px">'
-          +'<div style="display:flex;align-items:center;gap:5px">'
-            +(a.ceo?'<span class="copyable" id="agmc-ceo'+i+'" style="display:inline-flex;align-items:center;padding:2px 7px;border-radius:4px;font-size:10px;font-weight:700;background:rgba(136,136,160,.12);color:var(--txt2)">'+esc(a.ceo)+'</span>':'')
-            +'<span id="agmc-biz'+i+'" class="copyable" style="font-size:12px;font-weight:600">'+esc(a.biz||'-')+'</span>'
+          +'<div class="mc-name" style="overflow-wrap:anywhere">'+esc(a.name)+'</div>'
+          +'<div class="mc-sub" style="margin-top:4px;white-space:normal;display:flex;flex-wrap:wrap;align-items:center;gap:2px 6px;font-size:13px">'
+            +(a.ceo?'<span class="copyable" id="agmc-ceo'+i+'" style="color:var(--txt2)">'+esc(a.ceo)+'</span><span style="color:var(--faint)">/</span>':'')
+            +'<span id="agmc-biz'+i+'" class="copyable" style="color:var(--txt2)">'+esc(a.biz||'-')+'</span>'
           +'</div>'
-          +'<span class="mc-chv" style="font-size:14px">⌄</span>'
         +'</div>'
+        +'<span class="mc-chv" style="font-size:14px;flex-shrink:0;margin-left:10px;align-self:center">⌄</span>'
       +'</div>'
       +'<div class="mc-body">'+contactHtml
         +(canEdit()?'<div class="mc-actions" style="margin-top:8px"><button class="ab ed" id="aged'+i+'">✎</button><button class="ab dl" id="agdl'+i+'">✕</button></div>':'')
