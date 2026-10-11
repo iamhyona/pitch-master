@@ -969,15 +969,15 @@ function renderLt(){
     cards+='<div class="mc lt-c" id="ltm'+i+'">'
       +'<div class="lt-h"><span class="mc-name">'+esc(l.name)+'</span><span class="tag '+(biz?'t-g':'t-t')+'">'+esc(l.tax)+'</span></div>'
       +(detail?'<div class="lt-p">'
-        +row(biz?'사업자번호':'주민번호',l.regId,'ltmc-rid'+i)
+        +row(biz?'사업자번호':'주민번호',l.regId,'ltmc-rid'+i,biz&&l.ceo?'<span class="copyable" id="ltmc-ceo'+i+'">'+esc(l.ceo)+'</span><span style="color:var(--faint)">/</span>':'')
         +row('계좌',l.acct||(l.bank?'':'-'),'ltmc-acct'+i,l.bank?'<span class="bank-tag">'+esc(l.bank)+'</span>':'')
         +row('메일',l.email,'ltmc-email'+i)
       +'</div>'
-      +'<button class="lt-tg" id="ltmh'+i+'"><span>연락처 · 주소'+(l.ceo?' · 대표명':'')+'</span><span class="mc-chv">⌄</span></button>'
+      +'<button class="lt-tg" id="ltmh'+i+'"><span>연락처 · 주소'+(!biz&&l.ceo?' · 대표명':'')+'</span><span class="mc-chv">⌄</span></button>'
       +'<div class="mc-body lt-p lt-more">'
         +row('연락처',l.tel,'ltmc-tel'+i)
         +row('주소',l.addr,'ltmc-addr'+i)
-        +(l.ceo?row('대표명',l.ceo,'ltmc-ceo'+i):'')
+        +(!biz&&l.ceo?row('대표명',l.ceo,'ltmc-ceo'+i):'')
         +(canEdit()?'<div class="mc-actions"><button class="ab ed" id="lted'+i+'">✎</button><button class="ab dl" id="ltdl'+i+'">✕</button></div>':'')
       +'</div>':'<div class="lt-p">'+row('메일',l.email,'ltmc-email'+i)+'</div>')
       +'</div>';
