@@ -2540,14 +2540,20 @@ toggleEditMode = function () {
 .wd-add{position:relative;flex:none;display:inline-flex;align-items:center;background:#fff!important;box-shadow:0 0 0 1px var(--line) inset;color:var(--txt3)!important}
 .wd-add select{position:absolute;inset:0;opacity:0;width:100%;cursor:pointer;font-size:16px}
 .wd-tot{display:flex;align-items:baseline;justify-content:space-between;gap:10px;padding:2px 2px 0}
-.wd-tot b{font-size:20px;font-weight:800;flex:none}
+.wd-tot b{font-size:18px;font-weight:800;flex:none}
 .wd-tot span{font-size:13px;color:var(--txt3);text-align:right}
 .wd-sec{background:var(--chip);border-radius:16px;overflow:hidden}
-.wd-sh{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;border:0;background:none;padding:14px 16px 10px;font-family:inherit;cursor:pointer;text-align:left}
+.wd-sh{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;border:0;background:none;padding:11px 16px 7px;font-family:inherit;cursor:pointer;text-align:left}
 .wd-sh b{font-size:15px;font-weight:700;color:var(--txt)}
 .wd-sh em{font-style:normal;font-size:14px;font-weight:700;color:var(--txt)}
 .wd-sh em i{font-style:normal;color:var(--faint);margin-left:4px}
-.wd-li{display:block;width:100%;border:0;background:none;text-align:left;padding:10px 16px;border-top:1px solid #e9ecef;font-family:inherit;cursor:pointer}
+.wd-li{display:flex;align-items:baseline;justify-content:space-between;gap:10px;width:100%;border:0;background:none;text-align:left;padding:9px 16px;border-top:1px solid #e9ecef;font-family:inherit;cursor:pointer}
+.wd-li .wd-f{display:block;font-size:14px;font-weight:600;color:var(--txt);min-width:0;overflow-wrap:anywhere}
+.wd-li .wd-f small{display:block;font-size:11px;font-weight:500;color:var(--txt3);margin-top:1px}
+.wd-li .wd-its{display:block;flex:none;max-width:60%;text-align:right;font-size:13px;color:var(--txt3);margin:0}
+.wd-li .wd-its b{color:var(--txt);font-weight:700}
+.wd-sec>.wd-li:first-child{border-top:0}
+.wd-sec>.wd-ed{margin:8px}
 .wd-li.solo{background:var(--chip);border:0;border-radius:16px;padding:14px 16px}
 .wd-f{display:flex;align-items:baseline;justify-content:space-between;gap:8px}
 .wd-f b{font-size:15px;font-weight:700;color:var(--txt);overflow-wrap:anywhere;min-width:0}
@@ -2587,10 +2593,10 @@ function woFilled(r) { return r.e.some(function (x) { return String(x).trim(); }
 function woBreak(s) { var p = []; for (var c = 1; c <= 11; c++) if (s[c]) p.push(esc(woLbl(c)) + ' ' + s[c]); return p.join(' · '); }
 function woRowItems(r) { var p = []; for (var c = 1; c <= 11; c++) if (woNum(r.e[c])) p.push('<i>' + esc(woLbl(c)) + ' ' + esc(String(r.e[c]).trim()) + '</i>'); return p.join(''); }
 function woRowSum(r) { var n = 0; for (var c = 1; c <= 11; c++) n += woNum(r.e[c]); return n; }
-function woRowView(t, ti, r, i, solo) {
-  return '<button class="wd-li' + (solo ? ' solo' : '') + '" onclick="woRowEdit(' + ti + ',' + i + ')"><div class="wd-f"><b>' + (esc(String(r.e[0]).trim()) || '<span style="color:var(--faint)">(폴더명 없음)</span>') +
-    (woRowDirty(r) ? '<span class="ch-dot"></span>' : '') + '</b><span>' + woRowSum(r) + '컷</span></div>' +
-    '<div class="wd-its">' + woRowItems(r) + '</div>' + (String(r.e[12]).trim() ? '<div class="wd-memo-t">' + esc(r.e[12]) + '</div>' : '') + '</button>';
+function woRowView(t, ti, r, i) {
+  var it = []; for (var c = 1; c <= 11; c++) if (woNum(r.e[c])) it.push(esc(woLbl(c)) + ' <b>' + esc(String(r.e[c]).trim()) + '</b>');
+  return '<button class="wd-li" onclick="woRowEdit(' + ti + ',' + i + ')"><span class="wd-f">' + (esc(String(r.e[0]).trim()) || '<span style="color:var(--faint)">(폴더명 없음)</span>') +
+    (woRowDirty(r) ? '<span class="ch-dot"></span>' : '') + (String(r.e[12]).trim() ? '<small>' + esc(r.e[12]) + '</small>' : '') + '</span><span class="wd-its">' + (it.join(' · ') || '-') + '</span></button>';
 }
 function woRowEditor(t, ti, r, i) {
   if (!r.x) { r.x = []; for (var c = 1; c <= 11; c++) if (String(r.e[c]).trim()) r.x.push(c); }
@@ -2631,13 +2637,13 @@ woDetail = function () {
   } else {
     var t = d.tabs[WO.tab], tt = woTot(t);
     h += '<div class="wd-tot"><b>' + esc(t.name) + ' ' + tt.all + '컷</b><span>' + (woBreak(tt.s) || '아직 없음') + '</span></div>';
-    var any = false;
+    var any = false, box = '';
     t.rows.forEach(function (r, i) {
       var ed = WO.ed && WO.ed.t === WO.tab && WO.ed.i === i;
-      if (ed) { h += woRowEditor(t, WO.tab, r, i); any = true; }
-      else if (woFilled(r) || woRowDirty(r)) { h += woRowView(t, WO.tab, r, i, true); any = true; }
+      if (ed) { box += woRowEditor(t, WO.tab, r, i); any = true; }
+      else if (woFilled(r) || woRowDirty(r)) { box += woRowView(t, WO.tab, r, i); any = true; }
     });
-    if (!any) h += '<div class="wo-empty">아직 작성한 내역이 없어요</div>';
+    h += any ? '<div class="wd-sec">' + box + '</div>' : '<div class="wo-empty">아직 작성한 내역이 없어요</div>';
     h += '<button class="wd-more" onclick="woNewRow()">+ 줄 추가</button>';
   }
   var n = woChanged();
