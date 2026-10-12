@@ -3315,6 +3315,18 @@ function woHead(ck, artist, title, d6, t) {
 .dc-sel,.dc-dt,.dc-hq{height:34px}
 .dc-box .wo-chip,#tab-dash .wo-chip{height:34px;display:inline-flex;align-items:center;padding-top:0;padding-bottom:0}
 .dc-sel,.dc-hq{font-size:13px}
+/* 2026-10-12: 모바일 작업 항목 — 2열(구분|내용 / 컷수|단가 / 긴급·고급|소계), 칸 이름 더 작게 */
+@media(max-width:560px){
+.inv-g{grid-template-columns:22px minmax(0,1fr) minmax(0,1fr)!important}
+.inv-g .inv-span2{grid-column:auto!important}
+.inv-g .inv-sub{grid-row:3;grid-column:3;min-height:38px}
+.inv-g .inv-op{grid-row:3;grid-column:2!important;justify-content:flex-start!important;align-self:center;padding-left:2px}
+.inv-fl,.inv-sub span{font-size:9px!important}
+.inv-fl{left:9px!important}
+.inv-f .fi{padding-left:30px!important}
+.inv-sub span{display:inline!important}
+.inv-sub b{font-size:13px!important}
+}
 /* 2026-10-12: 견적서 — 소계·합계 글자 크기를 입력칸(15px)과 맞춤 · 칸 안 이름 10px · 안내문 색: 필수(빨강)/자동(파랑) */
 .inv-sub b{font-size:15px!important}
 .inv-fl,.inv-sub span{font-size:10px!important}
