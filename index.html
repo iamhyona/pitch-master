@@ -3800,6 +3800,17 @@ function txToggle(id, ym) {
 .wo-item .wo-wl .wo-w{padding-left:5px!important;padding-right:5px!important}
 .wo-g .wo-t{padding-left:4px!important}
 </style>
+<style>
+/* 2026-10-12: 색 통일 — 빨강은 #f04452, 파랑은 #3182f6 두 가지만 (주황·연한 빨강/파랑 없앰) */
+:root{--danger:#f04452!important;--acc:#3182f6!important;--acc2:#3182f6!important}
+.inv-req::placeholder,select.inv-req.ph{color:#f04452!important;opacity:1!important}
+.inv-auto::placeholder,.inv-sub b.z{color:#3182f6!important;opacity:1!important}
+.inv-tr:first-child b{color:var(--txt)!important}
+.inv-tt b{color:#3182f6!important}
+.base-val{color:var(--txt)!important;font-weight:700!important}
+.rate-val{color:#3182f6!important}
+.wo-warn{color:#f04452!important}
+</style>
 </body>
 
 </html>
