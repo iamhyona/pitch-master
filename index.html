@@ -4009,12 +4009,12 @@ function woDlSave() {
     woOptsLoad(function (o) {
       var kst = new Date(Date.now() + 9 * 3600000), d6 = String(kst.getUTCFullYear()).slice(2) + ('0' + (kst.getUTCMonth() + 1)).slice(-2) + ('0' + kst.getUTCDate()).slice(-2);
       document.getElementById('wo-n-body').innerHTML =
-        '<div class="fg">' + lab('거래처', 'first') + '<select class="fi sm" id="won-c" onchange="woNewClient()"><option value="">선택</option>' + o.clients.map(function (c) { return '<option>' + esc(c.disp) + '</option>'; }).join('') + '</select></div>' +
-        '<div class="fg">' + lab('아티스트', '') + '<select class="fi sm" id="won-a"><option value="">소속사 먼저 선택</option></select></div>' +
-        '<div class="fg">' + lab('요청일 (YYMMDD)', 'auto') + '<input class="fi sm" id="won-d" inputmode="numeric" maxlength="6" value="' + d6 + '"></div>' +
+        '<div class="fg">' + lab('거래처', 'first') + '<select class="fi sm" id="won-c" onchange="woNewClient()"><option value="">거래처 선택</option>' + o.clients.map(function (c) { return '<option>' + esc(c.disp) + '</option>'; }).join('') + '</select></div>' +
+        '<div class="fg">' + lab('아티스트', '') + '<select class="fi sm ph" id="won-a" onchange="this.classList.toggle(\'ph\',!this.value)"><option value="">거래처 먼저 선택</option></select></div>' +
+        '<div class="fg">' + lab('요청일', '') + wonDw('won-dd', '20' + d6.slice(0, 2) + '-' + d6.slice(2, 4) + '-' + d6.slice(4), '선택', 1) + '<input type="hidden" id="won-d" value="' + d6 + '"></div>' +
         '<div class="fg">' + lab('프로젝트명', 'hand') + '<input class="fi sm" id="won-p" placeholder="예: C자켓"></div>' +
-        '<div class="fg">' + lab('담당자', 'drop') + '<select class="fi sm ph" id="won-ks" onchange="wonK(this)"><option value="">소속사 먼저 선택</option></select><input class="fi sm" id="won-k" placeholder="담당자 이름 직접 입력" style="display:none;margin-top:6px"><datalist id="won-kl"></datalist></div>' +
-        '<div class="fg">' + lab('마감일', 'hand') + '<div class="won-dl">' + [1, 2, 3].map(function (n) { return '<label>' + n + '순위<input type="date" class="fi sm" id="won-dl' + n + '"></label>'; }).join('') + '</div></div>' +
+        '<div class="fg">' + lab('담당자', '') + '<select class="fi sm ph" id="won-ks" onchange="wonK(this)"><option value="">거래처 먼저 선택</option></select><input class="fi sm" id="won-k" placeholder="담당자 이름 직접 입력" style="display:none;margin-top:6px"><datalist id="won-kl"></datalist></div>' +
+        '<div class="fg">' + lab('마감일', '') + '<div class="won-dl">' + [1, 2, 3].map(function (n) { return '<div class="won-dlc"><small>' + n + '순위</small>' + wonDw('won-dl' + n, '', '선택') + '</div>'; }).join('') + '</div></div>' +
         '<div class="fg">' + lab('작업자', 'reqs') + '<div id="won-ws">' + wsHtml(o.vendors) + '</div></div>' +
         '<div class="login-err" id="won-err"></div><button class="login-btn" id="won-go" onclick="woCreate()">만들기</button>';
     });
@@ -4601,7 +4601,7 @@ function woDlSave() {
     var sel = document.getElementById('won-ks'), kl = document.getElementById('won-kl'); if (!sel || !kl) return;
     var names = [].map.call(kl.querySelectorAll('option'), function (o) { return o.value; }).filter(String);
     var c = (document.getElementById('won-c') || {}).value;
-    sel.innerHTML = (c ? '<option value="">' + (names.length ? '담당자 선택' : '등록된 담당자 없음') + '</option>' : '<option value="">소속사 먼저 선택</option>') +
+    sel.innerHTML = (c ? '<option value="">' + (names.length ? '담당자 선택' : '등록된 담당자 없음') + '</option>' : '<option value="">거래처 먼저 선택</option>') +
       names.map(function (n) { return '<option>' + esc(n) + '</option>'; }).join('') + (c ? '<option value="__d">직접 입력</option>' : '');
     sel.classList.add('ph'); var k = document.getElementById('won-k'); k.value = ''; k.style.display = 'none';
   };
@@ -4652,6 +4652,42 @@ function woDlSave() {
 #tab-taxbill .pf-hd .pf-ic,#tab-tx .tc-h .dc-ib{width:38px!important;height:38px!important;background:#fff!important}
 #tab-taxbill .pf-hd .pf-ic svg,#tab-tx .tc-h .dc-ib svg{width:18px!important;height:18px!important}
 </style>
+<style>
+/* 2026-10-13: 새 작업내역서 — 날짜칸은 기간 선택처럼 '선택' 글자 + 달력 아이콘 */
+#wo-n-body select.ph{color:var(--faint)}
+.won-dw{position:relative;display:flex;align-items:center;justify-content:space-between;gap:6px;height:42px;border-radius:14px;background:var(--chip);padding:0 14px;font-size:15px;color:var(--txt);cursor:pointer;box-sizing:border-box;min-width:0}
+.won-dw.e span{color:var(--faint)}
+.won-dw span{overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.won-dw svg{width:18px;height:18px;color:var(--txt3);flex:none}
+.won-dw input{position:absolute;inset:0;width:100%;height:100%;opacity:0;border:0;cursor:pointer;-webkit-appearance:none;appearance:none}
+.won-dw input::-webkit-calendar-picker-indicator{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer}
+.won-dl .won-dlc{display:flex;flex-direction:column;gap:3px;min-width:0}
+.won-dl .won-dlc small{font-size:11px;color:var(--txt3);padding-left:2px}
+.won-dl label.won-dw{flex-direction:row;height:42px;padding:0 10px;font-size:13px;color:var(--txt);gap:4px}
+.won-dl .won-dw svg{width:16px;height:16px}
+</style>
+<script>
+(function () {
+  var CAL = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/></svg>';
+  var W = ['일', '월', '화', '수', '목', '금', '토'];
+  function fmt(v, full) { if (!v) return ''; var d = new Date(v + 'T00:00:00'); return (full ? v : v.slice(5).replace('-', '.')) + '(' + W[d.getDay()] + ')'; }
+  window.wonDw = function (id, v, ph, full) {
+    return '<label class="won-dw' + (v ? '' : ' e') + '" data-ph="' + ph + '"' + (full ? ' data-full="1"' : '') + '><span>' + (v ? fmt(v, full) : ph) + '</span>' + CAL +
+      '<input type="date" id="' + id + '" value="' + (v || '') + '" onclick="try{this.showPicker()}catch(e){}" onchange="wonDwSet(this)"></label>';
+  };
+  window.wonDwSet = function (inp) {
+    var l = inp.parentNode, v = inp.value, full = l.getAttribute('data-full');
+    l.querySelector('span').textContent = v ? fmt(v, full) : l.getAttribute('data-ph'); l.classList.toggle('e', !v);
+    if (inp.id === 'won-dd') { var h = document.getElementById('won-d'); if (h) h.value = v ? v.slice(2, 4) + v.slice(5, 7) + v.slice(8, 10) : ''; }
+  };
+  var _nc2 = woNewClient;
+  woNewClient = function () {
+    _nc2.apply(this, arguments);
+    var c = document.getElementById('won-c'), a = document.getElementById('won-a');
+    if (a) { a.classList.add('ph'); var f = a.querySelector('option[value=""]'); if (f) f.textContent = c && c.value ? '아티스트 선택' : '거래처 먼저 선택'; }
+  };
+})();
+</script>
 </body>
 
 </html>
