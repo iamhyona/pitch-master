@@ -3523,6 +3523,70 @@ function pfOutCopy() {
   closeMo('mo-pfout');
 }
 </script>
+<style>
+/* 2026-10-12: 메뉴 바로 아래 정돈 — 흰 카드 맨 윗줄 하나에 [왼쪽 필터/단추 | 오른쪽 아이콘] */
+.dc-box .tc-h{gap:6px}
+.dc-hf{display:flex;align-items:center;gap:6px;min-width:0;flex:1;overflow-x:auto;scrollbar-width:none}
+.dc-hf::-webkit-scrollbar{display:none}
+.dc-box .tc-h .dc-ics{margin-left:0;flex:none}
+.dc-box .tc-h.q .dc-hf{display:none}
+.dc-box .tc-h.q .dc-ics{flex:1;justify-content:flex-end}
+.dc-box .tc-h.q .dc-hq.open{flex:1;width:auto}
+.dc-hf .dc-sel{height:32px;font-size:13px;padding:0 24px 0 12px;background-position:right 9px center;flex:none}
+.dc-pb{height:32px;border:0;border-radius:999px;background:var(--chip);color:var(--txt3);font-family:inherit;font-size:13px;padding:0 12px;cursor:pointer;white-space:nowrap;flex:none}
+.dc-pb.on{background:var(--txt);color:#fff}
+.dc-x{height:32px;width:32px;border:0;border-radius:50%;background:none;color:var(--txt3);font-size:15px;cursor:pointer;flex:none;padding:0}
+.dc-box .wo-bar{padding-top:10px;padding-bottom:10px}
+.dc-per2{display:flex;align-items:center;gap:6px;color:var(--txt3);font-size:12px}
+.dc-per2 .dc-dt{flex:1;width:auto;min-width:0;height:32px}
+/* 작업단가: 청구/지급 단추를 흰 카드 맨 윗줄로 */
+.rt-top{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:14px 16px 4px}
+.rt-top .rt-seg{margin:0!important}
+.rt-top .btn{height:32px!important;font-size:13px!important;padding:0 13px!important;border-radius:999px!important;margin:0!important}
+.rate-agency-box .rate-agency-label{padding-top:10px}
+</style>
+<script>
+// 2026-10-12: 지급내역·청구내역 — 연도·월·기간을 머리 줄(아이콘 왼쪽)로 올리고, 기간 날짜칸은 '기간' 눌렀을 때만
+function dcRender(type) {
+  var S = DC[type], box = document.getElementById('dc-' + type); if (!box) return;
+  var bar = box.querySelector('.wo-bar'), old = bar.querySelector('.dc-chips'), sl = old ? old.scrollLeft : 0;
+  var base = S.items.filter(function (x) { return dcPass(S, x); }), cnt = {};
+  base.forEach(function (x) { cnt[x.folder] = (cnt[x.folder] || 0) + 1; });
+  var fl = S.folders.filter(function (f) { return f.n > 0 || f.name === S.folder; }).sort(function (a, b) { return pmCmpClient(a.name, b.name); });
+  var years = {}; S.items.forEach(function (x) { var d = dcD(x); if (d) years[d.slice(0, 4)] = 1; });
+  var yo = Object.keys(years).sort().reverse().map(function (y) { return '<option value="' + y + '"' + (S.y === y ? ' selected' : '') + '>' + y + '년</option>'; }).join('');
+  var mo = ''; for (var m = 1; m <= 12; m++) { var mm = ('0' + m).slice(-2); mo += '<option value="' + mm + '"' + (S.m === mm ? ' selected' : '') + '>' + m + '월</option>'; }
+  var any = S.y || S.m || S.from || S.to, per = S.from || S.to;
+  var hd = box.querySelector('.tc-h'), hf = hd && hd.querySelector('.dc-hf');
+  if (hd && !hf) { hf = document.createElement('div'); hf.className = 'dc-hf'; hd.insertBefore(hf, hd.firstChild); }
+  var md = function (v) { return v ? v.slice(5).replace('-', '.') : ''; };
+  if (hf) hf.innerHTML =
+    '<select class="dc-sel' + (S.y ? '' : ' ph') + '" onchange="dcSet(\'' + type + '\',\'y\',this.value)"><option value="">연도</option>' + yo + '</select>' +
+    '<select class="dc-sel' + (S.m ? '' : ' ph') + '" onchange="dcSet(\'' + type + '\',\'m\',this.value)"><option value="">월</option>' + mo + '</select>' +
+    '<button type="button" class="dc-pb' + (per || S.perOpen ? ' on' : '') + '" onclick="DC.' + type + '.perOpen=!DC.' + type + '.perOpen;dcRender(\'' + type + '\')">' + (per ? md(S.from) + '~' + md(S.to) : '기간') + '</button>' +
+    (any ? '<button type="button" class="dc-x" title="필터 초기화" onclick="DC.' + type + '.y=DC.' + type + '.m=DC.' + type + '.from=DC.' + type + '.to=\'\';DC.' + type + '.perOpen=false;dcRender(\'' + type + '\')">✕</button>' : '');
+  if (hd) hd.classList.toggle('q', !!S.qOpen);
+  bar.innerHTML =
+    (S.perOpen ? '<div class="dc-per2"><input type="date" class="dc-dt" value="' + (S.from || '') + '" onchange="dcSet(\'' + type + '\',\'from\',this.value)"><span>~</span><input type="date" class="dc-dt" value="' + (S.to || '') + '" onchange="dcSet(\'' + type + '\',\'to\',this.value)"></div>' : '') +
+    '<div class="dc-chips"><button class="wo-chip' + (S.folder ? '' : ' on') + '" onclick="dcFolder(\'' + type + '\',\'\')">전체<b>' + base.length + '</b></button>' +
+    fl.map(function (f) { return '<button class="wo-chip' + (S.folder === f.name ? ' on' : '') + '" data-f="' + esc(f.name) + '" onclick="dcFolder(\'' + type + '\',this.dataset.f)">' + esc(f.name) + '<b>' + (cnt[f.name] || 0) + '</b></button>'; }).join('') + '</div>';
+  var nc = bar.querySelector('.dc-chips'); if (nc) nc.scrollLeft = sl;
+  var sb = box.querySelector('.dc-sbtn'); if (sb) sb.classList.toggle('on', !!S.qOpen);
+  var dl = box.querySelector('.dc-drive'); if (dl) { var cf = S.folders.filter(function (f) { return f.name === S.folder; })[0]; dl.href = WO_DRIVE + (cf ? cf.id : (S.root || '')); }
+  dcList(type);
+}
+(function () {
+  var os = dcSearch; dcSearch = function (type) { os(type); var h = document.querySelector('#dc-' + type + ' .tc-h'); if (h) h.classList.toggle('q', !!DC[type].qOpen); };
+  // 작업단가: 청구/지급 단추와 '단가마스터 열기'를 흰 카드 맨 윗줄로
+  ['bill', 'pay'].forEach(function (k) {
+    var tab = document.getElementById('tab-rates-' + k); if (!tab) return;
+    var seg = tab.querySelector(':scope > .rt-seg'), box = tab.querySelector('.rate-agency-box'); if (!seg || !box) return;
+    var top = document.createElement('div'); top.className = 'rt-top'; top.appendChild(seg);
+    var b = document.getElementById('btn-edit-rate-' + k); if (b) top.appendChild(b);
+    box.insertBefore(top, box.firstChild);
+  });
+})();
+</script>
 </body>
 
 </html>
