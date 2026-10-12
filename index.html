@@ -2963,7 +2963,8 @@ doLogout = function () { DC.invoice = { items: [], folders: [], folder: '', q: '
 .pf-sum span{font-size:13px;color:var(--txt3);font-weight:600}
 .pf-sum b{font-size:20px;font-weight:800}
 .fi[readonly]{color:var(--txt2)}
-.pf-ro{height:auto!important;min-height:44px;display:flex;flex-direction:column;justify-content:center;font-size:13px;line-height:1.35;color:var(--txt2);padding-top:6px;padding-bottom:6px;overflow-wrap:anywhere}
+.pf-ro{display:flex;align-items:center;color:var(--txt2);white-space:nowrap;overflow-x:auto;scrollbar-width:none}
+.pf-ro::-webkit-scrollbar{display:none}
 .pf-tpl{width:100%;min-height:200px;border:0;background:var(--chip);border-radius:12px;padding:12px 14px;font-family:inherit;font-size:14px;line-height:1.6;color:var(--txt);outline:0;resize:vertical}
 .pf-keys{display:flex;flex-wrap:wrap;gap:4px}
 .pf-keys code{font-family:inherit;font-size:12px;background:var(--chip);border-radius:999px;padding:3px 8px;color:var(--txt2);cursor:pointer}
@@ -3041,9 +3042,10 @@ function pfMode(m, keep) {
   if (!keep) pfEl('pf-quick').value = '';
   pfQuick();
 }
+function pfAC(a) { return String(a && a.client || '').split(/\s*,\s*/).filter(Boolean); } // 아티스트 소속 거래처가 여러 곳일 수 있음 (예: YG · YG PLUS)
 function pfArtistOpts(disp) {
   var sel = pfEl('pf-artist-s'); if (!sel) return;
-  var list = PM.artists.filter(function (a) { return disp && a.client === disp; });
+  var list = PM.artists.filter(function (a) { return disp && pfAC(a).indexOf(disp) >= 0; });
   sel.innerHTML = '<option value="">' + (disp ? '아티스트 선택' : '거래처 먼저 선택') + '</option>' + list.map(function (a) { return '<option value="' + esc(a.disp) + '">' + esc(a.ko || a.disp) + '</option>'; }).join('');
   if (PF.artist && list.some(function (a) { return a.disp === PF.artist.disp; })) sel.value = PF.artist.disp;
   pfSet('pf-artist', PF.artist ? (PF.artist.ko || PF.artist.disp) : '');
@@ -3058,7 +3060,7 @@ function pfMgrOpts(disp, want) {
 function pfFillClient() {
   var c = pmClient(pfV('pf-client'));
   pfSet('pf-cname', pmClientName(c)); pfSet('pf-ceo', c ? c.ceo : ''); pfSet('pf-biz', c ? c.biz : '');
-  pfEl('pf-ceobiz').innerHTML = c ? esc(c.ceo || '-') + '<br>' + esc(c.biz || '-') : '';
+  pfEl('pf-ceobiz').textContent = c ? (c.ceo || '-') + ' / ' + (c.biz || '-') : '';
   pfArtistOpts(c ? c.disp : '');
   pfMgrOpts(c ? c.disp : '', pfV('pf-mgr'));
   pfFillMgr();
@@ -3078,12 +3080,12 @@ function pfFillArtist() {
   if (!r) { PF.artist = null; return '"' + q + '" 아티스트·멤버를 못 찾았어요' + (PF.mode === 'tax' ? '. 거래처를 골라 주세요.' : ''); }
   PF.artist = r.artist;
   if (PF.mode === 'tax') {
-    var mgr = PF._m, byMgr = mgr ? PM.contacts.filter(function (k) { return k.name === mgr && r.all.some(function (a) { return a.client === k.client; }); })[0] : null;
-    var disp = byMgr ? byMgr.client : r.artist.client;
-    var a2 = r.all.filter(function (a) { return a.client === disp; })[0]; if (a2) PF.artist = a2;
+    var mgr = PF._m, byMgr = mgr ? PM.contacts.filter(function (k) { return k.name === mgr && r.all.some(function (a) { return pfAC(a).indexOf(k.client) >= 0; }); })[0] : null;
+    var disp = byMgr ? byMgr.client : pfAC(r.artist)[0];
+    var a2 = r.all.filter(function (a) { return pfAC(a).indexOf(disp) >= 0; })[0]; if (a2) PF.artist = a2;
     pfEl('pf-client').value = disp; pfSet('pf-mgr', mgr || ''); pfFillClient();
   }
-  return (PF.artist.ko || PF.artist.disp) + ' → ' + pmClientName(pmClient(PF.artist.client));
+  return (PF.artist.ko || PF.artist.disp) + ' → ' + (PF.mode === 'tax' ? pmClientName(pmClient(pfV('pf-client'))) : pfAC(PF.artist).map(function (x) { return pmClientName(pmClient(x)); }).join(', '));
 }
 function pfQuick() {
   var parts = pfV('pf-quick').split(/(?<!\d),|,(?!\d{3}(?!\d))|[，\t\/]|\s{2,}/).map(function (x) { return x.trim(); }).filter(Boolean);
