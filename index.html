@@ -2968,6 +2968,8 @@ doLogout = function () { DC.invoice = { items: [], folders: [], folder: '', q: '
 .pf-tg{font-size:11px;font-weight:500;color:var(--txt3);margin-left:5px;white-space:nowrap}
 .pf-tg.r{color:#f04452}
 .pf-tg.b{color:#3182f6}
+#pf-form select.ph{color:var(--faint)}
+#pf-form select option{color:var(--txt)}
 .pf-sum .pf-tg{font-size:11px;font-weight:500}
 .pf-keys code{font-family:inherit;font-size:12px;background:var(--chip);border-radius:999px;padding:3px 8px;color:var(--txt2);cursor:pointer}
 </style>
@@ -3149,7 +3151,9 @@ function pfText() {
   return tpl.split('\n').filter(function (line) { return !(/^\s*-/.test(line) && /\{(계산서메일|추가설명)\}/.test(line) && !v[(line.match(/\{(계산서메일|추가설명)\}/) || [])[1]]); })
     .map(function (line) { return line.replace(/\{([^}]+)\}/g, function (all, key) { return key in v ? v[key] : all; }).replace(/ {2,}/g, ' ').replace(/ >/, '>'); }).join('\n');
 }
+function pfSelPh() { document.querySelectorAll('#pf-form select').forEach(function (e) { e.classList.toggle('ph', !e.value); }); }
 function pfBuild() {
+  pfSelPh();
   if (!pfEl('pf-total')) return;
   var k = pfCalc(); pfSet('pf-vat', k.amt ? tbWon(k.tax) : '');
   var vl = document.querySelector('label[for="pf-vat"] .pf-lt') || document.querySelector('label[for="pf-vat"]'); if (vl) vl.textContent = k.label;
