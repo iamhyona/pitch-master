@@ -5011,6 +5011,109 @@ a.rg-lk svg{width:16px;height:16px;flex:none}
   };
 })();
 </script>
+<style>
+/* 2026-10-13: 작업내역 — 검색 상자와 목록 사이 '리터칭 작업일정' 달력 (구글시트 @스케줄관리와 같은 내용) */
+#sch-box{background:#fff;border-radius:20px;margin:0 0 10px;padding:14px 14px 12px}
+.sch-h{display:flex;align-items:center;gap:6px;margin-bottom:10px}
+.sch-h b{font-size:15px;font-weight:700;color:var(--txt);min-width:92px;text-align:center}
+.sch-h .sp{flex:1}
+.sch-ib{width:32px;height:32px;border-radius:50%;border:0;background:var(--chip);color:var(--txt2);display:inline-flex;align-items:center;justify-content:center;padding:0;cursor:pointer;flex:none;text-decoration:none}
+.sch-ib svg{width:16px;height:16px}
+.sch-lg{display:flex;gap:10px;font-size:11px;color:var(--txt3);margin:0 2px 8px;flex-wrap:wrap}
+.sch-lg i{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:4px;vertical-align:0}
+.sch-g{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:2px}
+.sch-w{font-size:11px;color:var(--txt3);text-align:center;padding:2px 0 4px}
+.sch-w.we{color:#b0b8c1}
+.sch-d{min-height:62px;border-radius:8px;padding:3px 2px 2px;cursor:pointer;min-width:0;display:flex;flex-direction:column;gap:2px}
+.sch-d:hover{background:#f9fafb}
+.sch-d.out{cursor:default;opacity:.35}
+.sch-d.out:hover{background:none}
+.sch-d.sel{background:#f2f4f6}
+.sch-n{font-size:11px;font-weight:600;color:var(--txt);padding:1px 3px;line-height:16px;display:flex;align-items:center;gap:3px;min-width:0}
+.sch-n.we{color:#8b95a1}
+.sch-n em{font-style:normal;width:18px;height:18px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;flex:none}
+.sch-d.today .sch-n em{background:var(--txt);color:#fff}
+.sch-n small{font-size:9px;font-weight:400;color:#8b95a1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sch-e{font-size:9.5px;line-height:14px;border-radius:4px;padding:0 3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sch-e.r0{background:#e8f3ff;color:#3182f6}
+.sch-e.r1{background:#f2f4f6;color:#4e5968}
+.sch-e.r2{background:#ffeef0;color:#f04452}
+.sch-more{font-size:9px;color:var(--txt3);padding:0 3px}
+.sch-det{border-top:1px solid var(--line);margin-top:10px;padding-top:10px}
+.sch-det .t{font-size:13px;font-weight:700;color:var(--txt);margin-bottom:8px}
+.sch-det .it{display:flex;gap:8px;align-items:flex-start;font-size:13px;color:var(--txt);padding:3px 0}
+.sch-det .it span{flex:none;font-size:10px;font-weight:700;border-radius:999px;padding:1px 8px;margin-top:1px}
+.sch-det .none,.sch-msg{font-size:12px;color:var(--txt3)}
+.sch-msg{text-align:center;padding:6px 0 2px}
+</style>
+<script>
+// 2026-10-13 (현아 요청): 작업내역 달력 — 1행 핏치 일정(작업내역서 요청일·마감일 자동) · 2행 소속사 일정 · 3행 공식 일정
+(function () {
+  var SV = 'viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"';
+  var I = { l: '<svg ' + SV + '><path d="M15 18l-6-6 6-6"/></svg>', r: '<svg ' + SV + '><path d="M9 18l6-6-6-6"/></svg>',
+            sh: '<svg ' + SV + '><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M3 9h18M3 15h18M9 3v18"/></svg>' };
+  var LB = ['핏치', '소속사', '공식'];
+  function p2(n) { return ('0' + n).slice(-2); }
+  function ymd(d) { return d.getFullYear() + '-' + p2(d.getMonth() + 1) + '-' + p2(d.getDate()); }
+  var now = new Date();
+  window.SCH = { ym: now.getFullYear() + '-' + p2(now.getMonth() + 1), data: {}, sel: ymd(now), loading: {} };
+  function box() {
+    var b = document.getElementById('sch-box'); if (b) return b;
+    var l = document.getElementById('wo-list'); if (!l) return null;
+    l.insertAdjacentHTML('beforebegin', '<div id="sch-box"></div>');
+    return document.getElementById('sch-box');
+  }
+  window.schLoad = function (fresh, ym) {
+    ym = ym || SCH.ym; if (!PM_K || SCH.loading[ym]) return;
+    SCH.loading[ym] = 1; schRender();
+    woGet('&sch=' + ym + (fresh ? '&fresh=1' : ''), function (d) {
+      delete SCH.loading[ym];
+      SCH.data[ym] = d && d.ok ? d : { ok: false, error: (d && d.error) || '불러오지 못했어요' };
+      schRender();
+    });
+  };
+  window.schGo = function (n) {
+    var p = SCH.ym.split('-'), d = new Date(+p[0], +p[1] - 1 + n, 1);
+    SCH.ym = d.getFullYear() + '-' + p2(d.getMonth() + 1);
+    var t = new Date(); SCH.sel = SCH.ym === ymd(t).slice(0, 7) ? ymd(t) : SCH.ym + '-01';
+    if (!SCH.data[SCH.ym]) schLoad(false); else schRender();
+  };
+  window.schSel = function (k) { SCH.sel = k; schRender(); };
+  window.schRender = function () {
+    var b = box(); if (!b) return;
+    var p = SCH.ym.split('-'), y = +p[0], m = +p[1], D = SCH.data[SCH.ym], days = (D && D.days) || {};
+    var first = new Date(y, m - 1, 1), start = new Date(y, m - 1, 1 - first.getDay()), wk = Math.ceil((first.getDay() + new Date(y, m, 0).getDate()) / 7);
+    var today = ymd(new Date());
+    var h = '<div class="sch-h"><button class="sch-ib" title="이전 달" onclick="schGo(-1)">' + I.l + '</button><b>' + y + '년 ' + m + '월</b><button class="sch-ib" title="다음 달" onclick="schGo(1)">' + I.r + '</button><span class="sp"></span>' +
+      (D && D.url ? '<a class="sch-ib" title="구글시트에서 열기" href="' + esc(D.url) + '" target="_blank" rel="noopener">' + I.sh + '</a>' : '') + '</div>' +
+      '<div class="sch-lg">' + LB.map(function (t, i) { return '<span><i style="background:' + ['#3182f6', '#8b95a1', '#f04452'][i] + '"></i>' + t + ' 일정</span>'; }).join('') + '</div>';
+    h += '<div class="sch-g">' + '일월화수목금토'.split('').map(function (w, i) { return '<div class="sch-w' + (i === 0 || i === 6 ? ' we' : '') + '">' + w + '</div>'; }).join('');
+    for (var i = 0; i < wk * 7; i++) {
+      var dt = new Date(start.getFullYear(), start.getMonth(), start.getDate() + i), k = ymd(dt), out = dt.getMonth() !== m - 1, o = days[k] || {}, e = o.e || [[], [], []];
+      var we = dt.getDay() === 0 || dt.getDay() === 6 || o.h, all = [];
+      e.forEach(function (arr, r) { arr.forEach(function (t) { all.push([r, t]); }); });
+      h += '<div class="sch-d' + (out ? ' out' : '') + (k === today ? ' today' : '') + (!out && k === SCH.sel ? ' sel' : '') + '"' + (out ? '' : ' onclick="schSel(\'' + k + '\')"') + '>' +
+        '<div class="sch-n' + (we ? ' we' : '') + '"><em>' + dt.getDate() + '</em>' + (o.h && !out ? '<small>' + esc(o.h) + '</small>' : '') + '</div>' +
+        (out ? '' : all.slice(0, 3).map(function (a) { return '<div class="sch-e r' + a[0] + '">' + esc(a[1]) + '</div>'; }).join('') + (all.length > 3 ? '<div class="sch-more">+' + (all.length - 3) + '</div>' : '')) + '</div>';
+    }
+    h += '</div>';
+    if (SCH.loading[SCH.ym] && !D) h += '<div class="sch-msg">일정 불러오는 중… (처음엔 시트를 만드느라 조금 걸려요)</div>';
+    else if (D && !D.ok) h += '<div class="sch-msg">⚠ ' + esc(D.error) + '</div>';
+    else if (SCH.sel.slice(0, 7) === SCH.ym) {
+      var s = days[SCH.sel] || {}, se = s.e || [[], [], []], sd = new Date(+SCH.sel.slice(0, 4), +SCH.sel.slice(5, 7) - 1, +SCH.sel.slice(8)), any = false;
+      h += '<div class="sch-det"><div class="t">' + (sd.getMonth() + 1) + '월 ' + sd.getDate() + '일 (' + '일월화수목금토'.charAt(sd.getDay()) + ')' + (s.h ? ' · ' + esc(s.h) : '') + '</div>';
+      se.forEach(function (arr, r) { arr.forEach(function (t) { any = true; h += '<div class="it"><span class="sch-e r' + r + '">' + LB[r] + '</span><div>' + esc(t) + '</div></div>'; }); });
+      if (!any) h += '<div class="none">일정이 없어요' + (D && D.url ? ' — 소속사·공식 일정은 시트 2·3행에 적으면 여기에 보여요' : '') + '</div>';
+      h += '</div>';
+    }
+    b.innerHTML = h;
+  };
+  // 작업내역 새로고침할 때 달력도 같이
+  var _wl = window.woLoad;
+  window.woLoad = function (fresh) { _wl.apply(this, arguments); if (window.PM_K) schLoad(!!fresh); };
+  if (window.PM_K && document.getElementById('wo-list')) { schRender(); schLoad(false); }
+})();
+</script>
 </body>
 
 </html>
