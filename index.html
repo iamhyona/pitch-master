@@ -3322,6 +3322,10 @@ function woHead(ck, artist, title, d6, t) {
 .dc-sel,.dc-dt,.dc-hq{height:34px}
 .dc-box .wo-chip,#tab-dash .wo-chip{height:34px;display:inline-flex;align-items:center;padding-top:0;padding-bottom:0}
 .dc-sel,.dc-hq{font-size:13px}
+/* 2026-10-12: 배경과 구분 — 단추 묶음 바탕은 한 톤 진하게, 회색 바탕 위 검색칸은 흰색 */
+.rt-seg{background:#e5e8eb!important}
+.rt-seg button.on{background:#fff!important;color:var(--txt)!important;box-shadow:0 1px 3px rgba(0,0,0,.1)!important}
+.srch{background:#fff!important;border:1px solid var(--bdr)!important}
 /* 2026-10-12: 지급/청구 · 작업단가 청구/지급 단추 — 글자 폭에 맞게 */
 .rt-seg{display:inline-flex!important;align-self:flex-start;width:auto!important;padding:3px!important;border-radius:10px!important;gap:2px!important}
 .rt-seg button{flex:none!important;height:30px!important;padding:0 18px!important;font-size:14px!important;border-radius:8px!important}
