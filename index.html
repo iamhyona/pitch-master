@@ -216,7 +216,7 @@ select.fi option{background:var(--sur2)}
       <div id="tab-dash" class="tab-panel active">
         <div id="sync-bar" class="sync-bar" style="display:none"></div>
         <div class="tc" id="wo-box">
-          <div class="tc-h" style="flex-wrap:wrap"><span class="tc-t">작업내역서 <span class="wo-sub" style="font-weight:400">· 구글드라이브 02_작업내역서</span></span><span class="dc-ics"><button class="btn btn-p" style="height:34px;font-size:12px;border-radius:999px" onclick="woNew()">+ 새 작업내역서</button><button class="dc-ib" type="button" title="드라이브에서 다시 불러오기" onclick="woLoad(true)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.6-6.4"/><path d="M21 3v6h-6"/></svg></button><a class="dc-ib" id="wo-drive" href="https://drive.google.com/drive/folders/1loq0Q5v2gHT1aekgjh49PUfhdFyPMHvn" target="_blank" title="구글 드라이브 폴더 열기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg></a></span></div>
+          <div class="tc-h" style="flex-wrap:wrap"><span class="tc-t">작업내역서 <span class="wo-sub" style="font-weight:400">· 구글드라이브 02_작업내역서</span></span><span class="dc-ics"><button class="btn btn-p ui-pill" onclick="woNew()">+ 새 작업내역서</button><button class="dc-ib" type="button" title="드라이브에서 다시 불러오기" onclick="woLoad(true)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.6-6.4"/><path d="M21 3v6h-6"/></svg></button><a class="dc-ib" id="wo-drive" href="https://drive.google.com/drive/folders/1loq0Q5v2gHT1aekgjh49PUfhdFyPMHvn" target="_blank" title="구글 드라이브 폴더 열기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg></a></span></div>
           <div class="wo-bar" id="wo-folders"></div>
           <div class="wo-list" id="wo-list"></div>
         </div>
@@ -244,14 +244,14 @@ select.fi option{background:var(--sur2)}
 
       <div id="tab-iv" class="tab-panel">
         <div class="tc dc-box" id="dc-invoice">
-          <div class="tc-h"><span class="tc-t">청구내역</span><span class="dc-ics"><button class="dc-ib dc-sbtn" type="button" title="검색" onclick="dcSearch('invoice')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg></button><button class="dc-ib" type="button" title="드라이브에서 다시 불러오기" onclick="dcLoad('invoice',true)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.6-6.4"/><path d="M21 3v6h-6"/></svg></button><a class="dc-ib dc-drive" href="#" target="_blank" title="구글 드라이브 폴더 열기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg></a></span></div>
+          <div class="tc-h"><span class="tc-t">청구내역</span><span class="dc-ics"><input class="dc-hq" id="dcq-invoice" placeholder="아티스트·프로젝트 검색" oninput="DC.invoice.q=this.value;dcList('invoice')" onkeydown="if(event.key==='Escape')dcSearch('invoice')"><button class="dc-ib dc-sbtn" type="button" title="검색" onclick="dcSearch('invoice')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg></button><button class="dc-ib" type="button" title="드라이브에서 다시 불러오기" onclick="dcLoad('invoice',true)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.6-6.4"/><path d="M21 3v6h-6"/></svg></button><a class="dc-ib dc-drive" href="#" target="_blank" title="구글 드라이브 폴더 열기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg></a></span></div>
           <div class="wo-bar"></div>
           <div class="wo-list"></div>
         </div>
       </div>
       <div id="tab-py" class="tab-panel">
         <div class="tc dc-box" id="dc-pay">
-          <div class="tc-h"><span class="tc-t">지급내역</span><span class="dc-ics"><button class="dc-ib dc-sbtn" type="button" title="검색" onclick="dcSearch('pay')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg></button><button class="dc-ib" type="button" title="드라이브에서 다시 불러오기" onclick="dcLoad('pay',true)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.6-6.4"/><path d="M21 3v6h-6"/></svg></button><a class="dc-ib dc-drive" href="#" target="_blank" title="구글 드라이브 폴더 열기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg></a></span></div>
+          <div class="tc-h"><span class="tc-t">지급내역</span><span class="dc-ics"><input class="dc-hq" id="dcq-pay" placeholder="아티스트·프로젝트·작업자 검색" oninput="DC.pay.q=this.value;dcList('pay')" onkeydown="if(event.key==='Escape')dcSearch('pay')"><button class="dc-ib dc-sbtn" type="button" title="검색" onclick="dcSearch('pay')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg></button><button class="dc-ib" type="button" title="드라이브에서 다시 불러오기" onclick="dcLoad('pay',true)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.6-6.4"/><path d="M21 3v6h-6"/></svg></button><a class="dc-ib dc-drive" href="#" target="_blank" title="구글 드라이브 폴더 열기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg></a></span></div>
           <div class="wo-bar"></div>
           <div class="wo-list"></div>
         </div>
@@ -380,66 +380,72 @@ select.fi option{background:var(--sur2)}
         <div style="background:var(--sur);border:1px solid var(--bdr);border-radius:12px;padding:14px 16px;margin-bottom:10px">
           <div style="display:flex;align-items:center;justify-content:space-between">
             <div>
-              <div style="font-size:10px;font-weight:700;color:var(--txt3);text-transform:uppercase;margin-bottom:2px">발송처</div>
+              <div class="inv-sec" style="margin-bottom:4px">발송처</div>
               <div style="font-size:13px;font-weight:700" id="sender-preview">(주)핏치컴퍼니</div>
             </div>
-            <button class="btn btn-g" style="height:26px;font-size:11px" onclick="openMo('mo-sender')">확인 / 편집</button>
+            <button class="btn btn-g ui-pill" onclick="openMo('mo-sender')">확인 / 편집</button>
           </div>
         </div>
 
         <!-- 수신처 정보 -->
-        <div style="background:var(--sur);border:1px solid var(--bdr);border-radius:12px;padding:16px;margin-bottom:10px">
-          <div style="font-size:10px;font-weight:700;color:var(--txt3);text-transform:uppercase;margin-bottom:12px">수신처 정보</div>
+        <div class="inv-box">
+          <div class="inv-sec">수신처 정보</div>
           <div class="row2" style="margin-bottom:8px">
             <div class="fg">
-              <label class="fl">거래처 *</label>
+              <label class="fl">거래처 *<span class="pf-tg r">*최초 선택</span></label>
               <select class="fi sm" id="inv-client" onchange="onInvClientDirectCheck()"></select>
             </div>
             <div class="fg">
-              <label class="fl">담당자</label>
+              <label class="fl">담당자<span class="pf-tg">*드롭다운 선택</span></label>
               <select class="fi sm" id="inv-manager" onchange="onInvManagerChange()"></select>
             </div>
           </div>
           <div class="row2" style="margin-bottom:8px">
             <div class="fg">
-              <label class="fl">프로젝트명</label>
+              <label class="fl">프로젝트명<span class="pf-tg r">*수기 작성</span></label>
               <input class="fi sm" id="inv-project" placeholder="예: 미야오 신규 앨범">
             </div>
             <div class="fg">
-              <label class="fl">아티스트</label>
+              <label class="fl">아티스트<span class="pf-tg">*드롭다운 선택</span></label>
               <select class="fi sm" id="inv-artist" onchange="onInvArtistChange()"></select>
             </div>
           </div>
           <div class="row2" style="margin-bottom:8px">
             <div class="fg">
-              <label class="fl">검수완료일</label>
+              <label class="fl">검수완료일<span class="pf-tg b">*자동 작성</span></label>
               <input class="fi sm" id="inv-done" type="date">
             </div>
             <div class="fg">
-              <label class="fl">작성일</label>
+              <label class="fl">작성일<span class="pf-tg b">*자동 작성</span></label>
               <input class="fi sm" id="inv-write" type="date">
             </div>
           </div>
-          <div class="fg">
-            <label class="fl">작업링크</label>
-            <input class="fi sm" id="inv-link" placeholder="https://...">
+          <div class="row2">
+            <div class="fg">
+              <label class="fl">작업링크<span class="pf-tg r">*수기 작성</span></label>
+              <input class="fi sm" id="inv-link" placeholder="https://...">
+            </div>
+            <div class="fg">
+              <label class="fl">단가 기준 소속사<span class="pf-tg b">*자동 작성</span></label>
+              <select class="fi sm" id="inv-agency" onchange="onInvAgencyDirectCheck()"></select>
+            </div>
           </div>
         </div>
 
-        <!-- 단가 기준 소속사 -->
-        <div style="background:var(--sur);border:1px solid var(--bdr);border-radius:12px;padding:16px;margin-bottom:10px">
-          <div style="font-size:10px;font-weight:700;color:var(--txt3);text-transform:uppercase;margin-bottom:10px">단가 기준 소속사</div>
-          <select class="fi sm" id="inv-agency" onchange="onInvAgencyDirectCheck()"></select>
-        </div>
-
         <!-- 작업 항목 -->
-        <div style="background:var(--sur);border:1px solid var(--bdr);border-radius:12px;padding:16px;margin-bottom:10px">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
-            <div style="font-size:10px;font-weight:700;color:var(--txt3);text-transform:uppercase">작업 항목</div>
-            <div style="display:flex;gap:6px">
-              <button class="btn btn-g" style="height:26px;font-size:11px" onclick="removeLastInvItem()">항목 삭제</button>
-              <button class="btn btn-p" style="height:26px;font-size:11px" onclick="addInvItem()">항목 추가</button>
+        <div class="inv-box">
+          <div class="inv-ih">
+            <div class="inv-sec" style="margin:0">작업 항목</div>
+            <div class="inv-acts">
+              <button class="dc-ib" type="button" title="체크한 항목 위로" onclick="invMove(-1)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 15l6-6 6 6"/></svg></button>
+              <button class="dc-ib" type="button" title="체크한 항목 아래로" onclick="invMove(1)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></button>
+              <button class="btn btn-g inv-bt" onclick="invDelChecked()">선택 삭제</button>
+              <button class="btn btn-p inv-bt" onclick="addInvItem()">+ 항목 추가</button>
             </div>
+          </div>
+          <div class="inv-hd">
+            <div class="inv-r1"><label class="inv-ck"><input type="checkbox" id="inv-ckall" onchange="invCkAll(this.checked)"></label><span>작업구분<span class="pf-tg">*드롭다운 선택</span></span><span>작업 내용<span class="pf-tg r">*수기 작성</span></span></div>
+            <div class="inv-r2"><span></span><span>컷수<span class="pf-tg r">*수기 작성</span></span><span>컷당 단가<span class="pf-tg b">*자동 작성</span></span><span class="inv-amt-h">소계<span class="pf-tg b">*자동 작성</span></span></div>
           </div>
           <div id="inv-items"></div>
         </div>
@@ -2816,7 +2822,8 @@ function dcPass(S, x) {
   return true;
 }
 function dcSet(type, k, v) { DC[type][k] = v || ''; dcRender(type); }
-function dcSearch(type) { var S = DC[type]; S.qOpen = !S.qOpen; if (!S.qOpen) S.q = ''; dcRender(type); if (S.qOpen) { var e = document.querySelector('#dc-' + type + ' .dc-q'); if (e) e.focus(); } }
+// 검색: 돋보기 누르면 머리 줄에서 왼쪽으로 늘어나는 검색칸
+function dcSearch(type) { var S = DC[type]; S.qOpen = !S.qOpen; var e = document.getElementById('dcq-' + type); if (!S.qOpen) { S.q = ''; if (e) e.value = ''; } if (e) { e.classList.toggle('open', !!S.qOpen); if (S.qOpen) setTimeout(function () { e.focus(); }, 60); } var sb = document.querySelector('#dc-' + type + ' .dc-sbtn'); if (sb) sb.classList.toggle('on', !!S.qOpen); dcList(type); }
 function dcRender(type) {
   var S = DC[type], box = document.getElementById('dc-' + type); if (!box) return;
   var bar = box.querySelector('.wo-bar'), old = bar.querySelector('.dc-chips'), sl = old ? old.scrollLeft : 0;
@@ -2828,7 +2835,6 @@ function dcRender(type) {
   var mo = ''; for (var m = 1; m <= 12; m++) { var mm = ('0' + m).slice(-2); mo += '<option value="' + mm + '"' + (S.m === mm ? ' selected' : '') + '>' + m + '월</option>'; }
   var any = S.y || S.m || S.from || S.to;
   bar.innerHTML =
-    (S.qOpen ? '<input class="wo-srch dc-q" placeholder="아티스트·프로젝트' + (type === 'pay' ? '·작업자' : '') + ' 검색" value="' + esc(S.q || '') + '" oninput="DC.' + type + '.q=this.value;dcList(\'' + type + '\')">' : '') +
     '<div class="dc-chips"><button class="wo-chip' + (S.folder ? '' : ' on') + '" onclick="dcFolder(\'' + type + '\',\'\')">전체<b>' + base.length + '</b></button>' +
     fl.map(function (f) { return '<button class="wo-chip' + (S.folder === f.name ? ' on' : '') + '" data-f="' + esc(f.name) + '" onclick="dcFolder(\'' + type + '\',this.dataset.f)">' + esc(f.name) + '<b>' + (cnt[f.name] || 0) + '</b></button>'; }).join('') + '</div>' +
     '<div class="dc-fl"><select class="dc-sel' + (S.y ? '' : ' ph') + '" onchange="dcSet(\'' + type + '\',\'y\',this.value)"><option value="">연도</option>' + yo + '</select>' +
@@ -3277,6 +3283,111 @@ function woHead(ck, artist, title, d6, t) {
     '<div class="wo-t">' + (artist ? '<b>' + esc(artist) + '</b>' : '') + (proj ? '<span class="wo-pj">' + esc(proj) + '</span>' : '') + (mgr ? '<span class="wo-mg">' + esc(mgr) + '</span>' : '') + '</div>' +
     '<span class="wo-ago">' + woAgo(t) + ' 수정</span></div>';
 }
+</script>
+<style>
+/* 2026-10-12: 견적서 작성 — 칸 표시 · 작업 항목 정돈 */
+.inv-box{background:var(--sur);border:1px solid var(--bdr);border-radius:12px;padding:16px;margin-bottom:10px}
+.inv-sec{font-size:12px;font-weight:700;color:var(--txt3);margin-bottom:12px}
+#tab-invoice .fl .pf-tg{text-transform:none}
+#tab-invoice select.ph{color:var(--faint)}
+#tab-invoice select#inv-client.ph,#tab-invoice select#inv-agency.ph{color:var(--txt)}
+.inv-ih{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:12px;flex-wrap:wrap}
+.inv-acts{display:flex;align-items:center;gap:6px}
+.inv-acts .dc-ib{width:32px;height:32px}
+.inv-bt{height:32px!important;font-size:12px!important;border-radius:999px!important;padding:0 14px!important}
+.inv-r1,.inv-r2{display:grid;gap:6px;align-items:center}
+.inv-r1{grid-template-columns:24px minmax(0,1fr) minmax(0,1.6fr)}
+.inv-r2{grid-template-columns:24px minmax(0,1fr) minmax(0,1fr) minmax(0,1fr)}
+.inv-hd{padding:0 0 8px;border-bottom:1px solid var(--bdr);font-size:12px;font-weight:600;color:var(--txt3);display:flex;flex-direction:column;gap:4px}
+.inv-hd span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-left:2px}
+.inv-amt-h{text-align:right;padding-right:4px!important}
+.inv-ck{display:flex;align-items:center;justify-content:center;cursor:pointer;height:100%}
+.inv-ck input{width:17px;height:17px;margin:0;accent-color:var(--txt);cursor:pointer}
+.inv-it{padding:12px 0;border-bottom:1px solid var(--bdr);display:flex;flex-direction:column;gap:6px}
+.inv-it:last-child{border-bottom:0;padding-bottom:0}
+.inv-it.sel{background:linear-gradient(var(--chip),var(--chip));margin:0 -16px;padding-left:16px;padding-right:16px}
+.inv-no{font-size:11px;font-weight:700;color:var(--faint);text-align:center}
+.inv-amt{font-size:14px;font-weight:700;color:var(--txt);text-align:right;padding:0 4px;white-space:nowrap}
+.inv-op{display:flex;gap:12px;flex-wrap:wrap;padding-left:30px}
+.inv-r1 select[id^="inv-type-"]{grid-column:auto}
+.dc-box .tc-h{flex-wrap:nowrap!important}
+.dc-box .tc-h .tc-t{white-space:nowrap;flex:none}
+.dc-hq{width:0;opacity:0;padding:0;border:0;height:34px;border-radius:999px;background:var(--chip);font-family:inherit;font-size:13px;color:var(--txt);outline:0;transition:width .25s ease,opacity .2s ease,padding .25s ease;min-width:0}
+.dc-hq.open{width:min(220px,42vw);opacity:1;padding:0 14px}
+.inv-op label{display:flex;align-items:center;gap:4px;font-size:12px;color:var(--txt2);cursor:pointer}
+/* 2026-10-12: 메뉴 간 크기 통일 — 동그란 아이콘 38px(아이콘 18px) · 알약 버튼 38px/14px · 패널 제목 16px · 섹션 라벨 12px */
+.ib,.pf-ic,.dc-ib,.inv-acts .dc-ib{width:38px!important;height:38px!important}
+.ib svg,.pf-ic svg,.dc-ib svg{width:18px!important;height:18px!important}
+.ui-pill,.inv-bt,#pf-m-pay,#pf-m-tax{height:38px!important;font-size:14px!important;font-weight:600!important;border-radius:999px!important;padding:0 16px!important}
+.tc-t{font-size:16px!important;font-weight:800!important}
+.inv-sec{font-size:12px!important}
+.inv-acts,.dc-ics,.pf-top{gap:6px!important}
+.dc-sel,.dc-dt,.dc-hq{height:34px}
+.dc-box .wo-chip,#tab-dash .wo-chip{height:34px;display:inline-flex;align-items:center;padding-top:0;padding-bottom:0}
+.dc-sel,.dc-hq{font-size:13px}
+</style>
+<script>
+// 2026-10-12: 견적서 작성 — 작업 항목: 체크(삭제·순서 이동) · 작업구분/작업 내용 · 컷수/컷당 단가/소계
+function invTypeOpts() {
+  var rows = RATES_RAW[gv('inv-agency')] || [];
+  return '<option value="">작업구분 선택</option>' + rows.map(function (r) { return '<option value="' + esc(r[0]) + '">' + esc(r[0]) + '</option>'; }).join('') + '<option value="__direct__">직접 입력</option>';
+}
+function addInvItem() {
+  var id = ++INV_ITEM_ID; INV_ITEMS.push({ id: id });
+  var d = document.createElement('div'); d.className = 'inv-it'; d.id = 'inv-item-' + id;
+  d.innerHTML = '<div class="inv-r1"><label class="inv-ck"><input type="checkbox" class="inv-cb" data-id="' + id + '" onchange="invCkSync()"></label>' +
+    '<select class="fi sm" id="inv-type-' + id + '" onchange="onInvTypeChange(' + id + ')">' + invTypeOpts() + '</select>' +
+    '<input class="fi sm" id="inv-desc-' + id + '" placeholder="예: 모노코어 블랙착 1순위 루카" oninput="calcInvTotal()"></div>' +
+    '<div class="inv-r2"><span class="inv-no"></span>' +
+    '<input class="fi sm" id="inv-qty-' + id + '" type="number" inputmode="numeric" placeholder="컷수" min="1" style="text-align:right" oninput="calcInvTotal()">' +
+    '<input class="fi sm" id="inv-price-' + id + '" type="text" inputmode="numeric" placeholder="단가" style="text-align:right" oninput="onInvPriceInput(' + id + ')">' +
+    '<div class="inv-amt" id="inv-amount-' + id + '">0</div></div>' +
+    '<div class="inv-op"><label><input type="checkbox" id="inv-urgent-' + id + '" onchange="calcInvTotal()"> 긴급 (+25%)</label>' +
+    '<label><input type="checkbox" id="inv-premium-' + id + '" onchange="onInvPremiumChange(' + id + ')"> 고급단가</label></div>';
+  var box = document.getElementById('inv-items'); if (box) box.appendChild(d);
+  invSync(); calcInvTotal();
+}
+function onInvAgencyChange() {
+  INV_ITEMS.forEach(function (it) { var s = document.getElementById('inv-type-' + it.id); if (!s) return; var v = s.value; s.innerHTML = invTypeOpts(); if (v) s.value = v; });
+  invPh(); calcInvTotal();
+}
+function invChecked() { return [].slice.call(document.querySelectorAll('#inv-items .inv-cb:checked')).map(function (e) { return +e.dataset.id; }); }
+function invCkSync() {
+  var ids = invChecked();
+  INV_ITEMS.forEach(function (it) { var e = document.getElementById('inv-item-' + it.id); if (e) e.classList.toggle('sel', ids.indexOf(it.id) >= 0); });
+  var all = document.getElementById('inv-ckall'); if (all) { all.checked = INV_ITEMS.length > 0 && ids.length === INV_ITEMS.length; all.indeterminate = ids.length > 0 && ids.length < INV_ITEMS.length; }
+}
+function invCkAll(on) { document.querySelectorAll('#inv-items .inv-cb').forEach(function (e) { e.checked = on; }); invCkSync(); }
+function invSync() {
+  var box = document.getElementById('inv-items'); if (!box) return;
+  INV_ITEMS.forEach(function (it, i) { var e = document.getElementById('inv-item-' + it.id); if (!e) return; box.appendChild(e); var n = e.querySelector('.inv-no'); if (n) n.textContent = i + 1; });
+  invCkSync();
+}
+function invDelChecked() {
+  var ids = invChecked(); if (!ids.length) { toast('삭제할 항목을 체크해 주세요'); return; }
+  ids.forEach(function (id) { removeInvItem(id); });
+  if (!INV_ITEMS.length) addInvItem();
+  invSync(); calcInvTotal();
+}
+function removeLastInvItem() { if (INV_ITEMS.length) removeInvItem(INV_ITEMS[INV_ITEMS.length - 1].id); invSync(); }
+function invMove(dir) {
+  var ids = invChecked(); if (!ids.length) { toast('옮길 항목을 체크해 주세요'); return; }
+  var a = INV_ITEMS, i;
+  if (dir < 0) { for (i = 1; i < a.length; i++) if (ids.indexOf(a[i].id) >= 0 && ids.indexOf(a[i - 1].id) < 0) { var t = a[i - 1]; a[i - 1] = a[i]; a[i] = t; } }
+  else { for (i = a.length - 2; i >= 0; i--) if (ids.indexOf(a[i].id) >= 0 && ids.indexOf(a[i + 1].id) < 0) { var u = a[i + 1]; a[i + 1] = a[i]; a[i] = u; } }
+  invSync();
+}
+// 거래처 고르기 전엔 담당자·아티스트에 안내 문구, 비어 있는 드롭다운은 흐리게
+function invPh() {
+  var has = !!gv('inv-client');
+  ['inv-manager', 'inv-artist'].forEach(function (id) { var e = document.getElementById(id); if (e && !has) e.innerHTML = '<option value="">거래처 먼저 선택</option>'; });
+  document.querySelectorAll('#tab-invoice select').forEach(function (e) { e.classList.toggle('ph', !e.value); });
+}
+(function () {
+  var oc = onInvClientChange; onInvClientChange = function () { oc.apply(this, arguments); invPh(); };
+  var oi = initInvoiceTab; initInvoiceTab = function () { oi.apply(this, arguments); invPh(); };
+  document.addEventListener('change', function (e) { if (e.target && e.target.closest && e.target.closest('#tab-invoice') && e.target.tagName === 'SELECT') e.target.classList.toggle('ph', !e.target.value); });
+})();
 </script>
 </body>
 
