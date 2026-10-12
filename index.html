@@ -4907,6 +4907,81 @@ a.rg-lk svg{width:16px;height:16px;flex:none}
 /* 2026-10-13: 지급내역 아래쪽 소속사 — 고유 색 없이 예전 리터쳐 표시처럼 회색 알약(양옆 반원) */
 #dc-pay .wo-wl .wo-ck{background:var(--chip)!important;color:var(--txt2)!important;border-radius:999px!important;font-size:10.5px!important;font-weight:400!important;letter-spacing:0!important;padding:1px 8px!important}
 </style>
+<style>
+/* 2026-10-13: 거래처 카드 — 수정·삭제 버튼 위 여백 한 번 더 절반 (12px → 6px) */
+#mc-ag .mc-contact:has(+ .mc-actions){padding-bottom:2px!important}
+/* 2026-10-13: 거래처 수정 — 담당자 전부 보이고 추가·삭제 */
+#mo-ag .age-hide{display:none!important}
+</style>
+<script>
+// 2026-10-13 (현아 요청): 거래처 수정 창에 그 거래처 담당자를 모두 보여주고, 추가·삭제·수정 → 반영 대기
+(function () {
+  var X = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>';
+  function $(id) { return document.getElementById(id); }
+  function ea(s) { return esc(String(s == null ? '' : s)).replace(/"/g, '&quot;'); }
+  function blk(c) {
+    c = c || {};
+    var id = c.id && String(c.id).indexOf('cl:') !== 0 ? c.id : '';
+    return '<div class="agn-ct" data-id="' + ea(id) + '">' +
+      '<div class="agn-ct-h"><span>담당자</span><button type="button" class="re-x" title="담당자 빼기" onclick="ageCtDel(this)">' + X + '</button></div>' +
+      '<div class="row2"><div class="fg"><input class="fi sm ct-n" placeholder="예: 홍길동" value="' + ea(c.manager) + '"></div><div class="fg"><input class="fi sm ct-t" placeholder="010-0000-0000" inputmode="tel" value="' + ea(c.tel) + '"></div></div>' +
+      '<div class="fg"><input class="fi sm ct-m" placeholder="example@company.com" inputmode="email" value="' + ea(c.email) + '"></div></div>';
+  }
+  var ORIG = [], ON = false;
+  window.ageCtAdd = function () { $('age-cts').insertAdjacentHTML('beforeend', blk()); var l = $('age-cts').lastElementChild.querySelector('.ct-n'); if (l) l.focus(); };
+  window.ageCtDel = function (b) { b.closest('.agn-ct').remove(); };
+  function setup() {
+    var md = document.querySelector('#mo-ag .md-b'); if (!md) return null;
+    var box = $('age-wrap');
+    if (!box) {
+      ['ag-manager', 'ag-email'].forEach(function (id) { var el = $(id); var r = el && (el.closest('.row2') || el.closest('.fg')); if (r) r.classList.add('age-hide'); });
+      var hr = md.querySelector('hr.hr'); if (hr) hr.classList.add('age-hide');
+      md.insertAdjacentHTML('beforeend', '<div id="age-wrap"><div class="agn-cth"><span>담당자</span><button type="button" class="agn-add" onclick="ageCtAdd()">+ 담당자 추가</button></div><div id="age-cts"></div></div>');
+      box = $('age-wrap');
+    }
+    return box;
+  }
+  var _ed = window.editAg;
+  window.editAg = function (id) {
+    _ed.apply(this, arguments);
+    var a = (DB.agencies || []).filter(function (x) { return x.id === id; })[0]; if (!a || !setup()) return;
+    var g = buildAgMap()[a.name], cts = (g && g.contacts || []).filter(function (c) { return c.manager || c.email || c.tel; });
+    ORIG = cts.map(function (c) { return { id: c.id && String(c.id).indexOf('cl:') !== 0 ? c.id : '', manager: c.manager || '', tel: c.tel || '', email: c.email || '' }; });
+    $('age-cts').innerHTML = cts.length ? cts.map(blk).join('') : blk();
+    ON = true;
+  };
+  var _sv = window.saveAg;
+  window.saveAg = function () {
+    if (!ON || !$('age-cts') || !$('mo-ag').classList.contains('open')) return _sv.apply(this, arguments);
+    ON = false;
+    var name = gv('ag-name');
+    var c = name && (pmClient(name) || PM.clients.filter(function (x) { return x.ko === name || x.en === name || pmClientName(x) === name; })[0]);
+    // 담당자는 아래에서 따로 → 원래 저장은 거래처 정보만
+    $('ag-manager').value = '';
+    var P = window.rgPend ? rgPend() : null, n0 = P ? P.length : 0;
+    _sv.apply(this, arguments);
+    if (!c || !P) return;
+    var now = [].map.call(document.querySelectorAll('#age-cts .agn-ct'), function (b) {
+      var v = function (k) { return (b.querySelector('.' + k).value || '').trim(); };
+      return { id: b.getAttribute('data-id') || '', manager: v('ct-n'), tel: v('ct-t'), email: v('ct-m') };
+    });
+    var add = function (action, d, label) { P.push({ menu: 'ag', action: action, data: d, label: label, t: Date.now() }); };
+    now.forEach(function (x) {
+      var o = x.id ? ORIG.filter(function (y) { return y.id === x.id; })[0] : null;
+      if (!x.manager) { if (o) add('pm_off_contact', { id: o.id }, '담당자 숨김 · ' + o.manager); return; }
+      if (!o) add('pm_add_contact', { id: '', client: c.disp, name: x.manager, email: x.email, tel: x.tel }, '담당자 추가 · ' + x.manager + ' (' + c.disp + ')');
+      else if (o.manager !== x.manager || o.tel !== x.tel || o.email !== x.email) add('pm_update_contact', { id: o.id, client: c.disp, name: x.manager, email: x.email, tel: x.tel }, '담당자 수정 · ' + x.manager);
+    });
+    ORIG.forEach(function (o) { if (o.id && !now.some(function (x) { return x.id === o.id; })) add('pm_off_contact', { id: o.id }, '담당자 숨김 · ' + o.manager); });
+    if (P.length > n0) {
+      try { localStorage.setItem('pm_pend', JSON.stringify(P)); } catch (e) {}
+      document.querySelectorAll('.rg-ib[data-sync="ag"] b').forEach(function (b) { var n = P.filter(function (p) { return p.menu === 'ag'; }).length; b.textContent = n || ''; });
+      document.querySelectorAll('.rg-pend[data-m="ag"]').forEach(function (el) { var n = P.filter(function (p) { return p.menu === 'ag'; }).length; el.classList.toggle('show', !!n); var s = el.querySelector('span'); if (s) s.textContent = '반영 대기 ' + n + '건 — 반영을 눌러야 구글시트에 저장돼요'; });
+      toast('반영 대기에 담았어요 — 반영을 눌러 저장하세요');
+    }
+  };
+})();
+</script>
 </body>
 
 </html>
