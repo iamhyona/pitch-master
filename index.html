@@ -4578,6 +4578,11 @@ function woDlSave() {
   try { if (CUR === 'taxbill') pfMode('tax'); } catch (e) {}
 })();
 </script>
+<style>
+/* 2026-10-13: 신고 — 작업자별 합계 구분선을 양옆 여백 있는 실선으로 */
+.tx-dt .dc-row{border-top:0;position:relative}
+.tx-dt .dc-row+.dc-row::before{content:'';position:absolute;top:0;left:14px;right:14px;border-top:1px solid #e3e6ea}
+</style>
 </body>
 
 </html>
