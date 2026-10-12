@@ -5212,6 +5212,132 @@ a.rg-lk svg{width:16px;height:16px;flex:none}
   add();
 })();
 </script>
+
+<style>
+/* 2026-10-13 (현아): 일정 등록 — 빠른 등록(붙여넣기) · 세부 등록(한 줄씩) */
+#sch-add{background:#fff;border-radius:20px;margin:0 0 10px;padding:16px 14px 14px}
+#sch-add .sa-h{display:flex;align-items:center;gap:8px;margin-bottom:12px}
+#sch-add .sa-h b{font-size:15px;font-weight:800;color:var(--txt);margin-right:auto}
+#sch-add .sa-seg{display:inline-flex;background:var(--chip);border-radius:12px;padding:3px;gap:2px}
+#sch-add .sa-seg button{border:0;background:transparent;border-radius:9px;padding:6px 12px;font:inherit;font-size:13px;font-weight:600;color:var(--txt3);cursor:pointer}
+#sch-add .sa-seg button.on{background:#fff;color:var(--txt);box-shadow:0 1px 3px rgba(0,0,0,.08)}
+#sch-add textarea,#sch-add input,#sch-add select{width:100%;box-sizing:border-box;border:0;background:var(--chip);border-radius:12px;padding:11px 12px;font:inherit;font-size:14px;color:var(--txt);outline:none}
+#sch-add textarea{min-height:150px;resize:vertical;line-height:1.5}
+#sch-add .sa-row{display:grid;grid-template-columns:130px 90px minmax(0,1fr);gap:6px}
+#sch-add .sa-btn{display:block;width:100%;border:0;border-radius:12px;padding:12px;font:inherit;font-size:14px;font-weight:700;cursor:pointer;margin-top:8px}
+#sch-add .sa-btn.g{background:var(--chip);color:var(--txt)}
+#sch-add .sa-btn.p{background:var(--txt);color:#fff}
+#sch-add .sa-btn:disabled{opacity:.4;cursor:default}
+#sch-add .sa-l{margin-top:12px;border-top:1px solid var(--line);padding-top:10px}
+#sch-add .sa-l .t{font-size:12px;color:var(--txt3);margin-bottom:6px}
+#sch-add .sa-it{display:grid;grid-template-columns:130px 90px minmax(0,1fr) 32px;gap:6px;margin-bottom:6px;align-items:center}
+#sch-add .sa-it input,#sch-add .sa-it select{padding:8px 10px;font-size:13px;border-radius:10px}
+#sch-add .sa-x{width:32px;height:32px;border:0;border-radius:50%;background:transparent;color:var(--txt3);font-size:18px;cursor:pointer}
+#sch-add .sa-tip{font-size:12px;color:var(--txt3);margin:6px 2px 0;line-height:1.5}
+@media (max-width:560px){#sch-add .sa-row{grid-template-columns:1fr 1fr}#sch-add .sa-row input[data-k=t]{grid-column:1/-1}#sch-add .sa-it{grid-template-columns:1fr 84px 28px}#sch-add .sa-it input[data-k=t]{grid-column:1/3;grid-row:2}#sch-add .sa-it .sa-x{grid-row:1/3;grid-column:3}}
+</style>
+<script>
+// 2026-10-13 (현아): 일정 등록 — 빠른 등록(카톡 일정 붙여넣기 → 자동 정리) · 세부 등록(날짜·구분·내용 한 줄씩)
+(function () {
+  var SA = { mode: 'q', list: [], busy: false };
+  var LB = ['핏치 일정', '소속사 일정', '공식 일정'];
+  function p2(n) { return ('0' + n).slice(-2); }
+  function host() {
+    var t = document.getElementById('tab-sch'); if (!t) return null;
+    var b = document.getElementById('sch-add'); if (b) return b;
+    t.insertAdjacentHTML('beforeend', '<div id="sch-add"></div>'); return document.getElementById('sch-add');
+  }
+  function baseY() { return +((window.SCH && SCH.ym) || String(new Date().getFullYear())).slice(0, 4); }
+  function fullDate(mo, d) {
+    var y = baseY(), cur = window.SCH ? +SCH.ym.slice(5, 7) : new Date().getMonth() + 1;
+    if (mo - cur > 6) y--; else if (cur - mo > 6) y++;
+    return y + '-' + p2(mo) + '-' + p2(d);
+  }
+  function lab(s) {
+    s = s.replace(/^[\s\-–·⦁•*>]+/, '').replace(/\(\s*[월화수목금토일]\s*\)/g, '').replace(/\d{1,2}\s*\/\s*\d{1,2}/g, '').replace(/[:：]/g, ' ').replace(/\s+/g, ' ').trim();
+    var n = (s.match(/(\d+)\s*차/) || [])[1];
+    if (/최종/.test(s)) return /납기|마감/.test(s) ? '최종 납기' : '최종본';
+    if (n && /리터칭|도착|수급|본/.test(s) && !/셀렉/.test(s)) return n + '차본';
+    return s;
+  }
+  // 붙여넣은 일정 → [날짜, 구분(0 핏치·1 소속사·2 공식), 내용]
+  window.saParse = function (txt) {
+    var out = [], title = '', sec = '';
+    String(txt || '').split(/\r?\n/).forEach(function (raw) {
+      var l = raw.trim(); if (!l) return;
+      var m = l.match(/(\d{1,2})\s*\/\s*(\d{1,2})/);
+      if (!m) {
+        var sm = l.match(/^\[(.+)\]$/) || l.match(/^#\s*(.+)$/);
+        if (sm) { sec = sm[1].replace(/\(.*?\)/g, '').trim().replace(/\s*(작업|착업)?\s*건$/, '').trim(); return; }
+        if (/^(리터칭\s*)?일정$/.test(l)) return;
+        title = l.replace(/[<>《》]/g, '').replace(/\(.*?\)/g, ' ').replace(/\s*일정\s*$/, '').replace(/\s+/g, ' ').trim(); sec = ''; return;
+      }
+      var t = lab(l), row = /셀렉본?\s*전달|원본\s*전달|자료\s*전달/.test(l) ? 1 : 0;
+      out.push([fullDate(+m[1], +m[2]), row, [title, sec, t].filter(String).join(' ')]);
+    });
+    return out;
+  };
+  function itHtml(e, i) {
+    return '<div class="sa-it"><input type="date" data-i="' + i + '" data-k="d" value="' + esc(e[0]) + '">' +
+      '<select data-i="' + i + '" data-k="r">' + LB.map(function (t, r) { return '<option value="' + r + '"' + (+e[1] === r ? ' selected' : '') + '>' + t.replace(' 일정', '') + '</option>'; }).join('') + '</select>' +
+      '<input data-i="' + i + '" data-k="t" value="' + esc(e[2]) + '">' +
+      '<button class="sa-x" type="button" title="빼기" onclick="saDel(' + i + ')">×</button></div>';
+  }
+  window.saRender = function () {
+    var b = host(); if (!b) return;
+    var keepQ = (document.getElementById('sa-q') || {}).value;
+    var h = '<div class="sa-h"><b>일정 등록</b><span class="sa-seg"><button type="button" class="' + (SA.mode === 'q' ? 'on' : '') + '" onclick="saMode(\'q\')">빠른 등록</button><button type="button" class="' + (SA.mode === 'd' ? 'on' : '') + '" onclick="saMode(\'d\')">세부 등록</button></span></div>';
+    if (SA.mode === 'q') {
+      h += '<textarea id="sa-q" placeholder="카톡으로 받은 일정을 그대로 붙여넣으세요\n\n예)\n베몬 (황미애) 신규앨범연동사진 일정\n[1순위]\n- 1차 리터칭 도착 : 10/1 (목)\n- 최종 납기일 : 10/6 (화)"></textarea>' +
+        '<button class="sa-btn g" type="button" onclick="saRead()">일정 정리하기</button>' +
+        '<div class="sa-tip">첫 줄(프로젝트명) · [1순위]·#1차 같은 구분 · 날짜 줄을 읽어서 한 줄씩 정리해요. 등록 전에 아래에서 고칠 수 있어요.</div>';
+    } else {
+      var t = new Date();
+      h += '<div class="sa-row"><input type="date" id="sa-d" value="' + t.getFullYear() + '-' + p2(t.getMonth() + 1) + '-' + p2(t.getDate()) + '">' +
+        '<select id="sa-r">' + LB.map(function (x, r) { return '<option value="' + r + '">' + x.replace(' 일정', '') + '</option>'; }).join('') + '</select>' +
+        '<input id="sa-t" data-k="t" placeholder="내용 (예: 베몬 신규앨범연동사진 1순위 1차본)" onkeydown="if(event.key===\'Enter\')saAddOne()"></div>' +
+        '<button class="sa-btn g" type="button" onclick="saAddOne()">목록에 추가</button>';
+    }
+    if (SA.list.length) {
+      h += '<div class="sa-l"><div class="t">등록할 일정 ' + SA.list.length + '건 — 날짜·구분·내용을 고칠 수 있어요</div>' + SA.list.map(itHtml).join('') +
+        '<button class="sa-btn p" type="button" onclick="saSave()"' + (SA.busy ? ' disabled' : '') + '>' + (SA.busy ? '등록 중…' : SA.list.length + '건 일정 등록') + '</button></div>';
+    }
+    b.innerHTML = h;
+    if (keepQ && document.getElementById('sa-q')) document.getElementById('sa-q').value = keepQ;
+    b.querySelectorAll('.sa-it [data-i]').forEach(function (el) {
+      el.addEventListener('change', function () { var i = +el.dataset.i, k = el.dataset.k; SA.list[i][k === 'd' ? 0 : k === 'r' ? 1 : 2] = k === 'r' ? +el.value : el.value; });
+    });
+  };
+  window.saMode = function (m) { SA.mode = m; saRender(); };
+  window.saDel = function (i) { SA.list.splice(i, 1); saRender(); };
+  window.saRead = function () {
+    var v = (document.getElementById('sa-q') || {}).value || '', l = saParse(v);
+    if (!l.length) { toast('날짜(예: 10/1)가 있는 줄을 못 찾았어요'); return; }
+    SA.list = SA.list.concat(l); saRender(); toast(l.length + '건 정리했어요 — 확인 후 등록을 눌러주세요');
+  };
+  window.saAddOne = function () {
+    var d = document.getElementById('sa-d').value, r = +document.getElementById('sa-r').value, t = document.getElementById('sa-t').value.trim();
+    if (!d || !t) { toast('날짜와 내용을 넣어주세요'); return; }
+    SA.list.push([d, r, t]); saRender(); var x = document.getElementById('sa-t'); if (x) x.focus();
+  };
+  window.saSave = function () {
+    var l = SA.list.filter(function (e) { return /^\d{4}-\d{2}-\d{2}$/.test(e[0]) && String(e[2]).trim(); });
+    if (!l.length || SA.busy) return;
+    SA.busy = true; saRender();
+    woPost('pm_sch_add', { list: l }, function (d) {
+      SA.busy = false;
+      if (!d || !d.ok) { saRender(); toast('등록 실패 — ' + ((d && d.error) || '다시 시도해주세요')); return; }
+      SA.list = []; var q = document.getElementById('sa-q'); if (q) q.value = '';
+      saRender(); toast('일정 ' + (d.added || 0) + '건 등록' + (d.skipped ? ' · ' + d.skipped + '건은 이미 있어요' : ''));
+      (d.months || []).forEach(function (ym) { if (window.SCH) delete SCH.data[ym]; });
+      if (window.schLoad) schLoad(true);
+    });
+  };
+  var _sw = window.switchTab;
+  window.switchTab = switchTab = function (t) { _sw.apply(this, arguments); if (t === 'sch') saRender(); };
+  if (document.getElementById('tab-sch') && document.getElementById('tab-sch').classList.contains('active')) saRender();
+})();
+</script>
 </body>
 
 </html>
