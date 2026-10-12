@@ -3935,6 +3935,14 @@ function woDlSave() {
   });
 }
 </script>
+<style>
+/* 2026-10-12: 거래처 펼침 — 위(대표·사업자번호)와 담당자 사이는 양옆 여백 있는 실선, 담당자끼리는 점선, 맨 아래 겹선 없앰 */
+#mc-ag .mc-body{border-top:0!important;position:relative}
+#mc-ag .mc-body::before{content:'';position:absolute;left:18px;right:18px;top:0;height:1px;background:var(--line)}
+#mc-ag .mc-contact{border-bottom:0!important}
+#mc-ag .mc-contact+.mc-contact{border-top:1px dashed #d9d9d9!important}
+#mc-ag .mc-actions{border-top:0!important;margin-top:0}
+</style>
 </body>
 
 </html>
