@@ -201,8 +201,9 @@ select.fi option{background:var(--sur2)}
       <div class="tab" data-tab="taxbill" id="tab-btn-taxbill">문구</div>
       <div class="tab" data-tab="invoice" id="tab-btn-invoice">견적서</div>
       <div class="tab active" data-tab="dash" id="tab-btn-dash">작업내역</div>
-      <div class="tab" data-tab="py">지급내역</div>
-      <div class="tab" data-tab="iv">청구내역</div>
+      <div class="tab" data-tab="sch" id="tab-btn-sch">일정</div>
+      <div class="tab" data-tab="py">매입</div>
+      <div class="tab" data-tab="iv">매출</div>
       <div class="tab" data-tab="rates-bill" id="tab-btn-rates-bill">단가</div>
       <div class="tab" data-tab="tx">신고</div>
       <div class="tab" data-tab="agencies">거래처</div>
@@ -242,16 +243,17 @@ select.fi option{background:var(--sur2)}
         </div>
       </div>
 
+      <div id="tab-sch" class="tab-panel"><div id="sch-host"></div></div>
       <div id="tab-iv" class="tab-panel">
         <div class="tc dc-box" id="dc-invoice">
-          <div class="tc-h"><span class="tc-t">청구내역</span><span class="dc-ics"><input class="dc-hq" id="dcq-invoice" placeholder="아티스트·프로젝트 검색" oninput="DC.invoice.q=this.value;dcList('invoice')" onkeydown="if(event.key==='Escape')dcSearch('invoice')"><button class="dc-ib dc-sbtn" type="button" title="검색" onclick="dcSearch('invoice')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg></button><button class="dc-ib" type="button" title="드라이브에서 다시 불러오기" onclick="dcLoad('invoice',true)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.6-6.4"/><path d="M21 3v6h-6"/></svg></button><a class="dc-ib dc-drive" href="#" target="_blank" title="구글 드라이브 폴더 열기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg></a></span></div>
+          <div class="tc-h"><span class="tc-t">매출</span><span class="dc-ics"><input class="dc-hq" id="dcq-invoice" placeholder="아티스트·프로젝트 검색" oninput="DC.invoice.q=this.value;dcList('invoice')" onkeydown="if(event.key==='Escape')dcSearch('invoice')"><button class="dc-ib dc-sbtn" type="button" title="검색" onclick="dcSearch('invoice')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg></button><button class="dc-ib" type="button" title="드라이브에서 다시 불러오기" onclick="dcLoad('invoice',true)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.6-6.4"/><path d="M21 3v6h-6"/></svg></button><a class="dc-ib dc-drive" href="#" target="_blank" title="구글 드라이브 폴더 열기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg></a></span></div>
           <div class="wo-bar"></div>
           <div class="wo-list"></div>
         </div>
       </div>
       <div id="tab-py" class="tab-panel">
         <div class="tc dc-box" id="dc-pay">
-          <div class="tc-h"><span class="tc-t">지급내역</span><span class="dc-ics"><input class="dc-hq" id="dcq-pay" placeholder="아티스트·프로젝트·작업자 검색" oninput="DC.pay.q=this.value;dcList('pay')" onkeydown="if(event.key==='Escape')dcSearch('pay')"><button class="dc-ib dc-sbtn" type="button" title="검색" onclick="dcSearch('pay')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg></button><button class="dc-ib" type="button" title="드라이브에서 다시 불러오기" onclick="dcLoad('pay',true)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.6-6.4"/><path d="M21 3v6h-6"/></svg></button><a class="dc-ib dc-drive" href="#" target="_blank" title="구글 드라이브 폴더 열기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg></a></span></div>
+          <div class="tc-h"><span class="tc-t">매입</span><span class="dc-ics"><input class="dc-hq" id="dcq-pay" placeholder="아티스트·프로젝트·작업자 검색" oninput="DC.pay.q=this.value;dcList('pay')" onkeydown="if(event.key==='Escape')dcSearch('pay')"><button class="dc-ib dc-sbtn" type="button" title="검색" onclick="dcSearch('pay')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg></button><button class="dc-ib" type="button" title="드라이브에서 다시 불러오기" onclick="dcLoad('pay',true)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.6-6.4"/><path d="M21 3v6h-6"/></svg></button><a class="dc-ib dc-drive" href="#" target="_blank" title="구글 드라이브 폴더 열기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg></a></span></div>
           <div class="wo-bar"></div>
           <div class="wo-list"></div>
         </div>
@@ -5059,8 +5061,8 @@ a.rg-lk svg{width:16px;height:16px;flex:none}
   window.SCH = { ym: now.getFullYear() + '-' + p2(now.getMonth() + 1), data: {}, sel: ymd(now), loading: {} };
   function box() {
     var b = document.getElementById('sch-box'); if (b) return b;
-    var l = document.getElementById('wo-list'); if (!l) return null;
-    l.insertAdjacentHTML('beforebegin', '<div id="sch-box"></div>');
+    var l = document.getElementById('sch-host'); if (!l) return null;
+    l.insertAdjacentHTML('beforeend', '<div id="sch-box"></div>');
     return document.getElementById('sch-box');
   }
   window.schLoad = function (fresh, ym) {
@@ -5111,7 +5113,10 @@ a.rg-lk svg{width:16px;height:16px;flex:none}
   // 작업내역 새로고침할 때 달력도 같이
   var _wl = window.woLoad;
   window.woLoad = function (fresh) { _wl.apply(this, arguments); if (window.PM_K) schLoad(!!fresh); };
-  if (window.PM_K && document.getElementById('wo-list')) { schRender(); schLoad(false); }
+  if (window.PM_K && document.getElementById('sch-host')) { schRender(); schLoad(false); }
+  // 2026-10-13: 달력은 '일정' 메뉴로 (작업내역에서는 뺌)
+  var _swS = window.switchTab;
+  window.switchTab = switchTab = function (t) { _swS.apply(this, arguments); if (t === 'sch') { schRender(); if (!SCH.data[SCH.ym]) schLoad(false); } };
 })();
 </script>
 <style>
