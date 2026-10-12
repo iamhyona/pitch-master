@@ -4828,6 +4828,42 @@ a.rg-lk svg{width:16px;height:16px;flex:none}
 .agn-ct{counter-increment:ct}
 .agn-ct-h span::after{content:' ' counter(ct)}
 </style>
+<style>
+/* 2026-10-13: 날짜칸 표기 통일 — 'YYYY-MM-DD(요일)' + 칸 안쪽 오른쪽 달력 아이콘 */
+.dt-w{position:relative;display:flex!important;align-items:center;justify-content:space-between;gap:6px;cursor:pointer;box-sizing:border-box;min-width:0;overflow:hidden}
+.dt-w>span{overflow:hidden;white-space:nowrap;text-overflow:ellipsis;min-width:0}
+.dt-w.e>span{color:var(--faint)}
+.dt-w>svg{width:18px;height:18px;color:var(--txt3);flex:none}
+.dt-w>input{position:absolute!important;inset:0!important;width:100%!important;height:100%!important;opacity:0!important;margin:0!important;padding:0!important;border:0!important;cursor:pointer;-webkit-appearance:none;appearance:none}
+.dt-w>input::-webkit-calendar-picker-indicator{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer}
+</style>
+<script>
+(function () {
+  var CAL = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/></svg>';
+  var W = ['일', '월', '화', '수', '목', '금', '토'];
+  var D = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value');
+  function fmt(v) { if (!/^\d{4}-\d{2}-\d{2}$/.test(v || '')) return ''; var d = new Date(v + 'T00:00:00'); return v + '(' + W[d.getDay()] + ')'; }
+  function paint(inp) { var w = inp.parentNode; if (!w || !w.classList || !w.classList.contains('dt-w')) return; var v = D.get.call(inp); w.firstChild.textContent = v ? fmt(v) : (inp.getAttribute('data-ph') || '선택'); w.classList.toggle('e', !v); }
+  function wrap(inp) {
+    if (inp.getAttribute('data-dt') || !inp.offsetParent) return;
+    var p = inp.parentNode; if (!p || /(^|\s)(dc-dw|won-dw|dt-w)(\s|$)/.test(p.className || '')) { inp.setAttribute('data-dt', 1); return; }
+    var cs = getComputedStyle(inp), w = document.createElement('span');
+    w.className = 'dt-w';
+    ['height', 'borderRadius', 'backgroundColor', 'paddingLeft', 'paddingRight', 'fontSize', 'fontWeight', 'color', 'marginTop', 'marginBottom'].forEach(function (k) { w.style[k] = cs[k]; });
+    var pcs = getComputedStyle(p), pw = p.clientWidth - parseFloat(pcs.paddingLeft) - parseFloat(pcs.paddingRight); w.style.width = (inp.offsetWidth >= pw - 4 || /grid|flex/.test(pcs.display)) ? '100%' : Math.max(inp.offsetWidth, 120) + 'px';
+    if (inp.style.flex) w.style.flex = inp.style.flex;
+    inp.setAttribute('data-dt', 1);
+    p.insertBefore(w, inp); w.appendChild(document.createElement('span')); w.insertAdjacentHTML('beforeend', CAL); w.appendChild(inp);
+    inp.addEventListener('click', function () { try { inp.showPicker(); } catch (e) {} });
+    inp.addEventListener('change', function () { paint(inp); }); inp.addEventListener('input', function () { paint(inp); });
+    try { Object.defineProperty(inp, 'value', { configurable: true, get: function () { return D.get.call(this); }, set: function (v) { D.set.call(this, v); paint(this); } }); } catch (e) {}
+    paint(inp);
+  }
+  function scan() { document.querySelectorAll('input[type="date"]:not([data-dt])').forEach(wrap); }
+  scan(); setInterval(scan, 700);
+  new MutationObserver(function () { setTimeout(scan, 0); }).observe(document.body, { childList: true, subtree: true });
+})();
+</script>
 </body>
 
 </html>
