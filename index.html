@@ -199,15 +199,14 @@ select.fi option{background:var(--sur2)}
   <div class="tabs-wrapper">
     <div class="tabs">
       <div class="tab active" data-tab="dash" id="tab-btn-dash">작업내역</div>
-      <div class="tab" data-tab="iv">청구서</div>
+      <div class="tab" data-tab="taxbill" id="tab-btn-taxbill">지급·청구문구</div>
       <div class="tab" data-tab="py">지급내역</div>
-      <div class="tab" data-tab="tx">원천세</div>
+      <div class="tab" data-tab="iv">청구내역</div>
+      <div class="tab" data-tab="rates-bill" id="tab-btn-rates-bill">작업단가</div>
+      <div class="tab" data-tab="tx">원천세신고</div>
       <div class="tab" data-tab="agencies">거래처</div>
-      <div class="tab" data-tab="litt">리터쳐</div>
-      <div class="tab" data-tab="rates-bill" id="tab-btn-rates-bill">청구단가</div>
-      <div class="tab" data-tab="rates-pay" id="tab-btn-rates-pay">지급단가</div>
-      <div class="tab" data-tab="invoice" id="tab-btn-invoice">견적서</div>
-      <div class="tab" data-tab="taxbill" id="tab-btn-taxbill">계산서</div>
+      <div class="tab" data-tab="litt">외주처</div>
+      <div class="tab" data-tab="invoice" id="tab-btn-invoice">견적서작성</div>
     </div>
   </div>
   <div class="content">
@@ -245,7 +244,7 @@ select.fi option{background:var(--sur2)}
 
       <div id="tab-iv" class="tab-panel">
         <div class="tc dc-box" id="dc-invoice">
-          <div class="tc-h"><span class="tc-t">청구서</span><button class="btn btn-g" onclick="dcLoad('invoice',true)" title="드라이브에서 다시 불러오기">↻</button><a class="btn btn-g dc-drive" href="#" target="_blank" style="text-decoration:none">드라이브 ↗</a></div>
+          <div class="tc-h"><span class="tc-t">청구내역</span><button class="btn btn-g" onclick="dcLoad('invoice',true)" title="드라이브에서 다시 불러오기">↻</button><a class="btn btn-g dc-drive" href="#" target="_blank" style="text-decoration:none">드라이브 ↗</a></div>
           <div class="wo-bar"></div>
           <div class="wo-list"></div>
         </div>
@@ -259,7 +258,7 @@ select.fi option{background:var(--sur2)}
       </div>
       <div id="tab-tx" class="tab-panel">
         <div class="tc dc-box" id="dc-tx">
-          <div class="tc-h"><span class="tc-t">원천세 <span class="wo-sub" style="font-weight:400">· 세무사제출용</span></span><button class="btn btn-g" onclick="txLoad(true)" title="드라이브에서 다시 불러오기">↻</button><a class="btn btn-g dc-drive" href="#" target="_blank" style="text-decoration:none">드라이브 ↗</a></div>
+          <div class="tc-h"><span class="tc-t">원천세신고 <span class="wo-sub" style="font-weight:400">· 세무사제출용</span></span><button class="btn btn-g" onclick="txLoad(true)" title="드라이브에서 다시 불러오기">↻</button><a class="btn btn-g dc-drive" href="#" target="_blank" style="text-decoration:none">드라이브 ↗</a></div>
           <div class="wo-list"></div>
         </div>
       </div>
@@ -292,6 +291,7 @@ select.fi option{background:var(--sur2)}
 
       <!-- 청구단가 -->
       <div id="tab-rates-bill" class="tab-panel">
+        <div class="rt-seg"><button type="button" class="on" onclick="switchTab('rates-bill')">청구단가</button><button type="button" onclick="switchTab('rates-pay')">지급단가</button></div>
         <div class="rate-agency-box">
           <div class="rate-agency-label" style="display:flex;justify-content:space-between;align-items:center">
             <span>소속사</span>
@@ -307,6 +307,7 @@ select.fi option{background:var(--sur2)}
 
       <!-- 지급단가 -->
       <div id="tab-rates-pay" class="tab-panel">
+        <div class="rt-seg"><button type="button" onclick="switchTab('rates-bill')">청구단가</button><button type="button" class="on" onclick="switchTab('rates-pay')">지급단가</button></div>
         <div class="rate-agency-box">
           <div class="rate-agency-label">소속사</div>
           <div class="rate-agency-wrap">
@@ -315,7 +316,7 @@ select.fi option{background:var(--sur2)}
         </div>
         <div class="rate-litter-box">
           <div class="rate-litter-label">
-            <span>리터쳐</span>
+            <span>외주처</span>
             <button class="btn btn-g" id="btn-edit-rate" style="display:none;height:24px;font-size:10px;padding:0 10px" onclick="openRateEditMo()">수수료 편집</button>
           </div>
           <div class="rate-litter-wrap">
@@ -521,7 +522,7 @@ select.fi option{background:var(--sur2)}
 <!-- 리터쳐 모달 -->
 <div class="mo" id="mo-lt">
   <div class="md">
-    <div class="md-h"><span class="md-t" id="mo-lt-title">리터쳐 추가</span><button class="xb" onclick="closeMo('mo-lt')">✕</button></div>
+    <div class="md-h"><span class="md-t" id="mo-lt-title">외주처 추가</span><button class="xb" onclick="closeMo('mo-lt')">✕</button></div>
     <div class="md-b">
       <div class="row2"><div class="fg"><label class="fl">이름 *</label><input class="fi sm" id="lt-name"></div><div class="fg"><label class="fl">구분</label><select class="fi sm" id="lt-tax"><option>원천세</option><option>사업자</option></select></div></div>
       <div class="fg"><label class="fl">주민번호 / 사업자번호</label><input class="fi sm" id="lt-regid"></div>
@@ -543,7 +544,7 @@ select.fi option{background:var(--sur2)}
       <button class="xb" onclick="closeMo('mo-rate')">✕</button>
     </div>
     <div class="md-b" style="padding:10px 12px">
-      <div style="font-size:10px;color:var(--txt3);margin-bottom:6px;text-transform:uppercase;letter-spacing:.06em">리터쳐별 수수료율</div>
+      <div style="font-size:10px;color:var(--txt3);margin-bottom:6px;text-transform:uppercase;letter-spacing:.06em">외주처별 수수료율</div>
       <div id="fee-header" style="overflow-x:auto;margin-bottom:10px"></div>
       <hr class="hr" style="margin:6px 0 10px">
       <div style="overflow-x:auto;max-height:55vh;overflow-y:auto">
@@ -1005,7 +1006,7 @@ function renderLt(){
       +'</div>':'<div class="lt-p">'+row('메일',l.email,'ltmc-email'+i)+'</div>')
       +'</div>';
   });
-  document.getElementById('mc-lt').innerHTML=cards||'<div style="padding:24px;text-align:center;color:var(--txt3);font-size:12px">리터쳐가 없어요</div>';
+  document.getElementById('mc-lt').innerHTML=cards||'<div style="padding:24px;text-align:center;color:var(--txt3);font-size:12px">외주처가 없어요</div>';
   sd.forEach(function(l,i){
     if(detail){
       var hEl=document.getElementById('ltmh'+i);
@@ -1189,7 +1190,7 @@ function saveLt(){
   saveDB();closeMo('mo-lt');renderAll();toast(EI>=0?'수정됐어요':'추가됐어요');
   postSheet('upsert_litter',{retoucherId:obj.id,세금구분:obj.tax,리터쳐명:obj.name,'주민번호/사업자번호':obj.regId,주소:obj.addr,은행:obj.bank,계좌번호:obj.acct,이메일:obj.email,연락처:obj.tel,'대표명(사업자)':obj.ceo,isActive:true});
 }
-function editLt(id){if(!canEdit())return;var i=DB.litters.findIndex(function(l){return l.id===id;});if(i<0)return;EI=i;var l=DB.litters[i];document.getElementById('mo-lt-title').textContent='리터쳐 수정';document.getElementById('lt-name').value=l.name||'';document.getElementById('lt-tax').value=l.tax||'원천세';document.getElementById('lt-regid').value=l.regId||'';document.getElementById('lt-addr').value=l.addr||'';document.getElementById('lt-ceo').value=l.ceo||'';document.getElementById('lt-bank').value=l.bank||'IBK';document.getElementById('lt-acct').value=l.acct||'';document.getElementById('lt-email').value=l.email||'';document.getElementById('lt-tel').value=l.tel||'';openMo('mo-lt');}
+function editLt(id){if(!canEdit())return;var i=DB.litters.findIndex(function(l){return l.id===id;});if(i<0)return;EI=i;var l=DB.litters[i];document.getElementById('mo-lt-title').textContent='외주처 수정';document.getElementById('lt-name').value=l.name||'';document.getElementById('lt-tax').value=l.tax||'원천세';document.getElementById('lt-regid').value=l.regId||'';document.getElementById('lt-addr').value=l.addr||'';document.getElementById('lt-ceo').value=l.ceo||'';document.getElementById('lt-bank').value=l.bank||'IBK';document.getElementById('lt-acct').value=l.acct||'';document.getElementById('lt-email').value=l.email||'';document.getElementById('lt-tel').value=l.tel||'';openMo('mo-lt');}
 function delLt(id){if(!canEdit())return;if(!confirm('삭제할까요?'))return;var l=DB.litters.find(function(x){return x.id===id;});DB.litters=DB.litters.filter(function(x){return x.id!==id;});saveDB();renderAll();toast('삭제됐어요');if(l)postSheet('delete_litter',{retoucherId:l.id});}
 
 
@@ -1916,7 +1917,7 @@ function pmFindArtist(q) {
   if (!hit.length) hit = PM.artists.filter(function (a) { return [a.ko, a.en, a.label].some(function (v) { return v && pmNorm(v).indexOf(n) === 0; }); });
   return hit.length ? { artist: hit[0], all: hit } : null;
 }
-var PF = { mode: 'tax' };
+var PF = { mode: 'pay' };
 function pfEl(id) { return document.getElementById(id); }
 function pfV(id) { var e = pfEl(id); return e ? e.value.trim() : ''; }
 function pfSet(id, v) { var e = pfEl(id); if (e) e.value = v == null ? '' : v; }
@@ -1926,8 +1927,8 @@ function initTaxBill() {
     box.dataset.pf = '1';
     box.innerHTML =
       '<div class="tb-box"><div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px">' +
-        '<button class="btn btn-p" id="pf-m-tax" type="button" onclick="pfMode(\'tax\')">세금계산서 발행</button>' +
-        '<button class="btn btn-g" id="pf-m-pay" type="button" onclick="pfMode(\'pay\')">외주용역 지급</button>' +
+        '<button class="btn btn-g" id="pf-m-pay" type="button" onclick="pfMode(\'pay\')">지급 문구</button>' +
+        '<button class="btn btn-p" id="pf-m-tax" type="button" onclick="pfMode(\'tax\')">청구 문구</button>' +
         '<button class="btn btn-g" type="button" style="margin-left:auto" onclick="pfDocs()">청구서·지급내역서에서 불러오기</button></div>' +
         '<label class="fl" for="pf-quick" id="pf-quick-l">아티스트(또는 멤버), 담당자, 공급가액</label>' +
         '<input class="fi" id="pf-quick" autocomplete="off">' +
@@ -1947,7 +1948,7 @@ function pfMode(m, keep) {
   PF.mode = m;
   pfEl('pf-m-tax').className = 'btn ' + (m === 'tax' ? 'btn-p' : 'btn-g');
   pfEl('pf-m-pay').className = 'btn ' + (m === 'pay' ? 'btn-p' : 'btn-g');
-  pfEl('pf-quick-l').textContent = m === 'tax' ? '아티스트(또는 멤버), 담당자, 공급가액' : '아티스트(또는 멤버), 리터쳐, 공급가액';
+  pfEl('pf-quick-l').textContent = m === 'tax' ? '아티스트(또는 멤버), 담당자, 공급가액' : '아티스트(또는 멤버), 외주처, 공급가액';
   pfEl('pf-quick').placeholder = m === 'tax' ? '예) 앤팀, 문성언, 2349000' : '예) 에이엔, 강영순, 23만8천원';
   pfEl('pf-out-l').textContent = m === 'tax' ? '계산서 발행 요청 문구' : '외주비용 지급 문구';
   var f = function (id, label, attr) { return '<div class="fg"><label class="fl" for="' + id + '">' + label + '</label><input class="fi sm" id="' + id + '"' + (attr || '') + '></div>'; };
@@ -2084,7 +2085,7 @@ function pfLoadDoc(id) {
     pfBuild();
   }).catch(function () { hint.textContent = '읽기 실패'; });
 }
-(function () { var t = document.getElementById('tab-btn-taxbill'); if (t) t.textContent = '발행·지급 문구'; })();
+(function () { var t = document.getElementById('tab-btn-taxbill'); if (t) t.textContent = '지급·청구문구'; })();
 
 </script>
 <script>
@@ -2942,6 +2943,15 @@ switchTab = function (t) {
 };
 var _dcLogout = doLogout;
 doLogout = function () { DC.invoice = { items: [], folders: [], folder: '', q: '', loaded: false, loading: false }; DC.pay = { items: [], folders: [], folder: '', q: '', loaded: false, loading: false }; TX = { items: [], memos: {}, loaded: false, loading: false, cur: null }; closeMo('mo-doc'); _dcLogout(); };
+</script>
+<style>
+/* 2026-10-12: 작업단가 탭 안 청구단가/지급단가 전환 */
+.rt-seg{display:flex;gap:4px;background:var(--chip);border-radius:12px;padding:4px;margin-bottom:12px}
+.rt-seg button{flex:1;height:34px;border:0;border-radius:9px;background:none;font-family:inherit;font-size:14px;font-weight:600;color:var(--txt3);cursor:pointer}
+.rt-seg button.on{background:#fff;color:var(--txt);box-shadow:0 1px 3px rgba(0,0,0,.08)}
+</style>
+<script>
+(function(){var _sw=switchTab;switchTab=function(t){_sw(t);if(t==='rates-pay'&&CUR==='rates-pay'){var b=document.getElementById('tab-btn-rates-bill');if(b)b.classList.add('active');}};})();
 </script>
 </body>
 </html>
