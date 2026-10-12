@@ -2967,6 +2967,8 @@ doLogout = function () { DC.invoice = { items: [], folders: [], folder: '', q: '
 .pf-ro::-webkit-scrollbar{display:none}
 .pf-tpl{width:100%;min-height:200px;border:0;background:var(--chip);border-radius:12px;padding:12px 14px;font-family:inherit;font-size:14px;line-height:1.6;color:var(--txt);outline:0;resize:vertical}
 .pf-keys{display:flex;flex-wrap:wrap;gap:4px}
+.pf-tg{font-size:11px;font-weight:500;color:var(--txt3);margin-left:5px;white-space:nowrap}
+.pf-tg.r{color:#f04452}
 .pf-keys code{font-family:inherit;font-size:12px;background:var(--chip);border-radius:999px;padding:3px 8px;color:var(--txt2);cursor:pointer}
 </style>
 <div class="mo" id="mo-pftpl"><div class="md wide"><div class="md-h"><span class="md-t">문구 포맷</span><button class="xb" onclick="closeMo('mo-pftpl')">✕</button></div><div class="md-b" id="pftpl-body"></div></div></div>
@@ -3018,11 +3020,11 @@ function pfMode(m, keep) {
       '<div class="row2">' + f('pf-work', '작업명', ' value="리터칭"') + '<div class="fg"><span class="fl">대표 · 사업자번호</span><div class="fi sm pf-ro" id="pf-ceobiz"></div></div>' + '</div>' +
       '<div class="row2">' + s('pf-mgr-s', '담당자') + f('pf-email', '메일주소', ' inputmode="email"') + '</div>' +
       '<div class="row2" id="pf-mgr-new" style="display:none">' + f('pf-mgr', '새 담당자 이름') + '<div class="fg" style="justify-content:flex-end"><label class="tb-save" style="margin:0"><input type="checkbox" id="pf-save" checked> 복사할 때 거래처마스터에 추가</label></div></div>' +
-      '<div class="row2">' + f('pf-taxmail', '계산서 전담메일 (생략 가능)', ' inputmode="email"') + f('pf-date', '청구일자', ' type="date"') + '</div>' +
+      '<div class="row2">' + f('pf-taxmail', '계산서 전담메일', ' inputmode="email" placeholder="없으면 비워두기"') + f('pf-date', '청구일자', ' type="date"') + '</div>' +
       '<div class="row2">' + f('pf-amt', '공급가액', ' inputmode="numeric"') + f('pf-vat', '부가세 (10%)', ' readonly') + '</div>' + sum +
       '<input type="hidden" id="pf-cname"><input type="hidden" id="pf-ceo"><input type="hidden" id="pf-biz"><input type="hidden" id="pf-artist">'
     : '<div class="row2">' + s('pf-vendor', '지급처') + f('pf-tax', '세금구분', ' readonly') + '</div>' +
-      '<div class="row2">' + f('pf-artist', '아티스트') + f('pf-work', '작업명 (예: 리터칭 박수현 일본)', ' value="리터칭"') + '</div>' +
+      '<div class="row2">' + f('pf-artist', '아티스트') + f('pf-work', '작업명', ' value="리터칭"') + '</div>' +
       '<div class="row2">' + f('pf-reg', '주민·사업자번호', ' readonly') + f('pf-corp', '회사명 (사업자만)', ' readonly') + '</div>' +
       '<div class="row2">' + f('pf-bank', '은행', ' readonly') + f('pf-acct', '계좌번호', ' readonly') + '</div>' +
       '<div class="row2">' + f('pf-amt', '공급가액', ' inputmode="numeric"') + f('pf-vat', '세금', ' readonly') + '</div>' + sum;
@@ -3040,7 +3042,21 @@ function pfMode(m, keep) {
   pfEl('pf-form').querySelectorAll('input').forEach(function (e) { e.addEventListener('input', function () { if (e.id === 'pf-mgr') pfFillMgr(); if (e.id === 'pf-artist' && PF.mode === 'pay') pfFillArtist(); pfBuild(); }); });
   pfEl('pf-amt').addEventListener('blur', function () { var n = pmMoney(this.value); this.value = n ? tbWon(n) : ''; pfBuild(); });
   if (!keep) pfEl('pf-quick').value = '';
+  pfTags();
   pfQuick();
+}
+// 2026-10-12: 칸마다 어떻게 채워지는지 표시 (최초 선택·수기 작성은 빨강)
+var PF_TAG = { first: '*최초 선택', auto: '*자동 작성', drop: '*드롭다운 선택', hand: '*수기 작성' };
+function pfTags() {
+  var map = PF.mode === 'tax'
+    ? { 'pf-client': 'first', 'pf-artist-s': 'drop', 'pf-work': 'auto', 'pf-ceobiz': 'auto', 'pf-mgr-s': 'drop', 'pf-email': 'auto', 'pf-mgr': 'hand', 'pf-taxmail': 'auto', 'pf-date': 'auto', 'pf-amt': 'hand', 'pf-vat': 'auto', 'pf-total': 'auto' }
+    : { 'pf-vendor': 'first', 'pf-tax': 'auto', 'pf-artist': 'hand', 'pf-work': 'auto', 'pf-reg': 'auto', 'pf-corp': 'auto', 'pf-bank': 'auto', 'pf-acct': 'auto', 'pf-amt': 'hand', 'pf-vat': 'auto', 'pf-total': 'auto' };
+  Object.keys(map).forEach(function (id) {
+    var el = pfEl(id); if (!el) return;
+    var lb = id === 'pf-total' ? el.parentNode.querySelector('span') : (document.querySelector('#pf-form label[for="' + id + '"]') || (el.parentNode && el.parentNode.querySelector('.fl')));
+    if (!lb || lb.querySelector('.pf-tg')) return;
+    var k = map[id]; lb.innerHTML = '<span class="pf-lt">' + esc(lb.textContent) + '</span><span class="pf-tg' + (k === 'first' || k === 'hand' ? ' r' : '') + '">' + PF_TAG[k] + '</span>';
+  });
 }
 function pfAC(a) { return String(a && a.client || '').split(/\s*,\s*/).filter(Boolean); } // 아티스트 소속 거래처가 여러 곳일 수 있음 (예: YG · YG PLUS)
 function pfArtistOpts(disp) {
@@ -3129,7 +3145,7 @@ function pfText() {
 function pfBuild() {
   if (!pfEl('pf-total')) return;
   var k = pfCalc(); pfSet('pf-vat', k.amt ? tbWon(k.tax) : '');
-  var vl = document.querySelector('label[for="pf-vat"]'); if (vl) vl.textContent = k.label;
+  var vl = document.querySelector('label[for="pf-vat"] .pf-lt') || document.querySelector('label[for="pf-vat"]'); if (vl) vl.textContent = k.label;
   pfEl('pf-total').textContent = tbWon(k.total) + '원';
   PF.text = pfText();
 }
