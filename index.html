@@ -983,7 +983,7 @@ function renderAg(){
 function renderLt(){
   var q=(gv('q-lt')||'').toLowerCase();
   document.getElementById('guest-lt-notice').style.display=SESSION.role==='guest'?'':'none';
-  var data=DB.litters.filter(function(l){return !q||[l.name,l.email,l.tax,l.ceo].join(' ').toLowerCase().includes(q);}).sort(function(a,b){return String(a.name||'').localeCompare(String(b.name||''),'ko');}); // 2026-10-12: 원천세/사업자 탭 없앰 → 검색으로, 가나다순
+  var data=DB.litters.filter(function(l){return !q||[l.name,l.email,l.tax,l.ceo].join(' ').toLowerCase().includes(q);}).sort(function(a,b){return (window.pmWCmp||function(x,y){return x.localeCompare(y,'ko');})(String(a.name||''),String(b.name||''));}); // 2026-10-12: 원천세/사업자 탭 없앰 → 검색으로, 가나다순
   var slice=data.slice(ltP*PER,(ltP+1)*PER);
   var detail=canSeeDetail();
   var cards='';var sd=[];
@@ -3989,7 +3989,7 @@ function woDlSave() {
 </style>
 <script>
 (function () {
-  var FAV = ['김현수', '강영순', '최현경', '이은지', '권미향', '이유나', '이혜선'];
+  var FAV = ['김현수', '강영순', '이은지', '최현경', '권미향', '이유나', '이혜선'];
   var NO_NEW = ['박현아', '박슬기', '박종배', '박현제', '강영순'];
   var BANKS = ['IBK', '국민', '신한', '우리', '하나', '농협', '기업', '토스', '카카오', '케이', '기타'];
   function tg(k) { if (!k) return ''; var t = { first: '*최초 선택', drop: '*드롭다운 선택', hand: '*수기 작성', auto: '*자동 작성', req: '*필수 입력', reqs: '*필수 선택' }[k]; return '<span class="pf-tg ' + (k === 'auto' ? 'b' : 'r') + '">' + t + '</span>'; }
@@ -3998,7 +3998,7 @@ function woDlSave() {
   function wsHtml(vs, keep) {
     keep = keep || [];
     var fav = FAV.filter(function (w) { return vs.indexOf(w) >= 0; });
-    var rest = vs.filter(function (w) { return fav.indexOf(w) < 0; }).sort(function (a, b) { return a.localeCompare(b, 'ko'); });
+    var rest = vs.filter(function (w) { return fav.indexOf(w) < 0; }).sort(function (a, b) { return window.pmWCmp ? pmWCmp(a, b) : a.localeCompare(b, 'ko'); });
     return (fav.length ? '<div class="wo-ws">' + fav.map(function (w) { return chip(w, keep.indexOf(w) >= 0); }).join('') + '</div><div class="won-div"></div>' : '') +
       '<div class="wo-ws">' + rest.map(function (w) { return chip(w, keep.indexOf(w) >= 0); }).join('') +
       '<label class="won-new" onclick="wonNewOpen(event)">+ 신규 작업자</label></div><div id="won-nv"></div>';
@@ -4610,6 +4610,34 @@ function woDlSave() {
     sel.classList.toggle('ph', !v);
     if (v === '__d') { k.style.display = ''; k.value = ''; k.focus(); } else { k.style.display = 'none'; k.value = v; }
   };
+})();
+</script>
+<script>
+// 2026-10-13 (현아 요청): 작업자 명단·드롭다운 순서 = 김현수 강영순 이은지 최현경 권미향 이유나 이혜선, 그 외 가나다 (기타는 맨 끝)
+(function () {
+  var ORDER = ['김현수', '강영순', '이은지', '최현경', '권미향', '이유나', '이혜선'];
+  function rank(n) { n = String(n || '').trim(); var i = ORDER.indexOf(n); return i >= 0 ? i : (n === '기타' ? 9999 : 500); }
+  window.pmWCmp = function (a, b) { var ra = rank(a), rb = rank(b); return ra !== rb ? ra - rb : String(a || '').localeCompare(String(b || ''), 'ko'); };
+  function isW(n) { n = String(n || '').trim(); return ORDER.indexOf(n) >= 0 || (typeof ALL_COLS !== 'undefined' && ALL_COLS.indexOf(n) >= 0) || (PM.vendors || []).some(function (v) { return v.name === n; }); }
+  // 지급내역(작업자 폴더) 칩 등: 작업자 이름이면 작업자 순서로
+  var _cc = pmCmpClient;
+  pmCmpClient = function (a, b) { return isW(a) && isW(b) ? pmWCmp(a, b) : _cc(a, b); };
+  var _ap = pmApply;
+  pmApply = function (d) {
+    if (d && d.workers) d.workers = d.workers.slice().sort(pmWCmp);
+    if (d && d.vendors) d.vendors = d.vendors.slice().sort(function (a, b) { return pmWCmp(a.name, b.name); });
+    _ap(d);
+  };
+  var _ol = woOptsLoad;
+  woOptsLoad = function (cb) { _ol(function (o) { if (o && o.vendors) o.vendors.sort(pmWCmp); cb(o); }); };
+  // 이미 불러온 화면에도 바로 적용
+  try {
+    ALL_COLS.sort(pmWCmp);
+    if (PM.vendors) PM.vendors.sort(function (a, b) { return pmWCmp(a.name, b.name); });
+    if (window.rgReapply) rgReapply();
+    if (window.pmLitterBtns) pmLitterBtns();
+    renderAll();
+  } catch (e) {}
 })();
 </script>
 </body>
