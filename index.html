@@ -5172,6 +5172,45 @@ a.rg-lk svg{width:16px;height:16px;flex:none}
   };
 })();
 </script>
+
+<style>
+/* 2026-10-13 (현아): 일정 — 오늘은 검정 동그라미만 (회색 박스 X) */
+.sch-d.today.sel{background:transparent}
+/* 2026-10-13 (현아): 문구 — 연도 시트·폴더 바로가기 */
+#pf-mm-s{margin-left:auto!important}
+#pf-mm-s~.pf-ic{margin-left:8px!important}
+</style>
+<script>
+// 2026-10-13 (현아): 문구 메뉴 — 해당 연도 매출/매입 시트 · 폴더 바로가기 아이콘
+(function () {
+  var SV_S = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18"/></svg>';
+  var SV_F = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>';
+  function kind() { return (typeof PF !== 'undefined' && PF.mode === 'tax') ? '매출' : '매입'; }
+  function add() {
+    var g = document.querySelector('#tab-taxbill button[onclick="pfTplOpen()"]') || document.querySelector('button[onclick="pfTplOpen()"]');
+    if (!g || document.getElementById('pf-mm-s')) return;
+    var a = document.createElement('button'); a.className = 'pf-ic'; a.id = 'pf-mm-s'; a.type = 'button'; a.innerHTML = SV_S; a.onclick = function () { pfMmOpen('sheet'); };
+    var b = document.createElement('button'); b.className = 'pf-ic'; b.id = 'pf-mm-f'; b.type = 'button'; b.innerHTML = SV_F; b.onclick = function () { pfMmOpen('folder'); };
+    g.parentNode.insertBefore(a, g); g.parentNode.insertBefore(b, g); tip();
+  }
+  function tip() {
+    var a = document.getElementById('pf-mm-s'), b = document.getElementById('pf-mm-f'), k = kind();
+    if (a) a.title = '올해 ' + k + ' 내역 시트 열기'; if (b) b.title = k + ' 폴더 열기';
+  }
+  window.pfMmOpen = function (w) {
+    var k = kind(), dv = String((document.getElementById('pf-date') || {}).value || ''), y = (dv.match(/\d{4}/) || [String(new Date().getFullYear())])[0];
+    var win = window.open('about:blank', '_blank');
+    woGet('&mm=' + encodeURIComponent(k) + '&y=' + y, function (d) {
+      var u = d && d.ok ? (d[w] || d.folder) : '';
+      if (!u) { if (win) win.close(); toast((d && d.error) || '링크를 못 찾았어요'); return; }
+      if (w === 'sheet' && !d.sheet) toast(y + '년 ' + k + ' 시트가 아직 없어서 폴더를 열었어요');
+      if (win) win.location.href = u; else location.href = u;
+    });
+  };
+  new MutationObserver(function () { add(); tip(); }).observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['class'] });
+  add();
+})();
+</script>
 </body>
 
 </html>
