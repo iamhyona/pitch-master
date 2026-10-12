@@ -514,13 +514,12 @@ select.fi option{background:var(--sur2)}
   <div class="md">
     <div class="md-h"><span class="md-t" id="mo-lt-title">외주처 추가</span><button class="xb" onclick="closeMo('mo-lt')">✕</button></div>
     <div class="md-b">
-      <div class="row2"><div class="fg"><label class="fl">이름<span class="pf-tg r">*필수 입력</span></label><input class="fi sm" id="lt-name"></div><div class="fg"><label class="fl">구분</label><select class="fi sm" id="lt-tax"><option>원천세</option><option>사업자</option></select></div></div>
-      <div class="fg"><label class="fl">주민번호 / 사업자번호</label><input class="fi sm" id="lt-regid"></div>
-      <div class="fg"><label class="fl">주소</label><input class="fi sm" id="lt-addr"></div>
-      <div class="fg"><label class="fl">대표명 (사업자용)</label><input class="fi sm" id="lt-ceo"></div>
-      <hr class="hr">
-      <div class="row2"><div class="fg"><label class="fl">지급은행</label><select class="fi sm" id="lt-bank"><option>IBK</option><option>국민</option><option>신한</option><option>우리</option><option>하나</option><option>농협</option><option>기업</option><option>토스</option><option>카카오</option><option>케이</option><option>기타</option></select></div><div class="fg"><label class="fl">계좌번호</label><input class="fi sm" id="lt-acct"></div></div>
-      <div class="row2"><div class="fg"><label class="fl">이메일</label><input class="fi sm" id="lt-email"></div><div class="fg"><label class="fl">연락처</label><input class="fi sm" id="lt-tel" placeholder="010-0000-0000"></div></div>
+      <div class="row2"><div class="fg"><label class="fl">이름<span class="pf-tg r">*필수 기재</span></label><input class="fi sm" id="lt-name" placeholder="예: 홍길동"></div><div class="fg"><label class="fl">구분</label><select class="fi sm" id="lt-tax" onchange="ltTaxUI()"><option>원천세</option><option>사업자</option></select></div></div>
+      <div class="row2 lt-biz"><div class="fg"><label class="fl">대표명</label><input class="fi sm" id="lt-ceo" placeholder="예: 홍길동"></div><div class="fg"><label class="fl">사업자명</label><input class="fi sm" id="lt-corp" placeholder="예: 바이케이"></div></div>
+      <div class="row2"><div class="fg"><label class="fl" id="lt-regid-l">주민등록번호</label><input class="fi sm" id="lt-regid" inputmode="numeric" placeholder="000000-0000000"></div><div class="fg"><label class="fl">연락처</label><input class="fi sm" id="lt-tel" inputmode="tel" placeholder="010-0000-0000"></div></div>
+      <div class="row2"><div class="fg"><label class="fl">은행명</label><select class="fi sm ph" id="lt-bank" data-rg="1" onchange="this.classList.toggle('ph',!this.value)"><option value="">은행 선택</option><option>IBK</option><option>국민</option><option>신한</option><option>우리</option><option>하나</option><option>농협</option><option>토스뱅크</option><option>카카오뱅크</option><option>케이뱅크</option><option>새마을</option><option>우체국</option><option>SC제일</option><option>수협</option><option>부산</option><option>대구</option><option>경남</option><option>광주</option><option>전북</option><option>씨티</option><option>기타</option></select></div><div class="fg"><label class="fl">계좌번호</label><input class="fi sm" id="lt-acct" inputmode="numeric" placeholder="123-000-00000"></div></div>
+      <div class="fg"><label class="fl">구글 메일</label><input class="fi sm" id="lt-email" inputmode="email" placeholder="example@gmail.com"></div>
+      <div class="fg"><label class="fl" id="lt-addr-l">주소</label><input class="fi sm" id="lt-addr" placeholder="예: 서울특별시 마포구 도화4길 41 102동 603호"></div>
     </div>
     <div class="md-f"><button class="btn btn-g" onclick="closeMo('mo-lt')">취소</button><button class="btn btn-p" onclick="saveLt()">저장</button></div>
   </div>
@@ -3992,7 +3991,7 @@ function woDlSave() {
   var FAV = ['김현수', '강영순', '이은지', '최현경', '권미향', '이유나', '이혜선'];
   var NO_NEW = ['박현아', '박슬기', '박종배', '박현제', '강영순'];
   var BANKS = ['IBK', '국민', '신한', '우리', '하나', '농협', '기업', '토스', '카카오', '케이', '기타'];
-  function tg(k) { if (!k) return ''; var t = { first: '*최초 선택', drop: '*드롭다운 선택', hand: '*수기 작성', auto: '*자동 작성', req: '*필수 입력', reqs: '*필수 선택' }[k]; return '<span class="pf-tg ' + (k === 'auto' ? 'b' : 'r') + '">' + t + '</span>'; }
+  function tg(k) { if (!k) return ''; var t = { first: '*최초 선택', drop: '*드롭다운 선택', hand: '*수기 작성', auto: '*자동 작성', req: '*필수 기재', reqs: '*필수 선택' }[k]; return '<span class="pf-tg ' + (k === 'auto' ? 'b' : 'r') + '">' + t + '</span>'; }
   function lab(t, k) { return '<label class="fl">' + t + tg(k) + '</label>'; }
   function chip(w, on) { return '<label><input type="checkbox" value="' + esc(w) + '"' + (on ? ' checked' : '') + '>' + esc(w) + '</label>'; }
   function wsHtml(vs, keep) {
@@ -4026,8 +4025,8 @@ function woDlSave() {
     box.innerHTML = '<div class="won-nv">' +
       '<div class="fg">' + lab('이름', 'req') + '<input class="fi sm" id="wnv-name" placeholder="예: 홍길동"></div>' +
       '<div class="fg">' + lab('주민등록번호', '') + '<input class="fi sm" id="wnv-reg" inputmode="numeric" placeholder="000000-0000000"></div>' +
-      '<div class="row2"><div class="fg">' + lab('은행', '') + '<select class="fi sm" id="wnv-bank"><option value="">선택</option>' + BANKS.map(function (b) { return '<option>' + b + '</option>'; }).join('') + '</select></div>' +
-      '<div class="fg">' + lab('계좌번호', '') + '<input class="fi sm" id="wnv-acct" inputmode="numeric"></div></div>' +
+      '<div class="row2"><div class="fg">' + lab('은행', '') + '<select class="fi sm ph" id="wnv-bank" onchange="this.classList.toggle(\'ph\',!this.value)"><option value="">은행 선택</option>' + BANKS.map(function (b) { return '<option>' + b + '</option>'; }).join('') + '</select></div>' +
+      '<div class="fg">' + lab('계좌번호', '') + '<input class="fi sm" id="wnv-acct" inputmode="numeric" placeholder="123-000-00000"></div></div>' +
       '<div class="fg">' + lab('연락처', '') + '<input class="fi sm" id="wnv-tel" inputmode="tel" placeholder="010-0000-0000"></div>' +
       '<div class="fg">' + lab('구글 메일', '') + '<input class="fi sm" id="wnv-mail" inputmode="email" placeholder="example@gmail.com"></div>' +
       '<div class="won-sub">이름만 적어도 등록돼요. PITCH_DB 거래처마스터 외주처 탭에 저장돼요.</div>' +
@@ -4761,6 +4760,40 @@ a.rg-lk svg{width:16px;height:16px;flex:none}
   }
   fixHeader(); fixLinks();
   new MutationObserver(function () { fixHeader(); fixLinks(); }).observe(document.body, { childList: true, subtree: true });
+})();
+</script>
+<style>
+/* 2026-10-13: 외주처 등록 — 순서 정리 · 구분선 없음 · 사업자 칸은 사업자일 때만 · 안내 글씨 흐리게 */
+#mo-lt .lt-biz{display:none}
+#mo-lt.biz .lt-biz{display:grid}
+#mo-lt select.ph,#wo-n-body .won-nv select.ph{color:var(--faint)}
+</style>
+<script>
+(function () {
+  window.ltTaxUI = function () {
+    var biz = (document.getElementById('lt-tax') || {}).value === '사업자', mo = document.getElementById('mo-lt'); if (!mo) return;
+    mo.classList.toggle('biz', biz);
+    document.getElementById('lt-regid-l').textContent = biz ? '사업자번호' : '주민등록번호';
+    document.getElementById('lt-regid').placeholder = biz ? '123-00-00000' : '000000-0000000';
+    document.getElementById('lt-addr-l').textContent = biz ? '사업장 주소' : '주소';
+    var b = document.getElementById('lt-bank'); if (b) b.classList.toggle('ph', !b.value);
+  };
+  // 새로 등록: 상호 칸도 비우기 / 수정: 상호 채우기
+  var _n = window.rgLtNew;
+  window.rgLtNew = function () { _n.apply(this, arguments); var c = document.getElementById('lt-corp'); if (c) c.value = ''; ltTaxUI(); };
+  var _e = window.editLt;
+  window.editLt = function (id) { _e.apply(this, arguments); var l = DB.litters.filter(function (x) { return x.id === id; })[0], c = document.getElementById('lt-corp'); if (c) c.value = (l && l.corp) || ''; ltTaxUI(); };
+  // 저장할 때 사업자명(상호)도 함께
+  var _s = window.saveLt;
+  window.saveLt = function () {
+    var P = window.rgPend ? rgPend() : null, n0 = P ? P.length : 0;
+    _s.apply(this, arguments);
+    var corp = (document.getElementById('lt-corp') || {}).value || '';
+    if (P && P.length > n0 && corp.trim()) { var it = P[P.length - 1]; if (it && /vendor/.test(it.action)) { it.data.corp = corp.trim(); try { localStorage.setItem('pm_pend', JSON.stringify(P)); } catch (e) {} } }
+  };
+  // 붙여넣기·파일로 칸을 채운 뒤에도 구분에 맞게
+  ['lt-tax'].forEach(function (id) { var el = document.getElementById(id); if (el) el.addEventListener('change', ltTaxUI); });
+  var _imp = window.rgImpText; if (_imp) window.rgImpText = function (k) { _imp.apply(this, arguments); if (k === 'lt') ltTaxUI(); };
 })();
 </script>
 </body>
