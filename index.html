@@ -3823,6 +3823,61 @@ function txToggle(id, ym) {
 #tab-rates-pay .rate-table-box{overflow-x:auto}
 #tab-rates-pay .rate-table-box th,#tab-rates-pay .rate-table-box td{white-space:nowrap;font-size:12px}
 </style>
+<style>
+/* 2026-10-12: 목록 기본 = 이번 달·지난달, 아래 더보기(2개월씩)·전체보기 */
+.ls-more{display:flex;align-items:center;justify-content:center;gap:6px;padding:14px 16px;border-top:1px solid var(--line)}
+.ls-more button{height:32px;border:0;border-radius:999px;background:var(--chip);color:var(--txt2);font-family:inherit;font-size:13px;font-weight:600;padding:0 14px;cursor:pointer}
+.ls-more span{font-size:12px;color:var(--faint);margin-right:4px}
+#edit-mode-btn{display:none!important}
+</style>
+<script>
+(function () {
+  // 상단 편집 버튼 없앰 → 로그인하면 항상 추가·수정 가능 (예전 편집모드 켠 상태와 같음)
+  canEdit = function () { return !!SESSION.role; };
+  // 시트 아이콘 → PITCH_DB 폴더
+  var sh = document.querySelector('header a.ib[title="시트 열기"]');
+  if (sh) { sh.href = 'https://drive.google.com/drive/folders/1ElylRcsc64T0-DXZq74leMIBZBlxYj-y'; sh.title = 'PITCH_DB 폴더 열기'; sh.setAttribute('aria-label', sh.title); }
+
+  var ymNow = function () { var d = new Date(); return d.getFullYear() % 100 * 12 + d.getMonth(); };
+  var ymOf = function (d6) { return /^\d{6}$/.test(d6 || '') ? +d6.slice(0, 2) * 12 + (+d6.slice(2, 4) - 1) : null; };
+  var older = function (d6, months) { var y = ymOf(d6); return y !== null && y < ymNow() - (months - 1); };
+  window.lsFoot = function (hid, months, fnMore, fnAll, fnReset) {
+    if (hid > 0) return '<div class="ls-more"><span>' + hid + '건 더</span><button type="button" onclick="' + fnMore + '">더보기 · 2개월</button><button type="button" onclick="' + fnAll + '">전체보기</button></div>';
+    if (months === 0) return '<div class="ls-more"><button type="button" onclick="' + fnReset + '">최근 2개월만 보기</button></div>';
+    return '';
+  };
+  // 작업내역
+  WO.months = 2;
+  var ov = woView;
+  woView = function () {
+    var v = ov.apply(this, arguments); WO._hid = 0;
+    if (WO.months && !String(WO.q || '').trim()) v = v.filter(function (x) { if (older(x.date6, WO.months)) { WO._hid++; return false; } return true; });
+    return v;
+  };
+  var orl = woRenderList;
+  woRenderList = function () {
+    orl.apply(this, arguments);
+    var lb = document.getElementById('wo-list'); if (!lb || !WO.loaded) return;
+    lb.insertAdjacentHTML('beforeend', lsFoot(WO._hid || 0, WO.months, 'WO.months+=2;woRenderList()', 'WO.months=0;woRenderList()', 'WO.months=2;woRenderList()'));
+  };
+  // 지급내역·청구내역
+  DC.invoice.months = 2; DC.pay.months = 2;
+  var op = dcPass, lim = null;
+  dcPass = function (S, x) {
+    var r = op(S, x);
+    if (r && lim && S === lim && S.months && !(S.y || S.m || S.from || S.to || String(S.q || '').trim()) && older(x.date6, S.months)) { S._hid++; return false; }
+    return r;
+  };
+  var ol = dcList;
+  dcList = function (type) {
+    var S = DC[type]; S._hid = 0; lim = S;
+    try { ol.apply(this, arguments); } finally { lim = null; }
+    var lb = document.querySelector('#dc-' + type + ' .wo-list'); if (!lb || !S.loaded) return;
+    var t = "'" + type + "'";
+    lb.insertAdjacentHTML('beforeend', lsFoot(S._hid || 0, S.months, 'DC[' + t + '].months+=2;dcList(' + t + ')', 'DC[' + t + '].months=0;dcList(' + t + ')', 'DC[' + t + '].months=2;dcList(' + t + ')'));
+  };
+})();
+</script>
 </body>
 
 </html>
