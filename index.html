@@ -943,9 +943,10 @@ function renderAg(){
         // 2026-10-12: 미리보기 = 거래처명 / 대표명 · 사업자번호 (아티스트명은 표시 안 함)
         +'<div class="mc-info" style="flex:1;min-width:0">'
           +'<div class="mc-name" style="overflow-wrap:anywhere">'+esc(a.name)+'</div>'
-          +'<div class="mc-sub" style="margin-top:4px;white-space:normal;display:flex;flex-wrap:wrap;align-items:center;gap:2px 6px;font-size:13px">'
-            +(a.ceo?'<span class="copyable" id="agmc-ceo'+i+'" style="color:var(--txt2)">'+esc(a.ceo)+'</span><span style="color:var(--faint)">/</span>':'')
-            +'<span id="agmc-biz'+i+'" class="copyable" style="color:var(--txt2)">'+esc(a.biz||'-')+'</span>'
+          // 2026-10-12: 외주처 카드처럼 이름표 칸 — 대표 / 사업자번호
+          +'<div class="ag-rows">'
+            +'<div class="lt-r"><span class="lt-k">대표</span><span class="lt-v"><span class="copyable" id="agmc-ceo'+i+'">'+esc(a.ceo||'-')+'</span></span></div>'
+            +'<div class="lt-r"><span class="lt-k">사업자번호</span><span class="lt-v"><span class="copyable" id="agmc-biz'+i+'">'+esc(a.biz||'-')+'</span></span></div>'
           +'</div>'
         +'</div>'
         +'<span class="mc-chv" style="font-size:14px;flex-shrink:0;margin-left:10px;align-self:center">⌄</span>'
@@ -3810,6 +3811,12 @@ function txToggle(id, ym) {
 .base-val{color:var(--txt)!important;font-weight:700!important}
 .rate-val{color:#3182f6!important}
 .wo-warn{color:#f04452!important}
+</style>
+<style>
+/* 2026-10-12: 거래처 카드 — 외주처와 같은 크기·이름표 칸 */
+#mc-ag .mc-name{font-size:16px!important;font-weight:800!important}
+.ag-rows{display:flex;flex-direction:column;gap:2px;margin-top:8px}
+.ag-rows .lt-r{font-size:14px}
 </style>
 </body>
 
