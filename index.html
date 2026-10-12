@@ -3878,6 +3878,63 @@ function txToggle(id, ym) {
   };
 })();
 </script>
+<style>
+/* 2026-10-12: 목록 구분선 양옆 여백 (견적서 합계처럼) */
+.wo-list .wo-item{position:relative;border-bottom:0!important}
+.wo-list .wo-item::after{content:'';position:absolute;left:18px;right:18px;bottom:0;height:1px;background:var(--line)}
+.wo-list .wo-item:last-of-type::after{display:none}
+.wo-list .ls-more{border-top:0}
+/* 발주일 ~ 마감일 */
+.wo-dl{font-size:11px;font-weight:600;color:var(--txt3);margin-left:3px}
+.wo-dlb{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin-top:8px}
+.wo-dlb label{display:flex;flex-direction:column;gap:3px;font-size:11px;font-weight:600;color:var(--txt3)}
+.wo-dlb input{height:36px;border:0;border-radius:10px;background:var(--chip);padding:0 8px;font-family:inherit;font-size:13px;color:var(--txt);min-width:0;width:100%}
+.wo-dlr{display:flex;align-items:center;justify-content:space-between;margin-top:12px}
+.wo-dlr b{font-size:13px;font-weight:700}
+.wo-dlr button{height:30px;border:0;border-radius:999px;background:var(--txt);color:#fff;font-family:inherit;font-size:12px;font-weight:600;padding:0 12px;cursor:pointer}
+</style>
+<script>
+// 2026-10-12: 작업내역 — 발주일 ~ 마감일(1~3순위). 마감일은 작업내역서 작업합산 E2:K4에 저장
+function woDlTxt(dl) { return (dl || []).map(function (s) { var m = String(s).match(/^\d{4}-(\d{2})-(\d{2})/); return m ? m[1] + '.' + m[2] : s; }).join('·'); }
+(function () {
+  var oh = woHead;
+  woHead = function (ck, artist, title, d6, t, dl) {
+    var h = oh(ck, artist, title, d6, t);
+    if (dl && dl.length) h = h.replace('</small></span>', '</small><span class="wo-dl">~ ' + esc(woDlTxt(dl)) + '</span></span>');
+    return h;
+  };
+  // 작업내역 목록: x.dl 넘기기
+  var orl = woRenderList;
+  woRenderList = function () {
+    var keep = woHead, byId = {};
+    (WO.items || []).forEach(function (x) { byId[x.clientKey + '|' + x.date6 + '|' + x.t] = x.dl; });
+    woHead = function (ck, artist, title, d6, t) { return keep(ck, artist, title, d6, t, byId[ck + '|' + d6 + '|' + t]); };
+    try { orl.apply(this, arguments); } finally { woHead = keep; }
+  };
+  // 상세: 마감일 칸 (최대 3개) + 저장
+  var od = woDetail;
+  woDetail = function () {
+    od.apply(this, arguments);
+    var d = WO.cur, b = document.getElementById('wo-d-body'); if (!d || !d.tabs || !b) return;
+    var inf = b.querySelector('.wd-links') || b.querySelector('.wo-info'); if (!inf || b.querySelector('.wo-dlw')) return;
+    var dl = d.dlEdit || (d.dl || []).slice();
+    var w = document.createElement('div'); w.className = 'wo-dlw';
+    w.innerHTML = '<div class="wo-dlr"><b>마감일</b><button type="button" onclick="woDlSave()">마감일 저장</button></div><div class="wo-dlb">' +
+      [0, 1, 2].map(function (i) { return '<label>' + (i + 1) + '순위<input type="date" value="' + esc(dl[i] || '') + '" onchange="(WO.cur.dlEdit=WO.cur.dlEdit||(WO.cur.dl||[]).slice())[' + i + ']=this.value"></label>'; }).join('') + '</div>';
+    inf.parentNode.insertBefore(w, inf.nextSibling);
+  };
+})();
+function woDlSave() {
+  var d = WO.cur; if (!d) return;
+  var dl = (d.dlEdit || d.dl || []).slice(0, 3).map(function (x) { return x || ''; });
+  woPost('pm_wo_dl', { id: d.id, dl: dl }, function (res) {
+    if (!res || !res.ok) { toast('저장 실패: ' + ((res && res.error) || '연결 확인')); return; }
+    d.dl = res.dl || []; d.dlEdit = null;
+    (WO.items || []).forEach(function (x) { if (x.id === d.id) x.dl = d.dl; });
+    woRenderList(); toast('마감일 저장했어요 · 작업내역서 시트에 반영됨');
+  });
+}
+</script>
 </body>
 
 </html>
