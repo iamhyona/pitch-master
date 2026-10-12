@@ -2238,8 +2238,7 @@ function woRenderList() {
   // 2026-10-12: 표 대신 한 줄씩 카드 목록 (폰에서 글자 잘림 없게)
   lb.innerHTML = v.map(function (x) {
     return '<div class="wo-item" data-id="' + esc(x.id) + '" onclick="woOpen(this.dataset.id)">' +
-      '<div class="wo-l1"><b>' + esc(x.artist) + '</b><span class="wo-dt"><span>' + woDateW(x.date6) + '</span><span class="wo-ago">' + woAgo(x.t) + ' 수정</span></span></div>' +
-      '<div class="wo-l2">' + esc(x.clientKey) + ' · ' + esc(x.title) + '</div>' +
+      woHead(x.clientKey, x.artist, x.title, x.date6, x.t) +
       '<div class="wo-l3"><span class="wo-wl">' + (x.workers || []).map(function (w) { return '<span class="wo-w">' + esc(w) + '</span>'; }).join('') + '</span></div></div>';
   }).join('');
 }
@@ -2812,8 +2811,7 @@ function dcList(type) {
   var v = S.items.filter(function (x) { return (!S.folder || x.folder === S.folder) && (!q || [x.clientKey, x.artist, x.title, x.date6, x.worker, x.folder].join(' ').toLowerCase().indexOf(q) >= 0); });
   if (!v.length) { lb.innerHTML = '<div class="wo-empty">' + (S.loaded ? '문서가 없어요' : '') + '</div>'; return; }
   lb.innerHTML = v.map(function (x) {
-    return '<div class="wo-item" data-id="' + esc(x.id) + '" onclick="dcOpen(this.dataset.id)"><div class="wo-l1"><b>' + esc(x.artist || x.clientKey) + '</b><span class="wo-dt"><span>' + woDateW(x.date6) + '</span><span class="wo-ago">' + woAgo(x.t) + ' 수정</span></span></div>' +
-      '<div class="wo-l2">' + esc(x.clientKey) + (x.title ? ' · ' + esc(x.title) : '') + '</div>' +
+    return '<div class="wo-item" data-id="' + esc(x.id) + '" onclick="dcOpen(this.dataset.id)">' + woHead(x.clientKey, x.artist || x.clientKey, x.title, x.date6, x.t) +
       '<div class="wo-l3"><span class="wo-wl">' + (type === 'pay' && x.worker ? '<span class="wo-w">' + esc(x.worker) + '</span>' : (x.sub ? '<span class="wo-w">' + esc(x.sub) + '</span>' : '')) + '</span></div></div>';
   }).join('');
 }
@@ -3169,6 +3167,34 @@ function pfTplOpen() {
 function pfTplIns(el) { var t = PF.tplFocus || pfEl('pft-pay'); var s = t.selectionStart || t.value.length; t.value = t.value.slice(0, s) + el.textContent + t.value.slice(t.selectionEnd || s); t.focus(); t.selectionStart = t.selectionEnd = s + el.textContent.length; }
 function pfTplSave() { var o = {}; ['pay', 'payBiz', 'tax'].forEach(function (k) { var v = pfEl('pft-' + k).value; if (v.trim() && v !== PF_TPL_DEF[k]) o[k] = v; }); woPost('pm_pf_tpl', { tpl: o }, function (r) { if (!r || !r.ok) { toast('저장 실패: ' + ((r && r.error) || '연결 확인')); return; } PF_SRV = o; tbLS('pf_tpl', o); closeMo('mo-pftpl'); pfBuild(); toast('문구 포맷을 저장했어요 · 모든 기기에 반영'); }); }
 function pfTplReset() { if (!confirm('세 가지 포맷을 모두 기본값으로 되돌릴까요?')) return; ['pay', 'payBiz', 'tax'].forEach(function (k) { pfEl('pft-' + k).value = PF_TPL_DEF[k]; }); }
+</script>
+<style>
+/* 2026-10-12: 목록 카드 머리 — [소속사] 아티스트 (프로젝트) · 담당자 / 날짜·수정시각 같은 줄 */
+.wo-g{display:grid;grid-template-columns:minmax(0,1fr) auto;column-gap:10px;row-gap:4px;align-items:baseline}
+.wo-t{display:flex;align-items:center;flex-wrap:wrap;gap:4px 6px;min-width:0;align-self:center}
+.wo-t b{font-size:15px;font-weight:700}
+.wo-pj{font-size:14px;font-weight:500;color:var(--txt3);overflow-wrap:anywhere}
+.wo-g .wo-dt{display:block;align-self:center;text-align:right}
+.wo-g .wo-l2{margin-top:0;font-size:12px}
+.wo-g .wo-ago{text-align:right}
+.wo-ck{font-size:10px!important;font-weight:700;letter-spacing:.01em}
+</style>
+<script>
+var WO_CK = { 'STARSHIP': ['#e8f3ff', '#1b64da'], 'YG': ['#e5e8eb', '#191f28'], 'YG PLUS': ['#ffeef4', '#d6336c'], 'THE BLACK LABEL': ['#333d4b', '#ffffff'], 'THEBLACKLABEL': ['#333d4b', '#ffffff'], 'HYBE': ['#f1edff', '#6741d9'], 'HYBE USA': ['#f1edff', '#6741d9'], 'KQ': ['#fff1e6', '#e8590c'], 'JYP': ['#e6fcf5', '#099268'], 'EDAM': ['#fff8db', '#b07d00'], 'MORE VISION': ['#e3fafc', '#0c8599'], 'MOREVISION': ['#e3fafc', '#0c8599'] };
+var WO_CKP = [['#fff0f0', '#e03131'], ['#ebfbee', '#2f9e44'], ['#f8f0fc', '#ae3ec9'], ['#fff9db', '#e67700'], ['#edf2ff', '#3b5bdb']];
+function woCK(k) {
+  k = String(k || '').trim(); if (!k) return '';
+  var c = WO_CK[k.toUpperCase()];
+  if (!c) { var h = 0; for (var i = 0; i < k.length; i++) h = (h * 31 + k.charCodeAt(i)) >>> 0; c = WO_CKP[h % WO_CKP.length]; }
+  return '<span class="tag wo-ck" style="background:' + c[0] + ';color:' + c[1] + '">' + esc(k) + '</span>';
+}
+function woHead(ck, artist, title, d6, t) {
+  var parts = String(title || '').split(' · ').map(function (x) { return x.trim(); }).filter(Boolean);
+  var mgr = parts.length > 1 ? parts.pop() : '', proj = parts.join(' ');
+  return '<div class="wo-g"><div class="wo-t">' + woCK(ck) + '<b>' + esc(artist || '') + '</b>' + (proj ? '<span class="wo-pj">(' + esc(proj) + ')</span>' : '') + '</div>' +
+    '<span class="wo-dt">' + woDateW(d6) + '</span>' +
+    '<div class="wo-l2">' + (mgr ? '담당 ' + esc(mgr) : '') + '</div><span class="wo-ago">' + woAgo(t) + ' 수정</span></div>';
+}
 </script>
 </body>
 
