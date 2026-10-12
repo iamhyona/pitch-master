@@ -3647,6 +3647,14 @@ function dcRender(type) {
   };
 })();
 </script>
+<style>
+/* 2026-10-12: 작업단가 — 청구/지급 단추는 문구작성처럼 박스 밖 (오른쪽 단가마스터 열기) */
+.rt-top.out{padding:0!important;margin:0 0 10px}
+.rt-top.out .btn{background:#fff!important}
+</style>
+<script>
+(function () { ['bill', 'pay'].forEach(function (k) { var tab = document.getElementById('tab-rates-' + k); if (!tab) return; var top = tab.querySelector('.rt-top'), box = tab.querySelector('.rate-agency-box'); if (!top || !box) return; top.classList.add('out'); tab.insertBefore(top, box); }); })();
+</script>
 </body>
 
 </html>
