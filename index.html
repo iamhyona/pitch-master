@@ -3587,6 +3587,14 @@ function dcRender(type) {
   });
 })();
 </script>
+<style>
+/* 2026-10-12: 문구작성 — 부가설명 숨김 (빠른 작성 결과 안내는 입력했을 때만) */
+.pf-sec small{display:none}
+#pf-hint:empty{display:none}
+</style>
+<script>
+(function () { var oq = pfQuick; pfQuick = function () { oq.apply(this, arguments); var q = pfEl('pf-quick'), h = pfEl('pf-hint'); if (h && q && !q.value.trim()) h.textContent = ''; }; })();
+</script>
 </body>
 
 </html>
