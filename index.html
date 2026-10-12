@@ -4362,13 +4362,29 @@ function woDlSave() {
   window.editLt = function (id) { ltPrep(); _editLt(id); var l = DB.litters.filter(function (x) { return x.id === id; })[0]; if (l && l.bank) { var bs = $('lt-bank'); if (![].some.call(bs.options, function (o) { return o.value === l.bank; })) bs.insertAdjacentHTML('beforeend', '<option>' + esc(l.bank) + '</option>'); bs.value = l.bank; } };
 
   // ── 거래처: + 로 새로 등록 ──
-  function fld(id, label, tag, ph, extra) { return '<div class="fg"><label class="fl">' + label + (tag ? '<span class="pf-tg ' + (tag === 'auto' ? 'b' : 'r') + '">' + { hand: '*수기 작성', first: '*최초 선택', auto: '*자동 작성' }[tag] + '</span>' : '') + '</label><input class="fi sm" id="' + id + '"' + (ph ? ' placeholder="' + ph + '"' : '') + (extra || '') + '></div>'; }
+  function fld(id, label, tag, ph, extra) { return '<div class="fg"><label class="fl">' + label + (tag ? '<span class="pf-tg ' + (tag === 'auto' ? 'b' : 'r') + '">' + { hand: '*수기 작성', first: '*최초 선택', auto: '*자동 작성', req: '*필수 기재' }[tag] + '</span>' : '') + '</label><input class="fi sm" id="' + id + '"' + (ph ? ' placeholder="' + ph + '"' : '') + (extra || '') + '></div>'; }
+  // 2026-10-13: 담당자 여러 명 — 추가·삭제
+  function ctBlock(first) {
+    var x = first ? ['agn-mgr', 'agn-tel', 'agn-email'] : ['', '', ''];
+    var inp = function (id, cls, ph, extra) { return '<input class="fi sm ' + cls + '"' + (id ? ' id="' + id + '"' : '') + ' placeholder="' + ph + '"' + (extra || '') + '>'; };
+    return '<div class="agn-ct">' +
+      '<div class="agn-ct-h"><span>담당자</span><button type="button" class="re-x" title="담당자 빼기" onclick="rgAgnCtDel(this)">' + IC.x + '</button></div>' +
+      '<div class="row2"><div class="fg">' + inp(x[0], 'ct-n', '예: 홍길동') + '</div><div class="fg">' + inp(x[1], 'ct-t', '010-0000-0000', ' inputmode="tel"') + '</div></div>' +
+      '<div class="fg">' + inp(x[2], 'ct-m', 'example@company.com', ' inputmode="email"') + '</div></div>';
+  }
+  window.rgAgnCtAdd = function () { $('agn-cts').insertAdjacentHTML('beforeend', ctBlock(false)); var l = $('agn-cts').lastElementChild.querySelector('.ct-n'); if (l) l.focus(); };
+  window.rgAgnCtDel = function (b) {
+    var box = b.closest('.agn-ct'), all = document.querySelectorAll('#agn-cts .agn-ct');
+    if (all.length <= 1) { box.querySelectorAll('input').forEach(function (i) { i.value = ''; }); return; }
+    var wasFirst = box === all[0]; box.remove();
+    if (wasFirst) { var f = document.querySelector('#agn-cts .agn-ct'); if (f) { f.querySelector('.ct-n').id = 'agn-mgr'; f.querySelector('.ct-t').id = 'agn-tel'; f.querySelector('.ct-m').id = 'agn-email'; } }
+  };
   window.rgAgNew = function () {
     $('agn-body').innerHTML = impHtml('agn') +
-      '<div class="row2">' + fld('agn-ko', '국문명', 'hand', '예: 스타쉽') + fld('agn-en', '영문명', 'hand', '예: STARSHIP ENTERTAINMENT') + '</div>' +
-      '<div class="row2">' + fld('agn-ceo', '대표명', 'hand') + fld('agn-biz', '사업자번호', 'hand', '000-00-00000', ' inputmode="numeric"') + '</div>' +
-      fld('agn-addr', '주소', 'hand') + fld('agn-taxmail', '세금계산서 메일', 'hand', '', ' inputmode="email"') + fld('agn-artists', '소속 아티스트', 'hand', '쉼표로 구분') +
-      '<hr class="hr">' + '<div class="row2">' + fld('agn-mgr', '담당자', 'hand') + fld('agn-tel', '연락처', 'hand', '010-0000-0000', ' inputmode="tel"') + '</div>' + fld('agn-email', '담당자 메일', 'hand', '', ' inputmode="email"') +
+      '<div class="row2">' + fld('agn-ko', '국문명', 'req', '예: 스타쉽') + fld('agn-en', '영문명', 'req', '예: STARSHIP ENTERTAINMENT') + '</div>' +
+      '<div class="row2">' + fld('agn-ceo', '대표명', '', '예: 홍길동') + fld('agn-biz', '사업자번호', '', '123-00-00000', ' inputmode="numeric"') + '</div>' +
+      fld('agn-addr', '주소', '', '예: 서울특별시 마포구 도화4길 41 102동 603호') + fld('agn-taxmail', '세금계산서 메일', '', '예: tax@company.com', ' inputmode="email"') + fld('agn-artists', '소속 아티스트', '', '쉼표로 구분 (예: 아이브, 크래비티)') +
+      '<div class="agn-cth"><span>담당자</span><button type="button" class="agn-add" onclick="rgAgnCtAdd()">+ 담당자 추가</button></div><div id="agn-cts">' + ctBlock(true) + '</div>' +
       '<div class="dc-note" style="margin-top:4px">국문명이나 영문명 중 하나만 있어도 추가돼요. 거래처 표기는 "영문명(국문명)"으로 저장돼요.</div>';
     openMo('mo-agn');
   };
@@ -4376,8 +4392,11 @@ function woDlSave() {
     var ko = gv('agn-ko'), en = gv('agn-en');
     if (!ko && !en) { toast('국문명이나 영문명을 적어주세요'); return; }
     var memo = [gv('agn-addr'), gv('agn-taxmail') ? '세금계산서 ' + gv('agn-taxmail') : ''].filter(String).join(' / ');
-    var d = { ko: ko, en: en, ceo: gv('agn-ceo'), biz: gv('agn-biz'), artists: gv('agn-artists'), memo: memo, manager: gv('agn-mgr'), email: gv('agn-email'), tel: gv('agn-tel') };
-    pendAdd('ag', 'pm_add_client', d, '거래처 추가 · ' + (en && ko ? en + '(' + ko + ')' : en || ko));
+    var cts = [].map.call(document.querySelectorAll('#agn-cts .agn-ct'), function (b) { var v = function (c) { return (b.querySelector('.' + c).value || '').trim(); }; return { name: v('ct-n'), tel: v('ct-t'), email: v('ct-m') }; }).filter(function (c) { return c.name; });
+    var first = cts[0] || {}, disp = en && ko ? en + '(' + ko + ')' : en || ko;
+    var d = { ko: ko, en: en, ceo: gv('agn-ceo'), biz: gv('agn-biz'), artists: gv('agn-artists'), memo: memo, manager: first.name || '', email: first.email || '', tel: first.tel || '' };
+    pendAdd('ag', 'pm_add_client', d, '거래처 추가 · ' + disp + (first.name ? ' (담당자 ' + first.name + ')' : ''));
+    cts.slice(1).forEach(function (c) { pendAdd('ag', 'pm_add_contact', { client: disp, name: c.name, email: c.email, tel: c.tel }, '담당자 추가 · ' + c.name + ' (' + disp + ')'); });
     closeMo('mo-agn'); toast('반영 대기에 담았어요 — 반영을 눌러 저장하세요');
   };
 
@@ -4796,6 +4815,19 @@ a.rg-lk svg{width:16px;height:16px;flex:none}
   var _imp = window.rgImpText; if (_imp) window.rgImpText = function (k) { _imp.apply(this, arguments); if (k === 'lt') ltTaxUI(); };
 })();
 </script>
+<style>
+/* 2026-10-13: 거래처 등록 — 담당자 여러 명 */
+.agn-cth{display:flex;align-items:center;justify-content:space-between;margin:14px 0 6px}
+.agn-cth span{font-size:13px;font-weight:700;color:var(--txt)}
+.agn-add{height:32px;border:0;border-radius:999px;background:var(--txt);color:#fff;font-family:inherit;font-size:13px;font-weight:600;padding:0 13px;cursor:pointer}
+.agn-ct{background:var(--sur2,#f9fafb);border-radius:14px;padding:8px 10px 2px;margin-bottom:8px}
+.agn-ct .fi{background:#fff}
+.agn-ct-h{display:flex;align-items:center;justify-content:space-between;font-size:11px;color:var(--txt3);padding:0 2px 4px}
+.agn-ct .fg{margin-bottom:8px}
+#agn-cts{counter-reset:ct}
+.agn-ct{counter-increment:ct}
+.agn-ct-h span::after{content:' ' counter(ct)}
+</style>
 </body>
 
 </html>
