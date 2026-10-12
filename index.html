@@ -5146,6 +5146,32 @@ a.rg-lk svg{width:16px;height:16px;flex:none}
   if (mo) new MutationObserver(function () { fix(); }).observe(mo, { childList: true, subtree: true });
 })();
 </script>
+<script>
+// 2026-10-13 (현아 요청): 문구 — '복사'하면 구글시트(PITCH_DB/07_매출매입)에 한 줄 저장
+//   청구 → 매출/[PITCH]YYYY년 매출 내역 (거래처 탭) · 지급 → 매입/[PITCH]YYYY년 매입 내역 (외주처 탭)
+(function () {
+  var last = '';
+  function vals() {
+    var k = pfCalc(), em = pfV('pf-email'), tm = pfV('pf-taxmail'), c = PF.mode === 'tax' ? pmClient(pfV('pf-client')) : null;
+    return { kind: PF.mode === 'tax' ? 'tax' : 'pay', client: c ? (c.key || '') : '',
+      '아티스트': PF.artist && PF.artist.ko ? PF.artist.ko : pfV('pf-artist'), '작업명': pfV('pf-work') || '리터칭', '거래처명': pfV('pf-cname'), '대표자': pfV('pf-ceo'), '사업자번호': pfV('pf-biz'),
+      '담당자': pfV('pf-mgr'), '메일주소': em, '계산서메일': tm && tm !== em ? tm : '', '청구일자': pfV('pf-date'),
+      '지급처': pfV('pf-vendor'), '등록번호': pfV('pf-reg'), '회사명': pfV('pf-corp'), '은행': pfV('pf-bank'), '계좌번호': pfV('pf-acct'), '세금구분': pfV('pf-tax'),
+      '공급가액': k.amt, '세금': k.tax, '최종지급액': k.total };
+  }
+  var _oc = window.pfOutCopy;
+  window.pfOutCopy = function () {
+    var d = null; try { d = vals(); d.text = (pfEl('pfout-x') || {}).value || PF.text || ''; } catch (e) {}
+    _oc.apply(this, arguments);
+    if (!d || !d.text || d.text === last) return;
+    last = d.text;
+    woPost('pm_mm_add', d, function (r) {
+      if (r && r.ok) toast((d.kind === 'tax' ? '매출' : '매입') + ' 내역에 저장했어요 · ' + (r.tab || ''));
+      else { last = ''; toast('시트 저장 실패 — ' + ((r && r.error) || '다시 복사해 주세요')); }
+    });
+  };
+})();
+</script>
 </body>
 
 </html>
