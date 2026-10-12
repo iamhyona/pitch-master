@@ -198,15 +198,15 @@ select.fi option{background:var(--sur2)}
   </header>
   <div class="tabs-wrapper">
     <div class="tabs">
-      <div class="tab" data-tab="taxbill" id="tab-btn-taxbill">문구작성</div>
+      <div class="tab" data-tab="taxbill" id="tab-btn-taxbill">문구</div>
+      <div class="tab" data-tab="invoice" id="tab-btn-invoice">견적서</div>
       <div class="tab active" data-tab="dash" id="tab-btn-dash">작업내역</div>
       <div class="tab" data-tab="py">지급내역</div>
       <div class="tab" data-tab="iv">청구내역</div>
-      <div class="tab" data-tab="rates-bill" id="tab-btn-rates-bill">작업단가</div>
-      <div class="tab" data-tab="tx">원천세신고</div>
+      <div class="tab" data-tab="rates-bill" id="tab-btn-rates-bill">단가</div>
+      <div class="tab" data-tab="tx">신고</div>
       <div class="tab" data-tab="agencies">거래처</div>
       <div class="tab" data-tab="litt">외주처</div>
-      <div class="tab" data-tab="invoice" id="tab-btn-invoice">견적서작성</div>
     </div>
   </div>
   <div class="content">
@@ -2092,7 +2092,7 @@ function pfLoadDoc(id) {
     pfBuild();
   }).catch(function () { hint.textContent = '읽기 실패'; });
 }
-(function () { var t = document.getElementById('tab-btn-taxbill'); if (t) t.textContent = '문구작성'; })();
+(function () { var t = document.getElementById('tab-btn-taxbill'); if (t) t.textContent = '문구'; })();
 
 </script>
 <script>
