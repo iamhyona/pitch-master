@@ -4583,6 +4583,15 @@ function woDlSave() {
 .tx-dt .dc-row{border-top:0;position:relative}
 .tx-dt .dc-row+.dc-row::before{content:'';position:absolute;top:0;left:14px;right:14px;border-top:1px solid #e3e6ea}
 </style>
+<style>
+/* 2026-10-13: 단가표 — 항목 사이 구분선은 양옆 여백 있는 실선 (머리글 아래 선은 그대로) */
+.rate-table-box tbody td{border-bottom:0!important}
+.rate-table-box tbody tr+tr td{background:linear-gradient(#e3e6ea,#e3e6ea) 0 0/100% 1px no-repeat}
+.rate-table-box tbody tr+tr td:first-child{background-position:right top;background-size:calc(100% - 14px) 1px}
+.rate-table-box tbody tr+tr td:last-child{background-position:left top;background-size:calc(100% - 14px) 1px}
+.rate-table-box tbody tr+tr td:only-child{background-position:center top;background-size:calc(100% - 28px) 1px}
+#tab-rates-bill .pg,#tab-rates-pay .pg{border-top:0}
+</style>
 </body>
 
 </html>
