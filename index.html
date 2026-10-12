@@ -3595,6 +3595,33 @@ function dcRender(type) {
 <script>
 (function () { var oq = pfQuick; pfQuick = function () { oq.apply(this, arguments); var q = pfEl('pf-quick'), h = pfEl('pf-hint'); if (h && q && !q.value.trim()) h.textContent = ''; }; })();
 </script>
+<style>
+/* 2026-10-12: 문구작성 — 지급/청구 단추는 박스 밖, 빠른 작성·반자동 작성은 각각 박스, 확인은 맨 아래 */
+.pf-hd.pf-out{margin:0 0 10px}
+.pf-hd.pf-out .rt-seg{background:#e5e8eb!important}
+.pf-hd.pf-out .pf-ic{background:#fff}
+.pf-box{gap:12px!important}
+.pf-ok.pf-out{margin-top:0}
+</style>
+<script>
+(function () {
+  var oi = initTaxBill;
+  initTaxBill = function () {
+    oi.apply(this, arguments);
+    var box = pfEl('tab-taxbill'); if (!box || box.dataset.pf4) return;
+    var one = box.querySelector('.pf-one'); if (!one) return;
+    box.dataset.pf4 = '1';
+    var kids = [].slice.call(one.children), hd = one.querySelector('.pf-hd'), dv = one.querySelector('.pf-div'), ok = one.querySelector('.pf-ok');
+    var b1 = document.createElement('div'), b2 = document.createElement('div');
+    b1.className = b2.className = 'tb-box pf-box';
+    var cur = b1;
+    kids.forEach(function (k) { if (k === hd || k === ok) return; if (k === dv) { cur = b2; return; } cur.appendChild(k); });
+    if (dv) dv.remove();
+    hd.classList.add('pf-out'); ok.classList.add('pf-out');
+    box.insertBefore(hd, one); box.insertBefore(b1, one); box.insertBefore(b2, one); box.insertBefore(ok, one); one.remove();
+  };
+})();
+</script>
 </body>
 
 </html>
