@@ -391,7 +391,7 @@ select.fi option{background:var(--sur2)}
               <select class="fi sm" id="inv-client" onchange="onInvClientDirectCheck()"></select>
             </div>
             <div class="fg">
-              <label class="fl">담당자<span class="pf-tg">*드롭다운 선택</span></label>
+              <label class="fl">담당자</label>
               <select class="fi sm" id="inv-manager" onchange="onInvManagerChange()"></select>
             </div>
           </div>
@@ -401,7 +401,7 @@ select.fi option{background:var(--sur2)}
               <input class="fi sm" id="inv-project" placeholder="예: 신규앨범MV연동">
             </div>
             <div class="fg">
-              <label class="fl">아티스트<span class="pf-tg">*드롭다운 선택</span></label>
+              <label class="fl">아티스트</label>
               <select class="fi sm" id="inv-artist" onchange="onInvArtistChange()"></select>
             </div>
           </div>
@@ -3082,7 +3082,7 @@ function pfMode(m, keep) {
   pfQuick();
 }
 // 2026-10-12: 칸마다 어떻게 채워지는지 표시 (최초 선택·수기 작성은 빨강)
-var PF_TAG = { first: '*최초 선택', auto: '*자동 작성', drop: '*드롭다운 선택', hand: '*수기 작성' };
+var PF_TAG = { first: '*최초 선택', auto: '*자동 작성', drop: '', hand: '*수기 작성' };
 function pfTags() {
   var map = PF.mode === 'tax'
     ? { 'pf-client': 'first', 'pf-ceobiz': 'auto', 'pf-email': 'auto', 'pf-mgr': 'hand', 'pf-taxmail': 'auto', 'pf-amt': 'hand', 'pf-vat': 'auto', 'pf-total': 'auto' }
@@ -3991,7 +3991,7 @@ function woDlSave() {
   var FAV = ['김현수', '강영순', '이은지', '최현경', '권미향', '이유나', '이혜선'];
   var NO_NEW = ['박현아', '박슬기', '박종배', '박현제', '강영순'];
   var BANKS = ['IBK', '국민', '신한', '우리', '하나', '농협', '기업', '토스', '카카오', '케이', '기타'];
-  function tg(k) { if (!k) return ''; var t = { first: '*최초 선택', drop: '*드롭다운 선택', hand: '*수기 작성', auto: '*자동 작성', req: '*필수 기재', reqs: '*필수 선택' }[k]; return '<span class="pf-tg ' + (k === 'auto' ? 'b' : 'r') + '">' + t + '</span>'; }
+  function tg(k) { if (!k || k === 'drop') return ''; var t = { first: '*최초 선택', drop: '*드롭다운 선택', hand: '*수기 작성', auto: '*자동 작성', req: '*필수 기재', reqs: '*필수 선택' }[k]; return '<span class="pf-tg ' + (k === 'auto' ? 'b' : 'r') + '">' + t + '</span>'; }
   function lab(t, k) { return '<label class="fl">' + t + tg(k) + '</label>'; }
   function chip(w, on) { return '<label><input type="checkbox" value="' + esc(w) + '"' + (on ? ' checked' : '') + '>' + esc(w) + '</label>'; }
   function wsHtml(vs, keep) {
@@ -4898,6 +4898,10 @@ a.rg-lk svg{width:16px;height:16px;flex:none}
 <style>
 /* 2026-10-13: 거래처 카드 — 수정·삭제 버튼 위 여백 절반으로 (24px → 12px) */
 #mc-ag .mc-actions{margin-top:0!important;padding-top:4px!important}
+</style>
+<style>
+/* 2026-10-13: '*드롭다운 선택' 안내 글씨 전부 없앰 */
+.pf-tg:empty{display:none!important}
 </style>
 </body>
 
