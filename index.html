@@ -3694,7 +3694,7 @@ function dcRender(type) {
 </style>
 <script>
 (function () {
-  var IC = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4h6v6"/><path d="M20 4l-9 9"/><path d="M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg>';
+  var IC = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M3 9h18M3 15h18M9 3v18"/></svg>'; // 2026-10-13: 시트 바로가기 = 표 아이콘
   var ou = updateEditUI;
   updateEditUI = function () {
     ou.apply(this, arguments);
@@ -4145,7 +4145,7 @@ function woDlSave() {
   var IC = {
     plus: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>',
     edit: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>',
-    sync: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V3M7 8l5-5 5 5"/><path d="M4 15v4a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-4"/></svg>',
+    sync: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 20V4M3 8l4-4 4 4"/><path d="M17 4v16M13 16l4 4 4-4"/></svg>',
     x: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>',
     undo: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14 4 9l5-5"/><path d="M4 9h11a5 5 0 0 1 0 10h-3"/></svg>'
   };
@@ -4640,6 +4640,13 @@ function woDlSave() {
   } catch (e) {}
 })();
 </script>
+<style>
+/* 2026-10-13: +·편집·반영 아이콘도 시트 바로가기처럼 흰 동그라미 안에 */
+.rg-ib,.rt-top .rg-ib{background:#fff!important;border-radius:50%!important;width:38px!important;height:38px!important;padding:0!important;color:var(--txt2)}
+.rg-ib.on,.rt-top .rg-ib.on{background:var(--txt)!important;color:#fff}
+.rt-top .dc-ib.rt-ms{width:38px!important;height:38px!important}
+.rt-top .dc-ib.rt-ms svg,.rg-ib svg{width:18px!important;height:18px!important}
+</style>
 </body>
 
 </html>
