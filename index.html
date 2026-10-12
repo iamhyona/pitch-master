@@ -3324,6 +3324,9 @@ function woHead(ck, artist, title, d6, t) {
 .dc-sel,.dc-dt,.dc-hq{height:34px}
 .dc-box .wo-chip,#tab-dash .wo-chip{height:34px;display:inline-flex;align-items:center;padding-top:0;padding-bottom:0}
 .dc-sel,.dc-hq{font-size:13px}
+/* 2026-10-12: 패널 안 제목이 메뉴 이름과 겹쳐서 숨김 (작업내역·지급내역·청구내역·원천세신고) — 거래처·외주처와 통일, 아이콘만 오른쪽 */
+#tab-dash .tc-h>.tc-t,.dc-box .tc-h>.tc-t{display:none!important}
+#tab-dash .tc-h,.dc-box .tc-h{justify-content:flex-end;padding-top:12px;padding-bottom:12px}
 /* 2026-10-12: 배경과 구분 — 단추 묶음 바탕은 한 톤 진하게, 회색 바탕 위 검색칸은 흰색 */
 .rt-seg{background:#e5e8eb!important}
 .rt-seg button.on{background:#fff!important;color:var(--txt)!important;box-shadow:0 1px 3px rgba(0,0,0,.1)!important}
