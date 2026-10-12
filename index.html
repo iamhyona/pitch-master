@@ -4541,6 +4541,30 @@ function woDlSave() {
   try { switchTab('taxbill'); } catch (e) {}
 })();
 </script>
+<style>
+/* 2026-10-13: 더보기·전체보기 — 흰 목록 상자 밖, '확인' 단추와 같은 크기·모서리로 두 개 나란히 */
+.ls-more.out{display:flex;flex-wrap:wrap;gap:8px;padding:14px 0 0;border:0!important;background:transparent}
+.ls-more.out span{flex-basis:100%;text-align:center;font-size:12px;color:var(--txt3);margin:0 0 2px}
+.ls-more.out button{flex:1;height:48px;border-radius:14px;font-size:15px;font-weight:700;padding:0 12px}
+.ls-more.out button:not(.p){background:#fff;color:var(--txt2)}
+</style>
+<script>
+(function () {
+  function out(panelId) {
+    var p = document.getElementById(panelId); if (!p) return;
+    p.querySelectorAll('.ls-more:not(.out)').forEach(function (el) {
+      var lb = el.parentNode; if (!lb) return; while (lb.parentNode && lb.parentNode !== p) lb = lb.parentNode;
+      var nx = lb.nextElementSibling; while (nx && nx.classList && nx.classList.contains('ls-more')) { var d = nx; nx = nx.nextElementSibling; d.remove(); }
+      el.classList.add('out'); lb.parentNode.insertBefore(el, lb.nextSibling);
+    });
+  }
+  function clear(panelId) { var p = document.getElementById(panelId); if (p) p.querySelectorAll('.ls-more.out').forEach(function (e) { e.remove(); }); }
+  var _w = woRenderList;
+  woRenderList = function () { clear('tab-dash'); var r = _w.apply(this, arguments); out('tab-dash'); return r; };
+  var _d = dcList;
+  dcList = function (type) { clear('tab-' + type); var r = _d.apply(this, arguments); out('tab-' + type); return r; };
+})();
+</script>
 </body>
 
 </html>
