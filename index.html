@@ -856,6 +856,17 @@ function tbCopy(){
 }
 
 document.querySelectorAll('.tab').forEach(function(t){t.addEventListener('click',function(){switchTab(t.dataset.tab);});});
+// 2026-10-12 (현아): 거래처 순서 — 자주 쓰는 STARSHIP · YG PLUS · YG · THE BLACK LABEL 먼저, 나머지는 가나다·알파벳순
+function pmFavRank(n) {
+  var raw = String(n || ''), u = raw.split('(')[0].toUpperCase().replace(/[^A-Z0-9]/g, '');
+  if (/스타쉽/.test(raw) || u.indexOf('STARSHIP') === 0) return 0;
+  if (/와이지플러스/.test(raw) || u.indexOf('YGPLUS') === 0) return 1;
+  if (/와이지/.test(raw) || u.indexOf('YG') === 0) return 2;
+  if (/블랙레이블/.test(raw) || u.indexOf('THEBLACKLABEL') === 0) return 3;
+  if (/^(기타|_?ETC)$/i.test(raw.trim())) return 999; // 기타는 맨 끝
+  return 99;
+}
+function pmCmpClient(a, b) { var ra = pmFavRank(a), rb = pmFavRank(b); return ra !== rb ? ra - rb : String(a || '').localeCompare(String(b || ''), 'ko'); }
 function switchTab(t){
   if((t==='rates-bill'||t==='rates-pay'||t==='dash'||t==='invoice'||t==='taxbill')&&SESSION.role==='guest'){toast('관리자만 접근 가능해요');return;}
   document.querySelectorAll('.tab').forEach(function(b){b.classList.toggle('active',b.dataset.tab===t);});
@@ -882,7 +893,7 @@ function updateStats(){
 
 function renderDash(){
   var agMap=buildAgMap();
-  var agNames=Object.keys(agMap).sort(function(a,b){return b.localeCompare(a,'ko');});
+  var agNames=Object.keys(agMap).sort(pmCmpClient);
   var ltEl=document.getElementById('d-lt');
   ltEl.innerHTML='';
   var ltList=dashShowAllLt?DB.litters:DB.litters.slice(0,6);
@@ -921,7 +932,7 @@ function buildAgMap(){var m={};DB.agencies.forEach(function(a){if(!m[a.name])m[a
 function renderAg(){
   var q=(gv('q-ag')||'').toLowerCase();
   var agMap=buildAgMap();
-  var data=Object.values(agMap).filter(function(a){return !q||a.name.toLowerCase().includes(q)||a.contacts.some(function(c){return (c.manager||'').toLowerCase().includes(q);});}).sort(function(a,b){return b.name.localeCompare(a.name,'ko');});
+  var data=Object.values(agMap).filter(function(a){return !q||a.name.toLowerCase().includes(q)||a.contacts.some(function(c){return (c.manager||'').toLowerCase().includes(q);});}).sort(function(a,b){return pmCmpClient(a.name,b.name);});
   document.getElementById('guest-ag-notice').style.display=SESSION.role==='guest'?'':'none';
   var slice=data.slice(agP*PER,(agP+1)*PER);
   var cards='';var sd=[];
@@ -1029,7 +1040,7 @@ function renderLt(){
 }
 
 function buildRateTabs(){
-  var agencies=Object.keys(RATES_RAW).sort(function(a,b){return b.localeCompare(a,'ko');});
+  var agencies=Object.keys(RATES_RAW).sort(pmCmpClient);
   if(agencies.length===0) return;
   if(!rtF||!agencies.includes(rtF)) rtF=agencies[0];
   ['rate-select-bill','rate-select-pay'].forEach(function(selId){
@@ -1251,7 +1262,7 @@ function initInvoiceTab() {
   var agSel = document.getElementById('inv-client');
   if (!agSel) return;
   var agMap = buildAgMap();
-  var agNames = Object.keys(agMap).sort(function(a,b){return b.localeCompare(a,'ko');});
+  var agNames = Object.keys(agMap).sort(pmCmpClient);
   agSel.innerHTML = '<option value="">거래처 선택</option>'
     + agNames.map(function(n){return '<option value="'+esc(n)+'">'+esc(n)+'</option>';}).join('')
     + '<option value="__direct__">직접 입력</option>';
@@ -1259,7 +1270,7 @@ function initInvoiceTab() {
   // 소속사 드롭다운 + 첫번째 자동 선택
   var agencySel = document.getElementById('inv-agency');
   if (agencySel) {
-    var agencies = Object.keys(RATES_RAW).sort(function(a,b){return b.localeCompare(a,'ko');});
+    var agencies = Object.keys(RATES_RAW).sort(pmCmpClient);
     agencySel.innerHTML = agencies.map(function(k){
       return '<option value="'+esc(k)+'">'+esc(k)+'</option>';
     }).join('') + '<option value="__direct__">직접 입력</option>';
@@ -1651,7 +1662,7 @@ function pmArtistTaxMail(c, a) {
 
 // ── 시트 → 화면 데이터 ──
 function pmApply(d) {
-  PM.clients = d.clients || []; PM.contacts = d.contacts || []; PM.artists = d.artists || [];
+  PM.clients = (d.clients || []).slice().sort(function (a, b) { return pmCmpClient(a.disp, b.disp); }); PM.contacts = d.contacts || []; PM.artists = d.artists || [];
   PM.members = d.members || []; PM.vendors = d.vendors || []; PM.prem = {};
   if (d.workers && d.workers.length) ALL_COLS = d.workers.slice();
   var ag = [];
@@ -2221,7 +2232,7 @@ function woView() {
 function woRender() {
   var box = document.getElementById('wo-box'); if (!box) return;
   var fb = document.getElementById('wo-folders'), lb = document.getElementById('wo-list');
-  var fl = WO.folders.filter(function (f) { return f.n > 0 || f.name === WO.folder; });
+  var fl = WO.folders.filter(function (f) { return f.n > 0 || f.name === WO.folder; }).sort(function (a, b) { return pmCmpClient(a.name, b.name); });
   fb.innerHTML = '<button class="wo-chip' + (WO.folder ? '' : ' on') + '" onclick="woFolder(\'\')">전체<b>' + WO.items.length + '</b></button>' +
     fl.map(function (f) { return '<button class="wo-chip' + (WO.folder === f.name ? ' on' : '') + '" data-f="' + esc(f.name) + '" onclick="woFolder(this.dataset.f)">' + esc(f.name) + '<b>' + f.n + '</b></button>'; }).join('') +
     '<input class="wo-srch" id="wo-q" placeholder="아티스트·프로젝트·작업자 검색" value="' + esc(WO.q) + '" oninput="WO.q=this.value;woRenderList()">';
@@ -2796,7 +2807,7 @@ function dcLoad(type, fresh) {
 }
 function dcRender(type) {
   var S = DC[type], box = document.getElementById('dc-' + type); if (!box) return;
-  var fl = S.folders.filter(function (f) { return f.n > 0 || f.name === S.folder; });
+  var fl = S.folders.filter(function (f) { return f.n > 0 || f.name === S.folder; }).sort(function (a, b) { return pmCmpClient(a.name, b.name); });
   box.querySelector('.wo-bar').innerHTML = '<button class="wo-chip' + (S.folder ? '' : ' on') + '" onclick="dcFolder(\'' + type + '\',\'\')">전체<b>' + S.items.length + '</b></button>' +
     fl.map(function (f) { return '<button class="wo-chip' + (S.folder === f.name ? ' on' : '') + '" data-f="' + esc(f.name) + '" onclick="dcFolder(\'' + type + '\',this.dataset.f)">' + esc(f.name) + '<b>' + f.n + '</b></button>'; }).join('') +
     '<input class="wo-srch" placeholder="아티스트·프로젝트' + (type === 'pay' ? '·작업자' : '') + ' 검색" value="' + esc(S.q) + '" oninput="DC.' + type + '.q=this.value;dcList(\'' + type + '\')">';
