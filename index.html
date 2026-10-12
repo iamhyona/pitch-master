@@ -3687,6 +3687,25 @@ function dcRender(type) {
   };
 })();
 </script>
+<style>
+/* 2026-10-12: 작업단가 — '단가마스터 열기'는 아이콘(새 창)으로, 청구·지급 모두 단추 줄 오른쪽 */
+.rt-top .dc-ib.rt-ms{background:#fff!important;color:var(--txt2);width:32px!important;height:32px!important;padding:0!important;border-radius:50%!important}
+</style>
+<script>
+(function () {
+  var IC = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4h6v6"/><path d="M20 4l-9 9"/><path d="M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg>';
+  var ou = updateEditUI;
+  updateEditUI = function () {
+    ou.apply(this, arguments);
+    [['btn-edit-rate-bill', 'bill'], ['btn-edit-rate', 'pay']].forEach(function (x) {
+      var el = document.getElementById(x[0]); if (!el) return;
+      el.className = 'dc-ib rt-ms'; el.removeAttribute('style'); el.title = '단가마스터 열기'; el.innerHTML = IC;
+      var top = document.querySelector('#tab-rates-' + x[1] + ' .rt-top'); if (top && el.parentNode !== top) top.appendChild(el);
+    });
+  };
+  try { updateEditUI(); } catch (e) {}
+})();
+</script>
 </body>
 
 </html>
