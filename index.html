@@ -4013,7 +4013,7 @@ function woDlSave() {
         '<div class="fg">' + lab('아티스트', '') + '<select class="fi sm" id="won-a"><option value="">소속사 먼저 선택</option></select></div>' +
         '<div class="fg">' + lab('요청일 (YYMMDD)', 'auto') + '<input class="fi sm" id="won-d" inputmode="numeric" maxlength="6" value="' + d6 + '"></div>' +
         '<div class="fg">' + lab('프로젝트명', 'hand') + '<input class="fi sm" id="won-p" placeholder="예: C자켓"></div>' +
-        '<div class="fg">' + lab('담당자', 'drop') + '<input class="fi sm" id="won-k" list="won-kl" placeholder="거래처 담당자"><datalist id="won-kl"></datalist></div>' +
+        '<div class="fg">' + lab('담당자', 'drop') + '<select class="fi sm ph" id="won-ks" onchange="wonK(this)"><option value="">소속사 먼저 선택</option></select><input class="fi sm" id="won-k" placeholder="담당자 이름 직접 입력" style="display:none;margin-top:6px"><datalist id="won-kl"></datalist></div>' +
         '<div class="fg">' + lab('마감일', 'hand') + '<div class="won-dl">' + [1, 2, 3].map(function (n) { return '<label>' + n + '순위<input type="date" class="fi sm" id="won-dl' + n + '"></label>'; }).join('') + '</div></div>' +
         '<div class="fg">' + lab('작업자', 'reqs') + '<div id="won-ws">' + wsHtml(o.vendors) + '</div></div>' +
         '<div class="login-err" id="won-err"></div><button class="login-btn" id="won-go" onclick="woCreate()">만들기</button>';
@@ -4592,6 +4592,26 @@ function woDlSave() {
 .rate-table-box tbody tr+tr td:only-child{background-position:center top;background-size:calc(100% - 28px) 1px}
 #tab-rates-bill .pg,#tab-rates-pay .pg{border-top:0}
 </style>
+<script>
+// 2026-10-13: 새 작업내역서 담당자 — 아이폰에서도 열리는 드롭다운 (거래처 고르면 그 거래처 담당자 목록, 없으면 직접 입력)
+(function () {
+  var _nc = woNewClient;
+  woNewClient = function () {
+    _nc.apply(this, arguments);
+    var sel = document.getElementById('won-ks'), kl = document.getElementById('won-kl'); if (!sel || !kl) return;
+    var names = [].map.call(kl.querySelectorAll('option'), function (o) { return o.value; }).filter(String);
+    var c = (document.getElementById('won-c') || {}).value;
+    sel.innerHTML = (c ? '<option value="">' + (names.length ? '담당자 선택' : '등록된 담당자 없음') + '</option>' : '<option value="">소속사 먼저 선택</option>') +
+      names.map(function (n) { return '<option>' + esc(n) + '</option>'; }).join('') + (c ? '<option value="__d">직접 입력</option>' : '');
+    sel.classList.add('ph'); var k = document.getElementById('won-k'); k.value = ''; k.style.display = 'none';
+  };
+  window.wonK = function (sel) {
+    var k = document.getElementById('won-k'), v = sel.value;
+    sel.classList.toggle('ph', !v);
+    if (v === '__d') { k.style.display = ''; k.value = ''; k.focus(); } else { k.style.display = 'none'; k.value = v; }
+  };
+})();
+</script>
 </body>
 
 </html>
