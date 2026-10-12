@@ -5122,6 +5122,25 @@ a.rg-lk svg{width:16px;height:16px;flex:none}
 /* 2026-10-13: 외주처 카드 — 두 줄 이상(주소 등) 행간 50% 넓힘 (줄 사이 4px → 6px), 한 줄 행 높이는 그대로 */
 #mc-lt .lt-v{line-height:1.45!important;margin-top:-1px;margin-bottom:-1px}
 </style>
+<style>
+/* 2026-10-13: 새 작업내역서 — 담당자 · 요청일 한 줄에 */
+#mo-wo-new .won-pair{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px}
+#mo-wo-new .won-pair>.fg{min-width:0}
+</style>
+<script>
+(function () {
+  function fix() {
+    var mo = document.getElementById('mo-wo-new'); if (!mo) return;
+    var d = mo.querySelector('#won-dd') || mo.querySelector('#won-d'), k = mo.querySelector('#won-ks') || mo.querySelector('#won-k');
+    var fd = d && d.closest('.fg'), fk = k && k.closest('.fg'); if (!fd || !fk || fd === fk) return;
+    if (fd.parentNode.classList.contains('won-pair')) return;
+    var w = document.createElement('div'); w.className = 'won-pair';
+    fk.parentNode.insertBefore(w, fk); w.appendChild(fk); w.appendChild(fd);
+  }
+  var mo = document.getElementById('mo-wo-new');
+  if (mo) new MutationObserver(function () { fix(); }).observe(mo, { childList: true, subtree: true });
+})();
+</script>
 </body>
 
 </html>
