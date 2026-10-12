@@ -2237,9 +2237,9 @@ function woRenderList() {
   // 2026-10-12: 표 대신 한 줄씩 카드 목록 (폰에서 글자 잘림 없게)
   lb.innerHTML = v.map(function (x) {
     return '<div class="wo-item" data-id="' + esc(x.id) + '" onclick="woOpen(this.dataset.id)">' +
-      '<div class="wo-l1"><b>' + esc(x.artist) + '</b><span class="wo-dt">' + woDateW(x.date6) + '</span></div>' +
+      '<div class="wo-l1"><b>' + esc(x.artist) + '</b><span class="wo-dt"><span>' + woDateW(x.date6) + '</span><span class="wo-ago">' + woAgo(x.t) + ' 수정</span></span></div>' +
       '<div class="wo-l2">' + esc(x.clientKey) + ' · ' + esc(x.title) + '</div>' +
-      '<div class="wo-l3"><span class="wo-wl">' + (x.workers || []).map(function (w) { return '<span class="wo-w">' + esc(w) + '</span>'; }).join('') + '</span><span class="wo-ago">' + woAgo(x.t) + ' 수정</span></div></div>';
+      '<div class="wo-l3"><span class="wo-wl">' + (x.workers || []).map(function (w) { return '<span class="wo-w">' + esc(w) + '</span>'; }).join('') + '</span></div></div>';
   }).join('');
 }
 function woFolder(f) { WO.folder = f || ''; woRender(); }
@@ -2531,15 +2531,16 @@ td{overflow-wrap:anywhere}
 .wo-item{padding:14px 18px;border-bottom:1px solid var(--line);cursor:pointer}
 .wo-item:last-child{border-bottom:0}
 .wo-item:active,.wo-item:hover{background:#f9fafb}
-.wo-l1{display:flex;align-items:baseline;justify-content:space-between;gap:10px}
+.wo-l1{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
 .wo-l1 b{font-size:16px;font-weight:700;min-width:0;overflow-wrap:anywhere}
-.wo-dt{flex:none;font-size:14px;font-weight:600;color:var(--txt2)}
+.wo-dt{flex:none;display:flex;flex-direction:column;align-items:flex-end;gap:2px;font-size:14px;font-weight:600;color:var(--txt2)}
 .wo-dt small{font-size:11px;font-weight:500;color:var(--txt3);margin-left:2px}
 .wo-l2{font-size:13px;color:var(--txt3);margin-top:2px;overflow-wrap:anywhere}
 .wo-l3{display:flex;align-items:flex-end;justify-content:space-between;gap:10px;margin-top:8px}
+.wo-l3:has(.wo-wl:empty){display:none}
 .wo-wl{display:flex;flex-wrap:wrap;gap:4px;min-width:0}
 .wo-wl .wo-w{margin:0}
-.wo-ago{flex:none;font-size:11px;color:var(--faint)}
+.wo-ago{flex:none;font-size:11px;font-weight:400;color:var(--faint)}
 /* 2026-10-12: 리터쳐 카드 */
 .lt-c{padding:16px 18px 6px}
 .lt-h{display:flex;align-items:center;gap:8px;margin-bottom:2px}
@@ -2810,9 +2811,9 @@ function dcList(type) {
   var v = S.items.filter(function (x) { return (!S.folder || x.folder === S.folder) && (!q || [x.clientKey, x.artist, x.title, x.date6, x.worker, x.folder].join(' ').toLowerCase().indexOf(q) >= 0); });
   if (!v.length) { lb.innerHTML = '<div class="wo-empty">' + (S.loaded ? '문서가 없어요' : '') + '</div>'; return; }
   lb.innerHTML = v.map(function (x) {
-    return '<div class="wo-item" data-id="' + esc(x.id) + '" onclick="dcOpen(this.dataset.id)"><div class="wo-l1"><b>' + esc(x.artist || x.clientKey) + '</b><span class="wo-dt">' + woDateW(x.date6) + '</span></div>' +
+    return '<div class="wo-item" data-id="' + esc(x.id) + '" onclick="dcOpen(this.dataset.id)"><div class="wo-l1"><b>' + esc(x.artist || x.clientKey) + '</b><span class="wo-dt"><span>' + woDateW(x.date6) + '</span><span class="wo-ago">' + woAgo(x.t) + ' 수정</span></span></div>' +
       '<div class="wo-l2">' + esc(x.clientKey) + (x.title ? ' · ' + esc(x.title) : '') + '</div>' +
-      '<div class="wo-l3"><span class="wo-wl">' + (type === 'pay' && x.worker ? '<span class="wo-w">' + esc(x.worker) + '</span>' : (x.sub ? '<span class="wo-w">' + esc(x.sub) + '</span>' : '')) + '</span><span class="wo-ago">' + woAgo(x.t) + ' 수정</span></div></div>';
+      '<div class="wo-l3"><span class="wo-wl">' + (type === 'pay' && x.worker ? '<span class="wo-w">' + esc(x.worker) + '</span>' : (x.sub ? '<span class="wo-w">' + esc(x.sub) + '</span>' : '')) + '</span></div></div>';
   }).join('');
 }
 function dcDirty() { var d = DC.cur; return !!(d && d.cells && Object.keys(d.cells).some(function (k) { return String(d.cells[k].val).trim() !== String(d.cells[k].old).trim(); })); }
