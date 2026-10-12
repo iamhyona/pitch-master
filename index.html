@@ -4982,6 +4982,35 @@ a.rg-lk svg{width:16px;height:16px;flex:none}
   };
 })();
 </script>
+<div class="mo" id="mo-rtn"><div class="md"><div class="md-h"><span class="md-t">새 단가표</span><button class="xb" onclick="closeMo('mo-rtn')">✕</button></div>
+  <div class="md-b">
+    <div class="fg"><label class="fl">단가표 이름(소속사)<span class="pf-tg r">*필수 기재</span></label><input class="fi sm" id="rtn-name" placeholder="예: CUBE"></div>
+    <div class="fg"><label class="fl">복사해서 시작할 단가표</label><select class="fi sm" id="rtn-from"></select></div>
+    <div class="dc-note">고른 단가표 내용을 그대로 복사해서 만들어요. 만든 뒤 편집으로 고치면 돼요.</div>
+  </div>
+  <div class="md-f"><button class="btn btn-g" onclick="closeMo('mo-rtn')">취소</button><button class="btn btn-p" onclick="rgRtnSave()">만들기</button></div></div></div>
+<script>
+// 2026-10-13: 새 단가표 — 브라우저 기본 입력창(prompt) 대신 앱 안의 창으로
+(function () {
+  var _nt = window.rgRateNewTab;
+  window.rgRateNewTab = function () {
+    var sel = document.getElementById('rtn-from'), ks = Object.keys(RATES_RAW || {}).sort(function (a, b) { return pmCmpClient(a, b); });
+    sel.innerHTML = ks.map(function (k) { return '<option value="' + esc(k).replace(/"/g, '&quot;') + '">' + esc(k) + '</option>'; }).join('');
+    sel.value = ks.indexOf(rtF) >= 0 ? rtF : (ks.indexOf('STARSHIP') >= 0 ? 'STARSHIP' : ks[0] || '');
+    document.getElementById('rtn-name').value = '';
+    openMo('mo-rtn'); setTimeout(function () { document.getElementById('rtn-name').focus(); }, 50);
+  };
+  window.rgRtnSave = function () {
+    var name = (document.getElementById('rtn-name').value || '').trim(), from = document.getElementById('rtn-from').value;
+    if (!name) { toast('단가표 이름을 적어주세요'); return; }
+    if (RATES_RAW[name]) { toast('이미 있는 단가표예요'); return; }
+    var q = [name, from], p = window.prompt;
+    window.prompt = function () { return q.shift() || ''; };
+    try { _nt(); } finally { window.prompt = p; }
+    closeMo('mo-rtn');
+  };
+})();
+</script>
 </body>
 
 </html>
