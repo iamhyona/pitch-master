@@ -216,7 +216,7 @@ select.fi option{background:var(--sur2)}
       <div id="tab-dash" class="tab-panel active">
         <div id="sync-bar" class="sync-bar" style="display:none"></div>
         <div class="tc" id="wo-box">
-          <div class="tc-h" style="flex-wrap:wrap"><span class="tc-t">작업내역서 <span class="wo-sub" style="font-weight:400">· 구글드라이브 02_작업내역서</span></span><button class="btn btn-g" style="height:26px;font-size:11px" onclick="woLoad(true)" title="드라이브에서 다시 불러오기">↻</button><a class="btn btn-g" id="wo-drive" href="https://drive.google.com/drive/folders/1loq0Q5v2gHT1aekgjh49PUfhdFyPMHvn" target="_blank" style="height:26px;font-size:11px;text-decoration:none">드라이브 ↗</a><button class="btn btn-p" style="height:26px;font-size:11px" onclick="woNew()">+ 새 작업내역서</button></div>
+          <div class="tc-h" style="flex-wrap:wrap"><span class="tc-t">작업내역서 <span class="wo-sub" style="font-weight:400">· 구글드라이브 02_작업내역서</span></span><span class="dc-ics"><button class="btn btn-p" style="height:34px;font-size:12px;border-radius:999px" onclick="woNew()">+ 새 작업내역서</button><button class="dc-ib" type="button" title="드라이브에서 다시 불러오기" onclick="woLoad(true)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.6-6.4"/><path d="M21 3v6h-6"/></svg></button><a class="dc-ib" id="wo-drive" href="https://drive.google.com/drive/folders/1loq0Q5v2gHT1aekgjh49PUfhdFyPMHvn" target="_blank" title="구글 드라이브 폴더 열기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg></a></span></div>
           <div class="wo-bar" id="wo-folders"></div>
           <div class="wo-list" id="wo-list"></div>
         </div>
@@ -244,21 +244,21 @@ select.fi option{background:var(--sur2)}
 
       <div id="tab-iv" class="tab-panel">
         <div class="tc dc-box" id="dc-invoice">
-          <div class="tc-h"><span class="tc-t">청구내역</span><button class="btn btn-g" onclick="dcLoad('invoice',true)" title="드라이브에서 다시 불러오기">↻</button><a class="btn btn-g dc-drive" href="#" target="_blank" style="text-decoration:none">드라이브 ↗</a></div>
+          <div class="tc-h"><span class="tc-t">청구내역</span><span class="dc-ics"><button class="dc-ib dc-sbtn" type="button" title="검색" onclick="dcSearch('invoice')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg></button><button class="dc-ib" type="button" title="드라이브에서 다시 불러오기" onclick="dcLoad('invoice',true)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.6-6.4"/><path d="M21 3v6h-6"/></svg></button><a class="dc-ib dc-drive" href="#" target="_blank" title="구글 드라이브 폴더 열기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg></a></span></div>
           <div class="wo-bar"></div>
           <div class="wo-list"></div>
         </div>
       </div>
       <div id="tab-py" class="tab-panel">
         <div class="tc dc-box" id="dc-pay">
-          <div class="tc-h"><span class="tc-t">지급내역</span><button class="btn btn-g" onclick="dcLoad('pay',true)" title="드라이브에서 다시 불러오기">↻</button><a class="btn btn-g dc-drive" href="#" target="_blank" style="text-decoration:none">드라이브 ↗</a></div>
+          <div class="tc-h"><span class="tc-t">지급내역</span><span class="dc-ics"><button class="dc-ib dc-sbtn" type="button" title="검색" onclick="dcSearch('pay')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg></button><button class="dc-ib" type="button" title="드라이브에서 다시 불러오기" onclick="dcLoad('pay',true)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.6-6.4"/><path d="M21 3v6h-6"/></svg></button><a class="dc-ib dc-drive" href="#" target="_blank" title="구글 드라이브 폴더 열기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg></a></span></div>
           <div class="wo-bar"></div>
           <div class="wo-list"></div>
         </div>
       </div>
       <div id="tab-tx" class="tab-panel">
         <div class="tc dc-box" id="dc-tx">
-          <div class="tc-h"><span class="tc-t">원천세신고 <span class="wo-sub" style="font-weight:400">· 세무사제출용</span></span><button class="btn btn-g" onclick="txLoad(true)" title="드라이브에서 다시 불러오기">↻</button><a class="btn btn-g dc-drive" href="#" target="_blank" style="text-decoration:none">드라이브 ↗</a></div>
+          <div class="tc-h"><span class="tc-t">원천세신고 <span class="wo-sub" style="font-weight:400">· 세무사제출용</span></span><span class="dc-ics"><button class="dc-ib" type="button" title="드라이브에서 다시 불러오기" onclick="txLoad(true)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.6-6.4"/><path d="M21 3v6h-6"/></svg></button><a class="dc-ib dc-drive" href="#" target="_blank" title="구글 드라이브 폴더 열기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg></a></span></div>
           <div class="wo-list"></div>
         </div>
       </div>
@@ -2805,12 +2805,38 @@ function dcLoad(type, fresh) {
     S.err = ''; S.items = d.items || []; S.folders = d.folders || []; S.root = d.root; S.loaded = true; dcRender(type);
   });
 }
+// 2026-10-12: 지급내역·청구내역 필터 — 소속사 칩은 한 줄 가로 스크롤 · 연도/월/기간 · 검색은 머리 아이콘으로
+function dcD(x) { return /^\d{6}$/.test(x.date6 || '') ? '20' + x.date6.slice(0, 2) + '-' + x.date6.slice(2, 4) + '-' + x.date6.slice(4) : ''; }
+function dcPass(S, x) {
+  var d = dcD(x);
+  if (S.y && d.slice(0, 4) !== S.y) return false;
+  if (S.m && d.slice(5, 7) !== S.m) return false;
+  if (S.from && (!d || d < S.from)) return false;
+  if (S.to && (!d || d > S.to)) return false;
+  return true;
+}
+function dcSet(type, k, v) { DC[type][k] = v || ''; dcRender(type); }
+function dcSearch(type) { var S = DC[type]; S.qOpen = !S.qOpen; if (!S.qOpen) S.q = ''; dcRender(type); if (S.qOpen) { var e = document.querySelector('#dc-' + type + ' .dc-q'); if (e) e.focus(); } }
 function dcRender(type) {
   var S = DC[type], box = document.getElementById('dc-' + type); if (!box) return;
+  var bar = box.querySelector('.wo-bar'), old = bar.querySelector('.dc-chips'), sl = old ? old.scrollLeft : 0;
+  var base = S.items.filter(function (x) { return dcPass(S, x); }), cnt = {};
+  base.forEach(function (x) { cnt[x.folder] = (cnt[x.folder] || 0) + 1; });
   var fl = S.folders.filter(function (f) { return f.n > 0 || f.name === S.folder; }).sort(function (a, b) { return pmCmpClient(a.name, b.name); });
-  box.querySelector('.wo-bar').innerHTML = '<button class="wo-chip' + (S.folder ? '' : ' on') + '" onclick="dcFolder(\'' + type + '\',\'\')">전체<b>' + S.items.length + '</b></button>' +
-    fl.map(function (f) { return '<button class="wo-chip' + (S.folder === f.name ? ' on' : '') + '" data-f="' + esc(f.name) + '" onclick="dcFolder(\'' + type + '\',this.dataset.f)">' + esc(f.name) + '<b>' + f.n + '</b></button>'; }).join('') +
-    '<input class="wo-srch" placeholder="아티스트·프로젝트' + (type === 'pay' ? '·작업자' : '') + ' 검색" value="' + esc(S.q) + '" oninput="DC.' + type + '.q=this.value;dcList(\'' + type + '\')">';
+  var years = {}; S.items.forEach(function (x) { var d = dcD(x); if (d) years[d.slice(0, 4)] = 1; });
+  var yo = Object.keys(years).sort().reverse().map(function (y) { return '<option value="' + y + '"' + (S.y === y ? ' selected' : '') + '>' + y + '년</option>'; }).join('');
+  var mo = ''; for (var m = 1; m <= 12; m++) { var mm = ('0' + m).slice(-2); mo += '<option value="' + mm + '"' + (S.m === mm ? ' selected' : '') + '>' + m + '월</option>'; }
+  var any = S.y || S.m || S.from || S.to;
+  bar.innerHTML =
+    (S.qOpen ? '<input class="wo-srch dc-q" placeholder="아티스트·프로젝트' + (type === 'pay' ? '·작업자' : '') + ' 검색" value="' + esc(S.q || '') + '" oninput="DC.' + type + '.q=this.value;dcList(\'' + type + '\')">' : '') +
+    '<div class="dc-chips"><button class="wo-chip' + (S.folder ? '' : ' on') + '" onclick="dcFolder(\'' + type + '\',\'\')">전체<b>' + base.length + '</b></button>' +
+    fl.map(function (f) { return '<button class="wo-chip' + (S.folder === f.name ? ' on' : '') + '" data-f="' + esc(f.name) + '" onclick="dcFolder(\'' + type + '\',this.dataset.f)">' + esc(f.name) + '<b>' + (cnt[f.name] || 0) + '</b></button>'; }).join('') + '</div>' +
+    '<div class="dc-fl"><select class="dc-sel' + (S.y ? '' : ' ph') + '" onchange="dcSet(\'' + type + '\',\'y\',this.value)"><option value="">연도</option>' + yo + '</select>' +
+    '<select class="dc-sel' + (S.m ? '' : ' ph') + '" onchange="dcSet(\'' + type + '\',\'m\',this.value)"><option value="">월</option>' + mo + '</select>' +
+    '<span class="dc-per"><input type="date" class="dc-dt" value="' + (S.from || '') + '" onchange="dcSet(\'' + type + '\',\'from\',this.value)"><span>~</span><input type="date" class="dc-dt" value="' + (S.to || '') + '" onchange="dcSet(\'' + type + '\',\'to\',this.value)"></span>' +
+    (any ? '<button class="dc-rst" onclick="DC.' + type + '.y=DC.' + type + '.m=DC.' + type + '.from=DC.' + type + '.to=\'\';dcRender(\'' + type + '\')">초기화</button>' : '') + '</div>';
+  var nc = bar.querySelector('.dc-chips'); if (nc) nc.scrollLeft = sl;
+  var sb = box.querySelector('.dc-sbtn'); if (sb) sb.classList.toggle('on', !!S.qOpen);
   var dl = box.querySelector('.dc-drive'); if (dl) { var cf = S.folders.filter(function (f) { return f.name === S.folder; })[0]; dl.href = WO_DRIVE + (cf ? cf.id : (S.root || '')); }
   dcList(type);
 }
@@ -2819,9 +2845,9 @@ function dcList(type) {
   var S = DC[type], lb = document.querySelector('#dc-' + type + ' .wo-list'); if (!lb) return;
   if (S.loading && !S.items.length) { lb.innerHTML = '<div class="wo-empty">드라이브에서 불러오는 중...</div>'; return; }
   if (S.err && !S.items.length) { lb.innerHTML = '<div class="wo-empty">⚠ ' + esc(S.err) + '</div>'; return; }
-  var q = S.q.trim().toLowerCase();
-  var v = S.items.filter(function (x) { return (!S.folder || x.folder === S.folder) && (!q || [x.clientKey, x.artist, x.title, x.date6, x.worker, x.folder].join(' ').toLowerCase().indexOf(q) >= 0); });
-  if (!v.length) { lb.innerHTML = '<div class="wo-empty">' + (S.loaded ? '문서가 없어요' : '') + '</div>'; return; }
+  var q = String(S.q || '').trim().toLowerCase();
+  var v = S.items.filter(function (x) { return (!S.folder || x.folder === S.folder) && dcPass(S, x) && (!q || [x.clientKey, x.artist, x.title, x.date6, x.worker, x.folder].join(' ').toLowerCase().indexOf(q) >= 0); });
+  if (!v.length) { lb.innerHTML = '<div class="wo-empty">' + (S.loaded ? '조건에 맞는 문서가 없어요' : '') + '</div>'; return; }
   lb.innerHTML = v.map(function (x) {
     return '<div class="wo-item" data-id="' + esc(x.id) + '" onclick="dcOpen(this.dataset.id)">' + woHead(x.clientKey, x.artist || x.clientKey, x.title, x.date6, x.t) +
       '<div class="wo-l3"><span class="wo-wl">' + (type === 'pay' && x.worker ? '<span class="wo-w">' + esc(x.worker) + '</span>' : (x.sub ? '<span class="wo-w">' + esc(x.sub) + '</span>' : '')) + '</span></div></div>';
@@ -3209,6 +3235,23 @@ function pfTplReset() { if (!confirm('세 가지 포맷을 모두 기본값으�
 .wo-mg{font-size:12px;color:var(--faint)}
 /* 시각 보정: 라벨·작업자 칩 안 글자 시작점(8px)에 제목 줄 맞춤 */
 .wo-g .wo-t{padding-left:6.4px}
+/* 2026-10-12: 패널 머리 아이콘 · 지급내역/청구내역 필터 */
+.dc-ics{margin-left:auto;display:flex;align-items:center;gap:6px}
+.dc-ib{width:34px;height:34px;border-radius:50%;border:0;background:var(--chip);color:var(--txt2);display:inline-flex;align-items:center;justify-content:center;padding:0;cursor:pointer;flex:none;text-decoration:none}
+.dc-ib svg{width:17px;height:17px}
+.dc-ib.on{background:var(--txt);color:#fff}
+.dc-box .wo-bar{flex-direction:column;flex-wrap:nowrap;align-items:stretch;gap:8px}
+.dc-box .wo-bar .wo-srch{max-width:none;width:100%;flex:none}
+.dc-chips{display:flex;gap:6px;overflow-x:auto;flex-wrap:nowrap;scrollbar-width:none;-webkit-overflow-scrolling:touch;margin:0 -18px;padding:0 18px}
+.dc-chips::-webkit-scrollbar{display:none}
+.dc-chips .wo-chip{flex:none}
+.dc-fl{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.dc-sel,.dc-dt{height:34px;border:0;border-radius:999px;background:var(--chip);padding:0 12px;font-family:inherit;font-size:13px;color:var(--txt);outline:0}
+.dc-sel{-webkit-appearance:none;appearance:none;padding-right:26px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%238b95a1' stroke-width='1.6' fill='none'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 11px center}
+.dc-sel.ph{color:var(--faint)}
+.dc-per{display:inline-flex;align-items:center;gap:4px;color:var(--txt3);font-size:12px}
+.dc-dt{padding:0 10px;font-size:12px;width:132px}
+.dc-rst{border:0;background:none;color:var(--txt3);font-family:inherit;font-size:12px;text-decoration:underline;cursor:pointer;padding:0 4px}
 /* 2026-10-12: 토글로 펼쳤을 때 카드 검정 테두리 없음 (구분선은 유지) */
 .mc.open{box-shadow:none!important;border-color:transparent!important}
 .mc-head,.mc-chv,.lt-tg{-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none}
