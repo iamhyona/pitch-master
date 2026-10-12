@@ -517,7 +517,7 @@ select.fi option{background:var(--sur2)}
       <div class="row2"><div class="fg"><label class="fl">이름<span class="pf-tg r">*필수 기재</span></label><input class="fi sm" id="lt-name" placeholder="예: 홍길동"></div><div class="fg"><label class="fl">구분</label><select class="fi sm" id="lt-tax" onchange="ltTaxUI()"><option>원천세</option><option>사업자</option></select></div></div>
       <div class="row2 lt-biz"><div class="fg"><label class="fl">대표명</label><input class="fi sm" id="lt-ceo" placeholder="예: 홍길동"></div><div class="fg"><label class="fl">사업자명</label><input class="fi sm" id="lt-corp" placeholder="예: 바이케이"></div></div>
       <div class="row2"><div class="fg"><label class="fl" id="lt-regid-l">주민등록번호</label><input class="fi sm" id="lt-regid" inputmode="numeric" placeholder="000000-0000000"></div><div class="fg"><label class="fl">연락처</label><input class="fi sm" id="lt-tel" inputmode="tel" placeholder="010-0000-0000"></div></div>
-      <div class="row2"><div class="fg"><label class="fl">은행명</label><select class="fi sm ph" id="lt-bank" data-rg="1" onchange="this.classList.toggle('ph',!this.value)"><option value="">은행 선택</option><option>IBK</option><option>국민</option><option>신한</option><option>우리</option><option>하나</option><option>농협</option><option>토스뱅크</option><option>카카오뱅크</option><option>케이뱅크</option><option>새마을</option><option>우체국</option><option>SC제일</option><option>수협</option><option>부산</option><option>대구</option><option>경남</option><option>광주</option><option>전북</option><option>씨티</option><option>기타</option></select></div><div class="fg"><label class="fl">계좌번호</label><input class="fi sm" id="lt-acct" inputmode="numeric" placeholder="123-000-00000"></div></div>
+      <div class="row2"><div class="fg"><label class="fl">은행명</label><select class="fi sm ph" id="lt-bank" data-rg="1" onchange="this.classList.toggle('ph',!this.value)"><option value="">은행 선택</option><option>IBK</option><option>국민</option><option>신한</option><option>우리</option><option>하나</option><option>농협</option><option>토스뱅크</option><option>카카오뱅크</option><option>케이뱅크</option><option>새마을</option><option>우체국</option><option>SC제일</option><option>수협</option><option>부산</option><option>대구</option><option>경남</option><option>광주</option><option>전북</option><option>씨티</option><option>기타</option></select></div><div class="fg"><label class="fl">계좌번호</label><input class="fi sm" id="lt-acct" inputmode="numeric" placeholder="000-000-00000"></div></div>
       <div class="fg"><label class="fl">구글 메일</label><input class="fi sm" id="lt-email" inputmode="email" placeholder="example@gmail.com"></div>
       <div class="fg"><label class="fl" id="lt-addr-l">주소</label><input class="fi sm" id="lt-addr" placeholder="예: 서울특별시 마포구 도화4길 41 102동 603호"></div>
     </div>
@@ -4026,7 +4026,7 @@ function woDlSave() {
       '<div class="fg">' + lab('이름', 'req') + '<input class="fi sm" id="wnv-name" placeholder="예: 홍길동"></div>' +
       '<div class="fg">' + lab('주민등록번호', '') + '<input class="fi sm" id="wnv-reg" inputmode="numeric" placeholder="000000-0000000"></div>' +
       '<div class="row2"><div class="fg">' + lab('은행', '') + '<select class="fi sm ph" id="wnv-bank" onchange="this.classList.toggle(\'ph\',!this.value)"><option value="">은행 선택</option>' + BANKS.map(function (b) { return '<option>' + b + '</option>'; }).join('') + '</select></div>' +
-      '<div class="fg">' + lab('계좌번호', '') + '<input class="fi sm" id="wnv-acct" inputmode="numeric" placeholder="123-000-00000"></div></div>' +
+      '<div class="fg">' + lab('계좌번호', '') + '<input class="fi sm" id="wnv-acct" inputmode="numeric" placeholder="000-000-00000"></div></div>' +
       '<div class="fg">' + lab('연락처', '') + '<input class="fi sm" id="wnv-tel" inputmode="tel" placeholder="010-0000-0000"></div>' +
       '<div class="fg">' + lab('구글 메일', '') + '<input class="fi sm" id="wnv-mail" inputmode="email" placeholder="example@gmail.com"></div>' +
       '<div class="won-sub">이름만 적어도 등록돼요. PITCH_DB 거래처마스터 외주처 탭에 저장돼요.</div>' +
@@ -4382,7 +4382,7 @@ function woDlSave() {
   window.rgAgNew = function () {
     $('agn-body').innerHTML = impHtml('agn') +
       '<div class="row2">' + fld('agn-ko', '국문명', 'req', '예: 스타쉽') + fld('agn-en', '영문명', 'req', '예: STARSHIP ENTERTAINMENT') + '</div>' +
-      '<div class="row2">' + fld('agn-ceo', '대표명', '', '예: 홍길동') + fld('agn-biz', '사업자번호', '', '123-00-00000', ' inputmode="numeric"') + '</div>' +
+      '<div class="row2">' + fld('agn-ceo', '대표명', '', '예: 홍길동') + fld('agn-biz', '사업자번호', '', '000-00-00000', ' inputmode="numeric"') + '</div>' +
       fld('agn-addr', '주소', '', '예: 서울특별시 마포구 도화4길 41 102동 603호') + fld('agn-taxmail', '세금계산서 메일', '', '예: tax@company.com', ' inputmode="email"') + fld('agn-artists', '소속 아티스트', '', '쉼표로 구분 (예: 아이브, 크래비티)') +
       '<div class="agn-cth"><span>담당자</span><button type="button" class="agn-add" onclick="rgAgnCtAdd()">+ 담당자 추가</button></div><div id="agn-cts">' + ctBlock(true) + '</div>' +
       '<div class="dc-note" style="margin-top:4px">국문명이나 영문명 중 하나만 있어도 추가돼요. 거래처 표기는 "영문명(국문명)"으로 저장돼요.</div>';
@@ -4793,7 +4793,7 @@ a.rg-lk svg{width:16px;height:16px;flex:none}
     var biz = (document.getElementById('lt-tax') || {}).value === '사업자', mo = document.getElementById('mo-lt'); if (!mo) return;
     mo.classList.toggle('biz', biz);
     document.getElementById('lt-regid-l').textContent = biz ? '사업자번호' : '주민등록번호';
-    document.getElementById('lt-regid').placeholder = biz ? '123-00-00000' : '000000-0000000';
+    document.getElementById('lt-regid').placeholder = biz ? '000-00-00000' : '000000-0000000';
     document.getElementById('lt-addr-l').textContent = biz ? '사업장 주소' : '주소';
     var b = document.getElementById('lt-bank'); if (b) b.classList.toggle('ph', !b.value);
   };
