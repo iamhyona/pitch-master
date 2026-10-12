@@ -448,19 +448,10 @@ select.fi option{background:var(--sur2)}
         </div>
 
         <!-- 합계 -->
-        <div style="background:var(--sur);border:1px solid var(--bdr);border-radius:12px;padding:16px;margin-bottom:10px">
-          <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--bdr)">
-            <span style="font-size:12px;color:var(--txt2)">Subtotal</span>
-            <span style="font-size:13px;font-weight:700;color:var(--gold)" id="inv-subtotal">0</span>
-          </div>
-          <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--bdr)">
-            <span style="font-size:12px;color:var(--txt2)">VAT (10%)</span>
-            <span style="font-size:12px;color:var(--txt2)" id="inv-vat">0</span>
-          </div>
-          <div style="display:flex;justify-content:space-between;padding:8px 0">
-            <span style="font-size:13px;font-weight:700">Total (include Tax)</span>
-            <span style="font-size:14px;font-weight:700;color:var(--acc2)" id="inv-total">0</span>
-          </div>
+        <div class="inv-box inv-tot">
+          <div class="inv-tr"><span>공급가액</span><b id="inv-subtotal">0</b></div>
+          <div class="inv-tr"><span>부가세 (10%)</span><b id="inv-vat">0</b></div>
+          <div class="inv-tr inv-tt"><span>최종지급액</span><b id="inv-total">0</b></div>
         </div>
 
         <!-- 생성 버튼 -->
@@ -3324,6 +3315,21 @@ function woHead(ck, artist, title, d6, t) {
 .dc-sel,.dc-dt,.dc-hq{height:34px}
 .dc-box .wo-chip,#tab-dash .wo-chip{height:34px;display:inline-flex;align-items:center;padding-top:0;padding-bottom:0}
 .dc-sel,.dc-hq{font-size:13px}
+/* 2026-10-12: 견적서 — 소계·합계 글자 크기를 입력칸(15px)과 맞춤 · 칸 안 이름 10px · 안내문 색: 필수(빨강)/자동(파랑) */
+.inv-sub b{font-size:15px!important}
+.inv-fl,.inv-sub span{font-size:10px!important}
+.inv-tot{padding:6px 16px!important}
+.inv-tr{display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid var(--bdr);font-size:15px;color:var(--txt2)}
+.inv-tr b{font-size:15px;font-weight:700;color:var(--txt)}
+.inv-tr:first-child b{color:var(--gold)}
+.inv-tr.inv-tt{border-bottom:0}
+.inv-tt span{font-size:16px;font-weight:800;color:var(--txt)}
+.inv-tt b{font-size:18px;font-weight:800;color:var(--acc2)}
+.inv-req::placeholder{color:#f04452!important;opacity:.75}
+select.inv-req.ph{color:#f04452!important;opacity:.8}
+.inv-auto::placeholder{color:#3182f6!important;opacity:.75}
+.inv-sub b.z{color:#3182f6!important;opacity:.75;font-weight:500!important}
+@media(max-width:560px){.inv-sub b{font-size:12px!important}}
 /* 2026-10-12: 패널 안 제목이 메뉴 이름과 겹쳐서 숨김 (작업내역·지급내역·청구내역·원천세신고) — 거래처·외주처와 통일, 아이콘만 오른쪽 */
 #tab-dash .tc-h>.tc-t,.dc-box .tc-h>.tc-t{display:none!important}
 #tab-dash .tc-h,.dc-box .tc-h{justify-content:flex-end;padding-top:12px;padding-bottom:12px}
@@ -3385,11 +3391,11 @@ function addInvItem() {
   var d = document.createElement('div'); d.className = 'inv-it'; d.id = 'inv-item-' + id;
   d.innerHTML = '<div class="inv-g">' +
     '<label class="inv-ck"><input type="checkbox" class="inv-cb" data-id="' + id + '" onchange="invCkSync()"></label>' +
-    '<div class="inv-f"><span class="inv-fl">구분</span><select class="fi sm" id="inv-type-' + id + '" onchange="onInvTypeChange(' + id + ')">' + invTypeOpts() + '</select></div>' +
-    '<div class="inv-f inv-span2"><span class="inv-fl">내용</span><input class="fi sm" id="inv-desc-' + id + '" placeholder="예: 모노코어 블랙착 1순위 루키" oninput="calcInvTotal()"></div>' +
+    '<div class="inv-f"><span class="inv-fl">구분</span><select class="fi sm inv-req" id="inv-type-' + id + '" onchange="onInvTypeChange(' + id + ')">' + invTypeOpts() + '</select></div>' +
+    '<div class="inv-f inv-span2"><span class="inv-fl">내용</span><input class="fi sm inv-req" id="inv-desc-' + id + '" placeholder="예: 모노코어 블랙착 1순위 루키" oninput="calcInvTotal()"></div>' +
     '<span class="inv-no"></span>' +
-    '<div class="inv-f"><span class="inv-fl">컷수</span><input class="fi sm" id="inv-qty-' + id + '" type="number" inputmode="numeric" placeholder="숫자만 수기 입력" min="1" oninput="calcInvTotal()"></div>' +
-    '<div class="inv-f"><span class="inv-fl">단가</span><input class="fi sm" id="inv-price-' + id + '" type="text" inputmode="numeric" placeholder="소속사 자동 연동" oninput="onInvPriceInput(' + id + ')"></div>' +
+    '<div class="inv-f"><span class="inv-fl">컷수</span><input class="fi sm inv-req" id="inv-qty-' + id + '" type="number" inputmode="numeric" placeholder="숫자만 수기 입력" min="1" oninput="calcInvTotal()"></div>' +
+    '<div class="inv-f"><span class="inv-fl">단가</span><input class="fi sm inv-auto" id="inv-price-' + id + '" type="text" inputmode="numeric" placeholder="소속사 자동 연동" oninput="onInvPriceInput(' + id + ')"></div>' +
     '<div class="inv-sub"><span>소계</span><b id="inv-amount-' + id + '">0</b></div>' +
     '<div class="inv-op"><label><input type="checkbox" id="inv-urgent-' + id + '" onchange="calcInvTotal()">긴급 +25%</label>' +
     '<label><input type="checkbox" id="inv-premium-' + id + '" onchange="onInvPremiumChange(' + id + ')">고급단가</label></div></div>';
