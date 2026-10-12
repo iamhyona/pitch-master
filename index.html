@@ -3969,6 +3969,106 @@ function woDlSave() {
 .ab.dl{--ic:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M18 6 6 18M6 6l12 12'/%3E%3C/svg%3E")}
 .ab.ed:hover{color:var(--txt)}.ab.dl:hover{color:#f04452}
 </style>
+<style>
+/* 2026-10-13: 새 작업내역서 — 칸 안내(빨강/파랑) · 마감일 · 자주 하는 작업자 · 신규 작업자 등록 */
+#wo-n-body .fl{display:flex;align-items:baseline}
+.won-dl{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.won-dl label{display:flex;flex-direction:column;gap:3px;font-size:11px;color:var(--txt3);min-width:0}
+.won-dl input{min-width:0;width:100%;box-sizing:border-box;padding:0 8px;font-size:13px}
+.won-dl input::-webkit-calendar-picker-indicator{margin-left:0;padding:0}
+.won-sub{font-size:11px;color:var(--txt3);margin:2px 0 6px}
+.won-div{border-top:1px dashed var(--line);margin:10px 0}
+#wo-n-body .wo-ws label.won-new{background:transparent;border:1px dashed var(--txt3);color:var(--txt2)}
+.won-nv{margin-top:10px;background:var(--sur2,#f9fafb);border-radius:14px;padding:12px}
+.won-nv .row2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.won-nv .fg{margin-bottom:8px}
+.won-nv .fi{background:#fff}
+.won-nv .won-btns{display:flex;gap:6px;justify-content:flex-end}
+.won-nv .won-btns button{height:32px;border:0;border-radius:999px;font-family:inherit;font-size:13px;font-weight:600;padding:0 13px;cursor:pointer;background:var(--chip);color:var(--txt2)}
+.won-nv .won-btns button.p{background:var(--txt);color:#fff}
+</style>
+<script>
+(function () {
+  var FAV = ['김현수', '강영순', '최현경', '이은지', '권미향', '이유나', '이혜선'];
+  var NO_NEW = ['박현아', '박슬기', '박종배', '박현제', '강영순'];
+  var BANKS = ['IBK', '국민', '신한', '우리', '하나', '농협', '기업', '토스', '카카오', '케이', '기타'];
+  function tg(k) { var t = { first: '*최초 선택', drop: '*드롭다운 선택', hand: '*수기 작성', auto: '*자동 작성' }[k]; return '<span class="pf-tg ' + (k === 'auto' ? 'b' : 'r') + '">' + t + '</span>'; }
+  function lab(t, k) { return '<label class="fl">' + t + tg(k) + '</label>'; }
+  function chip(w, on) { return '<label><input type="checkbox" value="' + esc(w) + '"' + (on ? ' checked' : '') + '>' + esc(w) + '</label>'; }
+  function wsHtml(vs, keep) {
+    keep = keep || [];
+    var fav = FAV.filter(function (w) { return vs.indexOf(w) >= 0; });
+    var rest = vs.filter(function (w) { return fav.indexOf(w) < 0; }).sort(function (a, b) { return a.localeCompare(b, 'ko'); });
+    return (fav.length ? '<div class="wo-ws">' + fav.map(function (w) { return chip(w, keep.indexOf(w) >= 0); }).join('') + '</div><div class="won-div"></div>' : '') +
+      '<div class="wo-ws">' + rest.map(function (w) { return chip(w, keep.indexOf(w) >= 0); }).join('') +
+      '<label class="won-new" onclick="wonNewOpen(event)">+ 신규 작업자</label></div><div id="won-nv"></div>';
+  }
+  window.woNew = function () {
+    document.getElementById('wo-n-body').innerHTML = '<div class="wo-empty">목록 불러오는 중...</div>';
+    openMo('mo-wo-new');
+    woOptsLoad(function (o) {
+      var kst = new Date(Date.now() + 9 * 3600000), d6 = String(kst.getUTCFullYear()).slice(2) + ('0' + (kst.getUTCMonth() + 1)).slice(-2) + ('0' + kst.getUTCDate()).slice(-2);
+      document.getElementById('wo-n-body').innerHTML =
+        '<div class="fg">' + lab('거래처', 'first') + '<select class="fi sm" id="won-c" onchange="woNewClient()"><option value="">선택</option>' + o.clients.map(function (c) { return '<option>' + esc(c.disp) + '</option>'; }).join('') + '</select></div>' +
+        '<div class="fg">' + lab('아티스트', 'drop') + '<select class="fi sm" id="won-a"><option value="">거래처를 먼저 골라주세요</option></select></div>' +
+        '<div class="fg">' + lab('요청일 (YYMMDD)', 'auto') + '<input class="fi sm" id="won-d" inputmode="numeric" maxlength="6" value="' + d6 + '"></div>' +
+        '<div class="fg">' + lab('프로젝트명', 'hand') + '<input class="fi sm" id="won-p" placeholder="예: C자켓"></div>' +
+        '<div class="fg">' + lab('담당자', 'drop') + '<input class="fi sm" id="won-k" list="won-kl" placeholder="거래처 담당자"><datalist id="won-kl"></datalist></div>' +
+        '<div class="fg">' + lab('마감일', 'hand') + '<div class="won-dl">' + [1, 2, 3].map(function (n) { return '<label>' + n + '순위<input type="date" class="fi sm" id="won-dl' + n + '"></label>'; }).join('') + '</div></div>' +
+        '<div class="fg">' + lab('작업자', 'first') + '<div id="won-ws">' + wsHtml(o.vendors) + '</div></div>' +
+        '<div class="login-err" id="won-err"></div><button class="login-btn" id="won-go" onclick="woCreate()">만들기</button>';
+    });
+  };
+  window.wonNewOpen = function (e) {
+    if (e) e.preventDefault();
+    var box = document.getElementById('won-nv'); if (!box) return;
+    if (box.innerHTML) { box.innerHTML = ''; return; }
+    box.innerHTML = '<div class="won-nv">' +
+      '<div class="fg">' + lab('이름', 'hand') + '<input class="fi sm" id="wnv-name" placeholder="필수"></div>' +
+      '<div class="fg">' + lab('주민등록번호', 'hand') + '<input class="fi sm" id="wnv-reg" inputmode="numeric" placeholder="000000-0000000"></div>' +
+      '<div class="row2"><div class="fg">' + lab('은행', 'drop') + '<select class="fi sm" id="wnv-bank"><option value="">선택</option>' + BANKS.map(function (b) { return '<option>' + b + '</option>'; }).join('') + '</select></div>' +
+      '<div class="fg">' + lab('계좌번호', 'hand') + '<input class="fi sm" id="wnv-acct" inputmode="numeric"></div></div>' +
+      '<div class="fg">' + lab('연락처', 'hand') + '<input class="fi sm" id="wnv-tel" inputmode="tel" placeholder="010-0000-0000"></div>' +
+      '<div class="fg">' + lab('구글 메일', 'hand') + '<input class="fi sm" id="wnv-mail" inputmode="email" placeholder="example@gmail.com"></div>' +
+      '<div class="won-sub">이름만 적어도 등록돼요. PITCH_DB 거래처마스터 외주처 탭에 저장돼요.</div>' +
+      '<div class="won-btns"><button type="button" onclick="wonNewOpen()">취소</button><button type="button" class="p" id="wnv-go" onclick="wonNewSave()">등록</button></div></div>';
+    document.getElementById('wnv-name').focus();
+  };
+  window.wonNewSave = function () {
+    var g = function (id) { return (document.getElementById(id).value || '').trim(); };
+    var name = g('wnv-name'); if (!name) { toast('이름을 적어주세요'); return; }
+    var vs = (WO.opts && WO.opts.vendors) || [];
+    if (vs.indexOf(name) >= 0 || NO_NEW.indexOf(name) >= 0) { toast('이미 있는 작업자예요'); return; }
+    var data = { id: '', name: name, tax: '원천세', regId: g('wnv-reg'), bank: g('wnv-bank'), acct: g('wnv-acct'), tel: g('wnv-tel'), email: g('wnv-mail') };
+    var btn = document.getElementById('wnv-go'); btn.disabled = true; btn.textContent = '저장 중...';
+    postSheet('pm_add_vendor', data, function () {
+      if (WO.opts && WO.opts.vendors.indexOf(name) < 0) WO.opts.vendors.push(name);
+      var keep = Array.prototype.map.call(document.querySelectorAll('#won-ws input:checked'), function (x) { return x.value; }).concat([name]);
+      var ws = document.getElementById('won-ws'); if (ws) ws.innerHTML = wsHtml(WO.opts.vendors, keep);
+    });
+    setTimeout(function () { var b = document.getElementById('wnv-go'); if (b) { b.disabled = false; b.textContent = '등록'; } }, 8000);
+  };
+  window.woCreate = function () {
+    var g = function (id) { return (document.getElementById(id).value || '').trim(); }, err = document.getElementById('won-err');
+    var p = { client: g('won-c'), artist: g('won-a'), date: g('won-d'), project: g('won-p'), contact: g('won-k'),
+              workers: Array.prototype.map.call(document.querySelectorAll('#wo-n-body #won-ws input:checked'), function (x) { return x.value; }) };
+    var dl = [g('won-dl1'), g('won-dl2'), g('won-dl3')].filter(String);
+    if (!p.client || !p.artist) { err.textContent = '거래처와 아티스트를 골라주세요'; return; }
+    if (!/^\d{6}$/.test(p.date)) { err.textContent = '요청일은 6자리 숫자(예: 261012)로 적어주세요'; return; }
+    if (!p.project) { err.textContent = '프로젝트명을 적어주세요'; return; }
+    if (!p.workers.length && !confirm('작업자 없이 만들까요? (나중에 추가할 수 있어요)')) return;
+    var btn = document.getElementById('won-go'); btn.disabled = true; btn.textContent = '만드는 중... (10~30초)'; err.textContent = '';
+    woPost('pm_wo_create', p, function (res) {
+      btn.disabled = false; btn.textContent = '만들기';
+      if (!res.ok) { err.textContent = res.error || '만들지 못했어요'; return; }
+      closeMo('mo-wo-new'); toast('02_작업내역서/' + (res.folder || '') + ' 에 만들었어요');
+      var after = function () { WO.loaded = false; woLoad(true); if (res.id) woOpen(res.id); };
+      if (dl.length && res.id) woPost('pm_wo_dl', { id: res.id, dl: dl }, function (r2) { if (!r2.ok) toast('마감일 저장 실패: ' + (r2.error || '')); after(); });
+      else after();
+    });
+  };
+})();
+</script>
 </body>
 
 </html>
