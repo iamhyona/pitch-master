@@ -199,7 +199,7 @@ select.fi option{background:var(--sur2)}
   <div class="tabs-wrapper">
     <div class="tabs">
       <div class="tab active" data-tab="dash" id="tab-btn-dash">작업내역</div>
-      <div class="tab" data-tab="taxbill" id="tab-btn-taxbill">지급·청구문구</div>
+      <div class="tab" data-tab="taxbill" id="tab-btn-taxbill">문구작성</div>
       <div class="tab" data-tab="py">지급내역</div>
       <div class="tab" data-tab="iv">청구내역</div>
       <div class="tab" data-tab="rates-bill" id="tab-btn-rates-bill">작업단가</div>
@@ -2102,7 +2102,7 @@ function pfLoadDoc(id) {
     pfBuild();
   }).catch(function () { hint.textContent = '읽기 실패'; });
 }
-(function () { var t = document.getElementById('tab-btn-taxbill'); if (t) t.textContent = '지급·청구문구'; })();
+(function () { var t = document.getElementById('tab-btn-taxbill'); if (t) t.textContent = '문구작성'; })();
 
 </script>
 <script>
@@ -3318,7 +3318,7 @@ function woHead(ck, artist, title, d6, t) {
 /* 2026-10-12: 메뉴 간 크기 통일 — 동그란 아이콘 38px(아이콘 18px) · 알약 버튼 38px/14px · 패널 제목 16px · 섹션 라벨 12px */
 .ib,.pf-ic,.dc-ib,.inv-acts .dc-ib{width:38px!important;height:38px!important}
 .ib svg,.pf-ic svg,.dc-ib svg{width:18px!important;height:18px!important}
-.ui-pill,.inv-bt,#pf-m-pay,#pf-m-tax{height:38px!important;font-size:14px!important;font-weight:600!important;border-radius:999px!important;padding:0 16px!important}
+.ui-pill,.inv-bt{height:38px!important;font-size:14px!important;font-weight:600!important;border-radius:999px!important;padding:0 16px!important}
 .tc-t{font-size:16px!important;font-weight:800!important}
 .inv-sec{font-size:12px!important}
 .inv-acts,.dc-ics,.pf-top{gap:6px!important}
@@ -3388,6 +3388,71 @@ function invPh() {
   var oi = initInvoiceTab; initInvoiceTab = function () { oi.apply(this, arguments); invPh(); };
   document.addEventListener('change', function (e) { if (e.target && e.target.closest && e.target.closest('#tab-invoice') && e.target.tagName === 'SELECT') e.target.classList.toggle('ph', !e.target.value); });
 })();
+</script>
+<div class="mo" id="mo-pfout"><div class="md"><div class="md-h"><span class="md-t" id="pfout-t">문구 확인</span><button class="xb" onclick="closeMo('mo-pfout')">✕</button></div><div class="md-b"><div class="dc-note">내용 확인 후 복사하세요. 여기서 고친 내용은 복사에만 반영돼요.</div><textarea class="pf-outx" id="pfout-x" spellcheck="false"></textarea><div style="display:flex;gap:8px"><button class="btn btn-g" style="flex:1;height:46px;border-radius:999px" onclick="closeMo('mo-pfout')">닫기</button><button class="btn btn-p" style="flex:2;height:46px;border-radius:999px" onclick="pfOutCopy()">복사하기</button></div></div></div></div>
+<style>
+/* 2026-10-12: 문구작성 — 박스 하나 · 지급/청구 네모 단추 · 빠른 작성 / 반자동 작성 · 확인 → 문구 팝업 */
+.pf-one{gap:14px!important}
+.pf-hd{display:flex;align-items:center;gap:8px}
+.pf-hd .rt-seg{flex:1;margin:0}
+.pf-sec{font-size:15px;font-weight:800;color:var(--txt);display:flex;align-items:baseline;gap:8px}
+.pf-sec small{font-size:12px;font-weight:500;color:var(--txt3)}
+.pf-div{height:1px;background:var(--bdr);margin:6px -20px}
+#pf-form{display:flex;flex-direction:column;gap:12px}
+.pf-ok{width:100%;height:48px!important;font-size:15px!important;font-weight:700!important;border-radius:14px!important;margin-top:4px}
+.pf-outx{width:100%;min-height:300px;border:0;border-radius:14px;background:var(--chip);padding:14px 16px;font-family:inherit;font-size:14px;line-height:1.6;color:var(--txt);resize:vertical;outline:0}
+</style>
+<script>
+// 2026-10-12: 문구작성 화면 — 하나의 박스 안에 빠른 작성 / 반자동 작성, 확인 누르면 팝업으로 문구 확인 후 복사
+function initTaxBill() {
+  var box = pfEl('tab-taxbill'); if (!box) return;
+  if (box.dataset.pf !== '3') {
+    box.dataset.pf = '3';
+    var gear = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>';
+    box.innerHTML =
+      '<div class="tb-box pf-one">' +
+        '<div class="pf-hd"><div class="rt-seg"><button type="button" id="pf-m-pay" onclick="pfMode(\'pay\')">지급</button><button type="button" id="pf-m-tax" onclick="pfMode(\'tax\')">청구</button></div>' +
+        '<button class="pf-ic" type="button" title="문구 포맷 수정" onclick="pfTplOpen()">' + gear + '</button></div>' +
+        '<div class="pf-sec">빠른 작성<small>한 줄로 한 번에 · Enter 누르면 확인</small></div>' +
+        '<label class="fl" for="pf-quick" id="pf-quick-l" style="margin:0 0 -4px 2px"></label>' +
+        '<input class="fi" id="pf-quick" autocomplete="off">' +
+        '<div class="tb-hint" id="pf-hint"></div>' +
+        '<div class="pf-div"></div>' +
+        '<div class="pf-sec">반자동 작성<small>칸을 하나씩 골라서</small></div>' +
+        '<div id="pf-form"></div>' +
+        '<button class="btn btn-p pf-ok" type="button" onclick="pfConfirm()">확인</button>' +
+      '</div>';
+    pfEl('pf-quick').addEventListener('input', pfQuick);
+    pfEl('pf-quick').addEventListener('keydown', function (e) { if (e.key === 'Enter' && !e.isComposing) { e.preventDefault(); pfConfirm(); } });
+  }
+  pfTplLoad();
+  pfMode(PF.mode, true);
+}
+(function () {
+  var om = pfMode;
+  pfMode = function (m, keep) {
+    om(m, keep);
+    var a = pfEl('pf-m-pay'), b = pfEl('pf-m-tax');
+    if (a) a.className = m === 'pay' ? 'on' : ''; if (b) b.className = m === 'tax' ? 'on' : '';
+    var l = pfEl('pf-quick-l'); if (l) l.textContent = l.textContent.replace(/^빠른 입력:\s*/, '');
+  };
+})();
+function pfConfirm() {
+  if (PF.mode === 'pay' && !pfV('pf-vendor')) { toast('지급처를 먼저 선택해 주세요'); return; }
+  if (PF.mode === 'tax' && !pfV('pf-client')) { toast('거래처를 먼저 선택해 주세요'); return; }
+  pfBuild();
+  pfEl('pfout-t').textContent = PF.mode === 'tax' ? '청구 문구 확인' : '지급 문구 확인';
+  pfEl('pfout-x').value = PF.text || '';
+  openMo('mo-pfout');
+}
+function pfOutCopy() {
+  if (PF.mode === 'tax') {
+    var c = pmClient(pfV('pf-client')), mgr = pfV('pf-mgr');
+    if (pfV('pf-mgr-s') === '__new' && pfEl('pf-save') && pfEl('pf-save').checked && c && mgr) { postSheet('pm_add_contact', { client: c.disp, name: mgr, email: pfV('pf-email') }); PM.contacts.push({ client: c.disp, name: mgr, email: pfV('pf-email'), memo: '' }); pfMgrOpts(c.disp, mgr); }
+  }
+  cp(pfEl('pfout-x').value, null);
+  closeMo('mo-pfout');
+}
 </script>
 </body>
 
