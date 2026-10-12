@@ -2973,12 +2973,15 @@ doLogout = function () { DC.invoice = { items: [], folders: [], folder: '', q: '
 // 2026-10-12 (현아): 지급·청구문구 — 불러오기 없앰 · 칸 순서 정리 · 거래처 고르면 아티스트·담당자·대표·사업자번호 자동 · 금액 자동계산 · ⚙ 포맷 수정
 var PF_TPL_DEF = {
   tax: '<{아티스트} {작업명} 계산서 발행>\n-거래처명: {거래처명}\n-대표자: {대표자}\n-사업자등록번호: {사업자번호}\n-담당자: {담당자}\n-메일주소: {메일주소}\n-계산서 수신메일: {계산서메일}\n-청구일자: {청구일자}\n-공급가액: {공급가액}원\n-부가세: {세금}원\n-최종지급액\n{최종지급액}원 (vat 10% 포함)',
-  pay: '<{아티스트} {작업명} {추가설명} 외주비용 지급>\n-지급처: {지급처}\n-주민등록번호: {등록번호}\n-(은행) 계좌번호: ({은행}) {계좌번호}\n-공급가액: {공급가액}원\n-원천세: -{세금}원\n-최종지급액: \n{최종지급액}원 (3.3% 차감)',
-  payBiz: '<{아티스트} {작업명} {추가설명} 외주비용 지급>\n-지급처: {지급처}\n-사업자등록번호: {등록번호}\n-회사명 (대표자): {회사명} ({지급처})\n-(은행) 계좌번호: ({은행}) {계좌번호}\n-공급가액: {공급가액}원\n-부가세: {세금}원\n-최종지급액\n{최종지급액}원 (vat 10% 포함)'
+  pay: '<{아티스트} {작업명} 외주비용 지급>\n-지급처: {지급처}\n-주민등록번호: {등록번호}\n-(은행) 계좌번호: ({은행}) {계좌번호}\n-공급가액: {공급가액}원\n-원천세: -{세금}원\n-최종지급액: \n{최종지급액}원 (3.3% 차감)',
+  payBiz: '<{아티스트} {작업명} 외주비용 지급>\n-지급처: {지급처}\n-사업자등록번호: {등록번호}\n-회사명 (대표자): {회사명} ({지급처})\n-(은행) 계좌번호: ({은행}) {계좌번호}\n-공급가액: {공급가액}원\n-부가세: {세금}원\n-최종지급액\n{최종지급액}원 (vat 10% 포함)'
 };
 var PF_KEYS = { tax: ['아티스트', '작업명', '거래처명', '대표자', '사업자번호', '담당자', '메일주소', '계산서메일', '청구일자', '공급가액', '세금', '최종지급액'],
-  pay: ['아티스트', '작업명', '추가설명', '지급처', '등록번호', '회사명', '은행', '계좌번호', '공급가액', '세금', '최종지급액'] };
-function pfTpl(k) { var t = tbLS('pf_tpl') || {}; return t[k] || PF_TPL_DEF[k]; }
+  pay: ['아티스트', '작업명', '지급처', '등록번호', '회사명', '은행', '계좌번호', '공급가액', '세금', '최종지급액'] };
+// 포맷은 서버(거래처마스터 스크립트 속성 PM_PF_TPL)에 저장 → 폰·맥 같이 씀. 이 기기 사본은 불러오기 전 임시로만 사용
+var PF_SRV = null;
+function pfTpl(k) { var t = PF_SRV || tbLS('pf_tpl') || {}; return t[k] || PF_TPL_DEF[k]; }
+function pfTplLoad() { if (!PM_K) return; woGet('&pftpl=1', function (d) { if (!d || !d.ok) return; var loc = tbLS('pf_tpl') || {}; PF_SRV = d.tpl || {}; if (!Object.keys(PF_SRV).length && Object.keys(loc).length) { PF_SRV = loc; woPost('pm_pf_tpl', { tpl: loc }, function () {}); } tbLS('pf_tpl', PF_SRV); pfBuild(); }); }
 function initTaxBill() {
   var box = pfEl('tab-taxbill'); if (!box) return;
   if (box.dataset.pf !== '2') {
@@ -2997,6 +3000,7 @@ function initTaxBill() {
       '<div class="tb-box" id="pf-form"></div>';
     pfEl('pf-quick').addEventListener('input', pfQuick);
   }
+  pfTplLoad();
   pfMode(PF.mode, true);
 }
 function pfMode(m, keep) {
@@ -3017,10 +3021,9 @@ function pfMode(m, keep) {
       '<div class="row2">' + f('pf-amt', '공급가액', ' inputmode="numeric"') + f('pf-vat', '부가세 (10%)', ' readonly') + '</div>' + sum +
       '<input type="hidden" id="pf-cname"><input type="hidden" id="pf-ceo"><input type="hidden" id="pf-biz"><input type="hidden" id="pf-artist">'
     : '<div class="row2">' + s('pf-vendor', '지급처') + f('pf-tax', '세금구분', ' readonly') + '</div>' +
-      '<div class="row2">' + f('pf-artist', '아티스트') + f('pf-work', '작업명', ' value="리터칭"') + '</div>' +
+      '<div class="row2">' + f('pf-artist', '아티스트') + f('pf-work', '작업명 (예: 리터칭 박수현 일본)', ' value="리터칭"') + '</div>' +
       '<div class="row2">' + f('pf-reg', '주민·사업자번호', ' readonly') + f('pf-corp', '회사명 (사업자만)', ' readonly') + '</div>' +
       '<div class="row2">' + f('pf-bank', '은행', ' readonly') + f('pf-acct', '계좌번호', ' readonly') + '</div>' +
-      '<div class="row2">' + f('pf-note', '추가 설명 (선택, 예: 박수현 일본)') + '<div class="fg"></div></div>' +
       '<div class="row2">' + f('pf-amt', '공급가액', ' inputmode="numeric"') + f('pf-vat', '세금', ' readonly') + '</div>' + sum;
   pfEl('pf-form').innerHTML = html;
   if (m === 'tax') {
@@ -3137,15 +3140,16 @@ function pfCopy() {
   cp(PF.text, null);
 }
 function pfTplOpen() {
+  pfTplLoad();
   var b = pfEl('pftpl-body'), keys = function (k) { return '<div class="pf-keys">' + PF_KEYS[k].map(function (x) { return '<code onclick="pfTplIns(this)">{' + x + '}</code>'; }).join('') + '</div>'; };
   var blk = function (id, title, k) { return '<div class="tx-sec" style="margin:0">' + title + '</div>' + keys(k) + '<textarea class="pf-tpl" id="pft-' + id + '" spellcheck="false" onfocus="PF.tplFocus=this">' + esc(pfTpl(id)) + '</textarea>'; };
-  b.innerHTML = '<div class="dc-note">{ } 안의 이름이 입력칸 값으로 바뀌어요. 이름을 누르면 커서 자리에 들어가요. 계산서메일·추가설명이 비어 있으면 그 줄은 빠져요.</div>' +
+  b.innerHTML = '<div class="dc-note">{ } 안의 이름이 입력칸 값으로 바뀌어요. 이름을 누르면 커서 자리에 들어가요. 계산서메일이 비어 있으면 그 줄은 빠져요.</div>' +
     blk('pay', '지급 문구 · 원천세', 'pay') + blk('payBiz', '지급 문구 · 사업자', 'pay') + blk('tax', '청구 문구', 'tax') +
     '<div style="display:flex;gap:8px"><button class="btn btn-g" style="flex:1;height:42px" onclick="pfTplReset()">기본값으로</button><button class="btn btn-p" style="flex:2;height:42px" onclick="pfTplSave()">저장</button></div>';
   openMo('mo-pftpl');
 }
 function pfTplIns(el) { var t = PF.tplFocus || pfEl('pft-pay'); var s = t.selectionStart || t.value.length; t.value = t.value.slice(0, s) + el.textContent + t.value.slice(t.selectionEnd || s); t.focus(); t.selectionStart = t.selectionEnd = s + el.textContent.length; }
-function pfTplSave() { var o = {}; ['pay', 'payBiz', 'tax'].forEach(function (k) { var v = pfEl('pft-' + k).value; if (v.trim() && v !== PF_TPL_DEF[k]) o[k] = v; }); tbLS('pf_tpl', o); closeMo('mo-pftpl'); pfBuild(); toast('문구 포맷을 저장했어요'); }
+function pfTplSave() { var o = {}; ['pay', 'payBiz', 'tax'].forEach(function (k) { var v = pfEl('pft-' + k).value; if (v.trim() && v !== PF_TPL_DEF[k]) o[k] = v; }); woPost('pm_pf_tpl', { tpl: o }, function (r) { if (!r || !r.ok) { toast('저장 실패: ' + ((r && r.error) || '연결 확인')); return; } PF_SRV = o; tbLS('pf_tpl', o); closeMo('mo-pftpl'); pfBuild(); toast('문구 포맷을 저장했어요 · 모든 기기에 반영'); }); }
 function pfTplReset() { if (!confirm('세 가지 포맷을 모두 기본값으로 되돌릴까요?')) return; ['pay', 'payBiz', 'tax'].forEach(function (k) { pfEl('pft-' + k).value = PF_TPL_DEF[k]; }); }
 </script>
 </body>
