@@ -3019,14 +3019,14 @@ function pfMode(m, keep) {
   var sum = '<div class="pf-sum"><span>최종지급액</span><b id="pf-total">0원</b></div>';
   var html = m === 'tax'
     ? '<div class="row2">' + s('pf-client', '거래처') + s('pf-artist-s', '아티스트') + '</div>' +
-      '<div class="row2">' + f('pf-work', '작업명', ' value="리터칭"') + '<div class="fg"><span class="fl">대표 · 사업자번호</span><div class="fi sm pf-ro" id="pf-ceobiz"></div></div>' + '</div>' +
+      '<div class="row2">' + f('pf-work', '작업명(수정가능)', ' value="리터칭"') + '<div class="fg"><span class="fl">대표 · 사업자번호</span><div class="fi sm pf-ro" id="pf-ceobiz"></div></div>' + '</div>' +
       '<div class="row2">' + s('pf-mgr-s', '담당자') + f('pf-email', '메일주소', ' inputmode="email"') + '</div>' +
       '<div class="row2" id="pf-mgr-new" style="display:none">' + f('pf-mgr', '새 담당자 이름') + '<div class="fg" style="justify-content:flex-end"><label class="tb-save" style="margin:0"><input type="checkbox" id="pf-save" checked> 복사할 때 거래처마스터에 추가</label></div></div>' +
       '<div class="row2">' + f('pf-taxmail', '계산서 전담메일', ' inputmode="email" placeholder="없으면 비워두기"') + f('pf-date', '청구일자', ' type="date"') + '</div>' +
       '<div class="row2">' + f('pf-amt', '공급가액', ' inputmode="numeric"') + f('pf-vat', '부가세 (10%)', ' readonly') + '</div>' + sum +
       '<input type="hidden" id="pf-cname"><input type="hidden" id="pf-ceo"><input type="hidden" id="pf-biz"><input type="hidden" id="pf-artist">'
     : '<div class="row2">' + s('pf-vendor', '지급처') + f('pf-tax', '세금구분', ' readonly') + '</div>' +
-      '<div class="row2">' + f('pf-artist', '아티스트') + f('pf-work', '작업명', ' value="리터칭"') + '</div>' +
+      '<div class="row2">' + f('pf-artist', '아티스트') + f('pf-work', '작업명(수정가능)', ' value="리터칭"') + '</div>' +
       '<div class="row2">' + f('pf-reg', '주민·사업자번호', ' readonly') + f('pf-corp', '회사명 (사업자만)', ' readonly') + '</div>' +
       '<div class="row2">' + f('pf-bank', '은행', ' readonly') + f('pf-acct', '계좌번호', ' readonly') + '</div>' +
       '<div class="row2">' + f('pf-amt', '공급가액', ' inputmode="numeric"') + f('pf-vat', '세금', ' readonly') + '</div>' + sum;
