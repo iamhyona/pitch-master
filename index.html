@@ -4069,6 +4069,478 @@ function woDlSave() {
   };
 })();
 </script>
+<style>
+/* 2026-10-13: 단가·거래처·외주처 — 신규 등록 / 항목 추가·수정·삭제 → '반영'을 눌러 구글시트에 저장 */
+#btn-add-ag,#btn-add-lt{display:none!important}
+.rg-row{display:flex;align-items:center;gap:6px}
+.rg-row .srch{flex:1;min-width:0}
+.rg-ib{position:relative;width:38px;height:38px;border-radius:50%;border:0;background:var(--chip);color:var(--txt2);display:inline-flex;align-items:center;justify-content:center;padding:0;cursor:pointer;flex:none}
+.rg-ib svg{width:18px;height:18px}
+.rg-ib.on{background:var(--txt);color:#fff}
+.rg-ib b{position:absolute;top:-3px;right:-3px;min-width:17px;height:17px;border-radius:9px;background:#f04452;color:#fff;font-size:10px;font-weight:700;line-height:17px;text-align:center;padding:0 4px;box-sizing:border-box}
+.rg-ib b:empty{display:none}
+.rg-pend{display:none;align-items:center;gap:8px;margin:0 0 10px;padding:10px 14px;border-radius:14px;background:#fff4f5;color:#f04452;font-size:12px;font-weight:600;cursor:pointer}
+.rg-pend.show{display:flex}
+.rg-pend span{flex:1}
+.rt-seg-row{display:flex;align-items:center;gap:6px}
+[data-rgrow]{justify-content:flex-start!important;gap:6px!important}
+[data-rgrow] .rg-first{margin-left:auto}
+.rt-seg-row .rt-sp{flex:1}
+/* 입력 방법 */
+.imp{background:var(--sur2,#f9fafb);border-radius:14px;padding:10px;margin-bottom:12px}
+.imp-seg{display:flex;gap:4px}
+.imp-seg button{flex:1;height:32px;border:0;border-radius:999px;background:transparent;color:var(--txt3);font-family:inherit;font-size:12px;font-weight:600;cursor:pointer}
+.imp-seg button.on{background:#fff;color:var(--txt);box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.imp-p{margin-top:10px}
+.imp textarea{width:100%;box-sizing:border-box;min-height:110px;border:0;border-radius:12px;background:#fff;padding:10px 12px;font-family:inherit;font-size:13px;resize:vertical}
+.imp-drop{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;min-height:84px;border:1px dashed var(--txt3);border-radius:12px;background:#fff;font-size:12px;color:var(--txt2);cursor:pointer;text-align:center;padding:10px}
+.imp-drop input{display:none}
+.imp-st{font-size:11px;color:var(--txt3);margin-top:6px;min-height:14px}
+.imp-go{margin-top:8px;width:100%;height:36px;border:0;border-radius:999px;background:var(--txt);color:#fff;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer}
+.fi.rg-fill{box-shadow:inset 0 0 0 1.5px #3182f6}
+/* 단가 편집 */
+.re-box{background:#fff;border-radius:18px;padding:12px}
+.re-h,.re-r{display:grid;gap:4px;align-items:center}
+.re-bill .re-h,.re-bill .re-r{grid-template-columns:minmax(0,1fr) 74px 40px 48px 28px}
+.re-h{font-size:10px;color:var(--txt3);padding:0 2px 6px}
+.re-h span:not(:first-child){text-align:right}
+.re-r{padding:5px 0;border-top:1px solid var(--line)}
+.re-r input{width:100%;box-sizing:border-box;height:34px;border:0;border-radius:9px;background:var(--chip);padding:0 7px;font-family:inherit;font-size:13px;min-width:0}
+.re-r input.n{text-align:right}
+.re-r small{grid-column:1/-1;font-size:10px;color:var(--txt3);padding-left:2px}
+.re-r.del{opacity:.4}
+.re-r.del input{text-decoration:line-through}
+.re-x{width:28px;height:28px;border:0;border-radius:50%;background:transparent;color:var(--txt3);cursor:pointer;padding:0;display:inline-flex;align-items:center;justify-content:center}
+.re-x svg{width:14px;height:14px}
+.re-pay{overflow-x:auto}
+.re-pay table{border-collapse:collapse;width:100%}
+.re-pay th{font-size:10px;color:var(--txt3);font-weight:500;padding:0 3px 6px;text-align:right;white-space:nowrap}
+.re-pay th:first-child{text-align:left}
+.re-pay td{padding:4px 3px;border-top:1px solid var(--line)}
+.re-pay td:first-child{font-size:12px;font-weight:600;white-space:nowrap}
+.re-pay input{width:76px;box-sizing:border-box;height:32px;border:0;border-radius:9px;background:var(--chip);padding:0 7px;font-family:inherit;font-size:12px;text-align:right}
+.re-pay input.chg,.re-r input.chg{box-shadow:inset 0 0 0 1.5px #3182f6}
+.re-f{display:flex;gap:6px;justify-content:flex-end;margin-top:10px;flex-wrap:wrap}
+.re-f button{height:32px;border:0;border-radius:999px;font-family:inherit;font-size:13px;font-weight:600;padding:0 13px;cursor:pointer;background:var(--chip);color:var(--txt2)}
+.re-f button.p{background:var(--txt);color:#fff}
+.re-f .sp{flex:1}
+.re-note{font-size:11px;color:var(--txt3);margin-top:8px}
+/* 반영 목록 */
+.pd-list{display:flex;flex-direction:column;gap:6px;max-height:50vh;overflow:auto}
+.pd-it{display:flex;align-items:center;gap:8px;background:var(--chip);border-radius:12px;padding:9px 10px 9px 12px;font-size:13px}
+.pd-it span{flex:1;min-width:0;overflow-wrap:anywhere}
+.pd-it em{font-style:normal;font-size:10px;font-weight:700;color:#3182f6;flex:none}
+.pd-empty{font-size:13px;color:var(--txt3);text-align:center;padding:18px 0}
+</style>
+
+<div class="mo" id="mo-agn"><div class="md"><div class="md-h"><span class="md-t">거래처 등록</span><button class="xb" onclick="closeMo('mo-agn')">✕</button></div>
+  <div class="md-b" id="agn-body"></div>
+  <div class="md-f"><button class="btn btn-g" onclick="closeMo('mo-agn')">취소</button><button class="btn btn-p" onclick="rgAgnSave()">추가</button></div></div></div>
+<div class="mo" id="mo-pend"><div class="md"><div class="md-h"><span class="md-t">반영 대기</span><button class="xb" onclick="closeMo('mo-pend')">✕</button></div>
+  <div class="md-b"><div class="dc-note" style="margin-bottom:10px">반영하기를 눌러야 PITCH_DB 구글시트(01_거래처마스터·02_단가마스터)에 저장돼요.</div><div class="pd-list" id="pd-list"></div></div>
+  <div class="md-f"><button class="btn btn-g" onclick="rgPendClear()">모두 취소</button><button class="btn btn-p" id="pd-go" onclick="rgFlush()">반영하기</button></div></div></div>
+
+<script>
+(function () {
+  var IC = {
+    plus: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>',
+    edit: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>',
+    sync: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V3M7 8l5-5 5 5"/><path d="M4 15v4a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-4"/></svg>',
+    x: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>',
+    undo: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14 4 9l5-5"/><path d="M4 9h11a5 5 0 0 1 0 10h-3"/></svg>'
+  };
+  var BANKS = ['IBK', '국민', '신한', '우리', '하나', '농협', '기업', '토스뱅크', '카카오뱅크', '케이뱅크', '새마을', '우체국', 'SC제일', '수협', '부산', '대구', '경남', '광주', '전북', '씨티', '기타'];
+  function $(id) { return document.getElementById(id); }
+  function num(v) { var n = Number(String(v == null ? '' : v).replace(/[^0-9.\-]/g, '')); return isNaN(n) ? 0 : n; }
+
+  // ── 반영 대기 목록 (이 기기에 보관 → '반영'을 누르면 구글시트로) ──
+  var PEND = [];
+  try { PEND = JSON.parse(localStorage.getItem('pm_pend') || '[]') || []; } catch (e) { PEND = []; }
+  function pendSave() { try { localStorage.setItem('pm_pend', JSON.stringify(PEND)); } catch (e) {} rgBadges(); }
+  function pendAdd(menu, action, data, label) { PEND.push({ menu: menu, action: action, data: data, label: label, t: Date.now() }); pendSave(); }
+  window.rgPend = function () { return PEND; };
+  function menuCnt(m) { return PEND.filter(function (p) { return !m || p.menu === m; }).length; }
+  function rgBadges() {
+    document.querySelectorAll('.rg-ib[data-sync]').forEach(function (b) { var n = menuCnt(b.getAttribute('data-sync')); b.querySelector('b').textContent = n ? n : ''; });
+    document.querySelectorAll('.rg-pend').forEach(function (el) { var n = menuCnt(el.getAttribute('data-m')); el.classList.toggle('show', !!n); var s = el.querySelector('span'); if (s) s.textContent = '반영 대기 ' + n + '건 — 반영을 눌러야 구글시트에 저장돼요'; });
+  }
+  function labelOf(action, d) {
+    var nm = d.name || d.disp || d.ko || d.en || d.id || '';
+    return ({ pm_add_client: '거래처 추가', pm_update_client: '거래처 수정', pm_add_contact: '담당자 추가·수정', pm_update_contact: '담당자 수정', pm_off_contact: '담당자 숨김',
+              pm_add_vendor: '외주처 추가·수정', pm_update_vendor: '외주처 수정', pm_off_vendor: '외주처 숨김' }[action] || action) + (nm ? ' · ' + nm : '');
+  }
+  window.rgOpenPend = function (m) {
+    var list = PEND.map(function (p, i) { return { p: p, i: i }; }).filter(function (o) { return !m || o.p.menu === m; });
+    $('pd-list').innerHTML = list.length ? list.map(function (o) {
+      return '<div class="pd-it"><em>' + ({ ag: '거래처', lt: '외주처', rate: '단가' }[o.p.menu] || '') + '</em><span>' + esc(o.p.label) + '</span><button class="re-x" title="빼기" onclick="rgPendDel(' + o.i + ',\'' + (m || '') + '\')">' + IC.x + '</button></div>';
+    }).join('') : '<div class="pd-empty">반영할 내용이 없어요. 시트에서 다시 불러올게요.</div>';
+    $('mo-pend').setAttribute('data-m', m || '');
+    $('pd-go').textContent = list.length ? '반영하기' : '다시 불러오기';
+    openMo('mo-pend');
+  };
+  window.rgPendDel = function (i, m) { PEND.splice(i, 1); pendSave(); rgReapply(); rgOpenPend(m); };
+  window.rgPendClear = function () {
+    var m = $('mo-pend').getAttribute('data-m');
+    if (!confirm('반영하지 않은 수정을 모두 취소할까요?')) return;
+    PEND = PEND.filter(function (p) { return m && p.menu !== m; }); pendSave(); rgReapply(); closeMo('mo-pend');
+  };
+  function post(action, data) {
+    return fetch(AS_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ action: action, data: data, k: PM_K }) })
+      .then(function (r) { return r.json(); }).catch(function () { return { ok: false, error: '연결 실패' }; });
+  }
+  window.rgFlush = function () {
+    var m = $('mo-pend').getAttribute('data-m');
+    var todo = PEND.filter(function (p) { return !m || p.menu === m; });
+    if (!todo.length) { closeMo('mo-pend'); loadSheetData(); return; }
+    var btn = $('pd-go'); btn.disabled = true; btn.textContent = '반영 중... (' + todo.length + '건)';
+    // 단가는 같은 소속사끼리 묶어서 한 번에
+    var jobs = [], cur = null;
+    todo.forEach(function (p) {
+      if (p.action === 'pm_rate_ops') {
+        if (cur && cur.tab === p.data.tab) { cur.items.push(p); cur.data.ops = cur.data.ops.concat(p.data.ops); return; }
+        cur = { tab: p.data.tab, action: 'pm_rate_save', data: { tab: p.data.tab, ops: p.data.ops.slice() }, items: [p] }; jobs.push(cur); return;
+      }
+      cur = null; jobs.push({ action: p.action, data: p.data, items: [p] });
+    });
+    var fail = [], i = 0;
+    (function next() {
+      if (i >= jobs.length) {
+        PEND = PEND.filter(function (p) { return todo.indexOf(p) < 0 || fail.indexOf(p) >= 0; }); pendSave();
+        btn.disabled = false; closeMo('mo-pend');
+        toast(fail.length ? '일부 반영 실패 (' + fail.length + '건) — 다시 눌러주세요' : '구글시트에 반영했어요');
+        loadSheetData(); return;
+      }
+      var j = jobs[i++];
+      post(j.action, j.data).then(function (res) {
+        if (res && res.auth === false) { btn.disabled = false; pmAuthFail(res); return; }
+        if (!res || !res.ok) { fail = fail.concat(j.items); if (res && res.error) toast(res.error); }
+        next();
+      });
+    })();
+  };
+
+  // ── 거래처 · 외주처: 저장/숨김을 바로 보내지 않고 반영 대기로 ──
+  function queued(menu, fn) {
+    return function () {
+      var orig = window.postSheet, n0 = PEND.length;
+      window.postSheet = function (a, d) { pendAdd(menu, a, d, labelOf(a, d)); };
+      try { fn.apply(this, arguments); } finally { window.postSheet = orig; }
+      if (PEND.length > n0) toast('반영 대기에 담았어요 — 반영을 눌러 저장하세요');
+    };
+  }
+  window.saveAg = queued('ag', window.saveAg);
+  window.delAg = queued('ag', window.delAg);
+  window.saveLt = queued('lt', window.saveLt);
+  window.delLt = queued('lt', window.delLt);
+
+  // ── 입력 방법: 직접 입력 / 텍스트 붙여넣기 / 파일 첨부(사진·PDF → 글자 읽기) ──
+  function impHtml(k) {
+    return '<div class="imp" id="imp-' + k + '"><div class="imp-seg">' +
+      ['hand:직접 입력', 'text:텍스트 붙여넣기', 'file:파일 첨부'].map(function (s, i) { var a = s.split(':'); return '<button type="button" data-m="' + a[0] + '"' + (i ? '' : ' class="on"') + ' onclick="rgImpMode(\'' + k + '\',\'' + a[0] + '\')">' + a[1] + '</button>'; }).join('') + '</div>' +
+      '<div class="imp-p" data-p="text" hidden><textarea id="imp-' + k + '-t" placeholder="카톡·메일로 받은 정보를 그대로 붙여넣으세요\n예: 상호, 대표자, 사업자번호, 주소, 은행·계좌, 연락처, 메일"></textarea><button type="button" class="imp-go" onclick="rgImpText(\'' + k + '\')">읽어서 칸 채우기</button></div>' +
+      '<div class="imp-p" data-p="file" hidden><label class="imp-drop"><input type="file" accept="image/*,.pdf,application/pdf" onchange="rgImpFile(\'' + k + '\',this)"><b>사진 또는 PDF 고르기</b><span>사업자등록증 · 통장사본 등 (이 기기 안에서만 글자를 읽어요)</span></label><div class="imp-st" id="imp-' + k + '-st"></div></div></div>';
+  }
+  window.rgImpMode = function (k, m) {
+    var box = $('imp-' + k); if (!box) return;
+    box.querySelectorAll('.imp-seg button').forEach(function (b) { b.classList.toggle('on', b.getAttribute('data-m') === m); });
+    box.querySelectorAll('.imp-p').forEach(function (p) { p.hidden = p.getAttribute('data-p') !== m; });
+  };
+  // 글자에서 정보 뽑기
+  function parseInfo(t) {
+    t = String(t || '').replace(/\r/g, '').replace(/[：]/g, ':').replace(/[‐‑–—]/g, '-');
+    var o = {}, one = t.replace(/\n+/g, '\n');
+    var LAB = '상\\s*호|법인명|단체명|대\\s*표\\s*자|대표이사|대표명|대표|성\\s*명|이\\s*름|예금주|사업장\\s*소재지|소\\s*재\\s*지|본점\\s*소재지|주\\s*소|은\\s*행|은행명|계좌번호|계\\s*좌|등록번호|사업자\\s*번호|사업자등록번호|주민등록번호|주민번호|생년월일|연락처|휴대폰|전화|핸드폰|이메일|메일|e-?mail|개업\\s*연월일|사업의\\s*종류|업\\s*태|종\\s*목|과세유형|발급|담당자|부서|아티스트';
+    function pick(re) { var m = one.match(re); return m ? m[1].replace(new RegExp('\\s*(' + LAB + ')\\s*[:：].*$'), '').replace(/^[\s:·\-]+|[\s,·]+$/g, '').trim() : ''; }
+    var lab = function (names) { return pick(new RegExp('(?:' + names + ')\\s*(?:\\([^)]*\\))?\\s*[:]?\\s*([^\\n]+)')); };
+    var b = t.match(/(\d{3})\s*-\s*(\d{2})\s*-\s*(\d{5})/) || t.match(/(?:사업자|등록번호)[^\d\n]{0,12}(\d{3})(\d{2})(\d{5})/); if (b) o.biz = b[1] + '-' + b[2] + '-' + b[3];
+    var r = t.match(/(\d{6})\s*-\s*([1-8]\d{6})/); if (r) o.reg = r[1] + '-' + r[2];
+    var em = t.match(/[\w.+-]+@[\w-]+(\.[\w-]+)+/g) || [];
+    em.forEach(function (e) { var ln = (one.split('\n').filter(function (l) { return l.indexOf(e) >= 0; })[0] || ''); if (/계산서/.test(ln)) o.taxMail = o.taxMail || e; else o.email = o.email || e; });
+    var tl = t.match(/(01[016789])[\s.\-]?(\d{3,4})[\s.\-]?(\d{4})/); if (tl) o.tel = tl[1] + '-' + tl[2] + '-' + tl[3];
+    else { var tl2 = t.match(/(0\d{1,2})[\s.\-)](\d{3,4})[\s.\-](\d{4})/); if (tl2) o.tel = tl2[1] + '-' + tl2[2] + '-' + tl2[3]; }
+    // 은행·계좌
+    var bk = ''; BANKS.concat(['토스', '카카오', '케이', 'NH', 'KB', '하나은행', '농협은행', '기업은행', '국민은행', '신한은행', '우리은행']).some(function (n) { if (t.indexOf(n) >= 0) { bk = n; return true; } return false; });
+    var bmap = { '토스': '토스뱅크', '카카오': '카카오뱅크', '케이': '케이뱅크', NH: '농협', KB: '국민', '하나은행': '하나', '농협은행': '농협', '기업은행': 'IBK', '기업': 'IBK', '국민은행': '국민', '신한은행': '신한', '우리은행': '우리' };
+    if (bk) o.bank = bmap[bk] || bk;
+    var accLine = (one.split('\n').filter(function (l) { return /계좌|은행|뱅크|입금/.test(l); }).join(' ')) || '';
+    var ac = (accLine.match(/\d{2,6}(?:[\s\-]\d{2,8}){1,4}|\d{10,14}/g) || []).filter(function (x) { var d = x.replace(/\D/g, ''); return d.length >= 9 && x !== o.biz && (!o.reg || x.replace(/\s/g, '') !== o.reg) && !/^01[016789]/.test(d); })[0];
+    if (!ac) ac = (t.match(/\d{2,6}-\d{2,8}-\d{2,8}(?:-\d{1,8})?/g) || []).filter(function (x) { return x !== o.biz && x !== o.reg && x !== o.tel && !/^\d{3}-\d{2}-\d{5}$/.test(x); })[0];
+    if (ac) o.acct = ac.replace(/\s+/g, '-');
+    o.corp = lab('상\\s*호|법인명(?:\\s*\\(단체명\\))?|단체명|회사명|업체명');
+    o.ceo = lab('대\\s*표\\s*자|대표이사|대표명|대\\s*표');
+    o.name = lab('성\\s*명|이\\s*름|예금주');
+    o.addr = lab('사업장\\s*소재지|본점\\s*소재지|소\\s*재\\s*지|주\\s*소');
+    o.manager = lab('담당자');
+    o.artists = lab('아티스트|소속\\s*아티스트');
+    ['ceo', 'name', 'manager', 'corp', 'addr', 'artists'].forEach(function (k) { if (o[k]) o[k] = o[k].replace(/[\w.+-]+@[\w-]+(\.[\w-]+)+/g, '').replace(/0\d{1,2}[\s.\-)]?\d{3,4}[\s.\-]?\d{4}/g, '').replace(/\d{3}-\d{2}-\d{5}|\d{6}-[1-8]\d{6}/g, '').replace(/\s{2,}/g, ' ').replace(/[\s,·/]+$/, '').trim(); });
+    if (o.manager) o.manager = o.manager.split(/\s+/)[0];
+    if (o.ceo && o.ceo.length > 20) o.ceo = o.ceo.slice(0, 20);
+    if (o.name) o.name = o.name.replace(/\s*\(.*$/, '').replace(/\s+/g, '').slice(0, 10);
+    if (!o.name && o.ceo && !o.biz) o.name = o.ceo;
+    if (o.corp) { o.ko = o.corp.replace(/주식회사|\(주\)|㈜|\(유\)|유한회사/g, '').trim(); var en = o.corp.match(/[A-Za-z][A-Za-z0-9 &.,'-]{1,}/); if (en) { o.en = en[0].trim(); o.ko = o.ko.replace(en[0], '').replace(/[()\s]+$/, '').replace(/^[()\s]+/, '').trim(); } }
+    return o;
+  }
+  window.rgParse = parseInfo;
+  function fill(map, o) {
+    var n = 0;
+    Object.keys(map).forEach(function (id) {
+      var v = o[map[id]], el = $(id); if (!el || !v) return;
+      if (el.tagName === 'SELECT') { if (![].some.call(el.options, function (op) { return op.value === v; })) el.insertAdjacentHTML('beforeend', '<option>' + esc(v) + '</option>'); }
+      el.value = v; el.classList.add('rg-fill'); n++;
+    });
+    return n;
+  }
+  var FILL = {
+    lt: function (o) {
+      var m = { 'lt-name': 'name', 'lt-regid': o.biz ? 'biz' : 'reg', 'lt-addr': 'addr', 'lt-bank': 'bank', 'lt-acct': 'acct', 'lt-email': 'email', 'lt-tel': 'tel' };
+      if (o.biz) { m['lt-ceo'] = 'ceo'; if (!o.name) o.name = o.ceo; }
+      var n = fill(m, o); if (o.biz || o.reg) { $('lt-tax').value = o.biz ? '사업자' : '원천세'; n++; } return n;
+    },
+    agn: function (o) {
+      return fill({ 'agn-ko': 'ko', 'agn-en': 'en', 'agn-ceo': 'ceo', 'agn-biz': 'biz', 'agn-addr': 'addr', 'agn-taxmail': 'taxMail', 'agn-mgr': 'manager', 'agn-email': 'email', 'agn-tel': 'tel', 'agn-artists': 'artists' }, o);
+    }
+  };
+  function applyParsed(k, text) {
+    var o = parseInfo(text), n = FILL[k](o);
+    var st = $('imp-' + k + '-st'); if (st) st.textContent = n ? n + '칸을 채웠어요. 파란 테두리 칸을 확인해주세요.' : '알아볼 수 있는 정보가 없어요. 직접 입력해주세요.';
+    toast(n ? n + '칸을 채웠어요 — 확인해주세요' : '읽은 정보가 없어요');
+  }
+  window.rgImpText = function (k) { applyParsed(k, $('imp-' + k + '-t').value); };
+  function loadJs(src) { return new Promise(function (ok, no) { var s = document.createElement('script'); s.src = src; s.onload = ok; s.onerror = no; document.head.appendChild(s); }); }
+  var PDFJS = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js', TESS = 'https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js';
+  function ocr(canvasOrFile, st) {
+    return (window.Tesseract ? Promise.resolve() : loadJs(TESS)).then(function () {
+      return Tesseract.recognize(canvasOrFile, 'kor+eng', { logger: function (m) { if (m.status === 'recognizing text') st.textContent = '글자 읽는 중... ' + Math.round(m.progress * 100) + '%'; else if (/load/.test(m.status)) st.textContent = '글자 인식 준비 중... (처음 한 번은 조금 걸려요)'; } });
+    }).then(function (r) { return r.data.text; });
+  }
+  window.rgImpFile = function (k, inp) {
+    var f = inp.files && inp.files[0]; if (!f) return;
+    var st = $('imp-' + k + '-st'); st.textContent = f.name + ' 읽는 중...';
+    var done = function (text) { $('imp-' + k + '-t').value = text; applyParsed(k, text); inp.value = ''; };
+    var fail = function () { st.textContent = '파일을 읽지 못했어요. 텍스트 붙여넣기나 직접 입력을 써주세요.'; inp.value = ''; };
+    if (/pdf/i.test(f.type) || /\.pdf$/i.test(f.name)) {
+      (window.pdfjsLib ? Promise.resolve() : loadJs(PDFJS)).then(function () {
+        pdfjsLib.GlobalWorkerOptions.workerSrc = PDFJS.replace('pdf.min.js', 'pdf.worker.min.js');
+        return f.arrayBuffer();
+      }).then(function (buf) { return pdfjsLib.getDocument({ data: buf }).promise; }).then(function (pdf) {
+        var n = Math.min(pdf.numPages, 3), out = [], i = 0;
+        function page() {
+          if (++i > n) { var txt = out.join('\n'); if (txt.replace(/\s/g, '').length > 20) return Promise.resolve(txt); return ocrPages(); }
+          return pdf.getPage(i).then(function (pg) { return pg.getTextContent(); }).then(function (tc) {
+            var lines = {}, ys = []; tc.items.forEach(function (it) { var y = Math.round(it.transform[5]); if (!(y in lines)) { lines[y] = []; ys.push(y); } lines[y].push(it.str); });
+            ys.sort(function (a, b) { return b - a; }).forEach(function (y) { out.push(lines[y].join(' ')); }); return page();
+          });
+        }
+        function ocrPages() {
+          var txt = [], j = 0;
+          function one() {
+            if (++j > n) return Promise.resolve(txt.join('\n'));
+            return pdf.getPage(j).then(function (pg) { var vp = pg.getViewport({ scale: 2 }), c = document.createElement('canvas'); c.width = vp.width; c.height = vp.height; return pg.render({ canvasContext: c.getContext('2d'), viewport: vp }).promise.then(function () { return ocr(c, st); }); }).then(function (s) { txt.push(s); return one(); });
+          }
+          return one();
+        }
+        return page();
+      }).then(done).catch(fail);
+    } else ocr(f, st).then(done).catch(fail);
+  };
+
+  // ── 외주처: + 로 새로 등록 (입력 방법 상자 · 은행 목록 보강) ──
+  function ltPrep() {
+    var md = document.querySelector('#mo-lt .md-b'); if (!md) return;
+    if (!$('imp-lt')) md.insertAdjacentHTML('afterbegin', impHtml('lt'));
+    var bs = $('lt-bank');
+    if (bs && !bs.getAttribute('data-rg')) { bs.setAttribute('data-rg', 1); if (![].some.call(bs.options, function (o) { return o.value === ''; })) bs.insertAdjacentHTML('afterbegin', '<option value="">선택</option>'); BANKS.forEach(function (n) { if (![].some.call(bs.options, function (o) { return o.value === n; })) bs.insertAdjacentHTML('beforeend', '<option>' + n + '</option>'); }); }
+    document.querySelectorAll('#mo-lt .rg-fill').forEach(function (e) { e.classList.remove('rg-fill'); });
+    rgImpMode('lt', 'hand'); var st = $('imp-lt-st'); if (st) st.textContent = ''; var tx = $('imp-lt-t'); if (tx) tx.value = '';
+  }
+  window.rgLtNew = function () {
+    ltPrep(); EI = -1; $('mo-lt-title').textContent = '외주처 등록';
+    ['lt-name', 'lt-regid', 'lt-addr', 'lt-ceo', 'lt-acct', 'lt-email', 'lt-tel'].forEach(function (id) { var e = $(id); if (e) e.value = ''; });
+    $('lt-tax').value = '원천세'; $('lt-bank').value = '';
+    document.getElementById('mo-lt').classList.add('open');
+  };
+  var _editLt = window.editLt;
+  window.editLt = function (id) { ltPrep(); _editLt(id); var l = DB.litters.filter(function (x) { return x.id === id; })[0]; if (l && l.bank) { var bs = $('lt-bank'); if (![].some.call(bs.options, function (o) { return o.value === l.bank; })) bs.insertAdjacentHTML('beforeend', '<option>' + esc(l.bank) + '</option>'); bs.value = l.bank; } };
+
+  // ── 거래처: + 로 새로 등록 ──
+  function fld(id, label, tag, ph, extra) { return '<div class="fg"><label class="fl">' + label + (tag ? '<span class="pf-tg ' + (tag === 'auto' ? 'b' : 'r') + '">' + { hand: '*수기 작성', first: '*최초 선택', auto: '*자동 작성' }[tag] + '</span>' : '') + '</label><input class="fi sm" id="' + id + '"' + (ph ? ' placeholder="' + ph + '"' : '') + (extra || '') + '></div>'; }
+  window.rgAgNew = function () {
+    $('agn-body').innerHTML = impHtml('agn') +
+      '<div class="row2">' + fld('agn-ko', '국문명', 'hand', '예: 스타쉽') + fld('agn-en', '영문명', 'hand', '예: STARSHIP ENTERTAINMENT') + '</div>' +
+      '<div class="row2">' + fld('agn-ceo', '대표명', 'hand') + fld('agn-biz', '사업자번호', 'hand', '000-00-00000', ' inputmode="numeric"') + '</div>' +
+      fld('agn-addr', '주소', 'hand') + fld('agn-taxmail', '세금계산서 메일', 'hand', '', ' inputmode="email"') + fld('agn-artists', '소속 아티스트', 'hand', '쉼표로 구분') +
+      '<hr class="hr">' + '<div class="row2">' + fld('agn-mgr', '담당자', 'hand') + fld('agn-tel', '연락처', 'hand', '010-0000-0000', ' inputmode="tel"') + '</div>' + fld('agn-email', '담당자 메일', 'hand', '', ' inputmode="email"') +
+      '<div class="dc-note" style="margin-top:4px">국문명이나 영문명 중 하나만 있어도 추가돼요. 거래처 표기는 "영문명(국문명)"으로 저장돼요.</div>';
+    openMo('mo-agn');
+  };
+  window.rgAgnSave = function () {
+    var ko = gv('agn-ko'), en = gv('agn-en');
+    if (!ko && !en) { toast('국문명이나 영문명을 적어주세요'); return; }
+    var memo = [gv('agn-addr'), gv('agn-taxmail') ? '세금계산서 ' + gv('agn-taxmail') : ''].filter(String).join(' / ');
+    var d = { ko: ko, en: en, ceo: gv('agn-ceo'), biz: gv('agn-biz'), artists: gv('agn-artists'), memo: memo, manager: gv('agn-mgr'), email: gv('agn-email'), tel: gv('agn-tel') };
+    pendAdd('ag', 'pm_add_client', d, '거래처 추가 · ' + (en && ko ? en + '(' + ko + ')' : en || ko));
+    closeMo('mo-agn'); toast('반영 대기에 담았어요 — 반영을 눌러 저장하세요');
+  };
+
+  // ── 메뉴마다 + · 반영 아이콘 ──
+  function ib(cls, title, svg, on, sync) { return '<button type="button" class="rg-ib ' + cls + '" title="' + title + '" aria-label="' + title + '" onclick="' + on + '"' + (sync ? ' data-sync="' + sync + '"' : '') + '>' + svg + (sync ? '<b></b>' : '') + '</button>'; }
+  function addIcons() {
+    [['q-ag', 'ag', 'rgAgNew()', '거래처 등록'], ['q-lt', 'lt', 'rgLtNew()', '외주처 등록']].forEach(function (a) {
+      var q = $(a[0]); if (!q) return; var s = q.closest('.srch'), row = s && s.parentNode; if (!row || row.querySelector('.rg-ib')) return;
+      row.classList.add('rg-row');
+      s.insertAdjacentHTML('afterend', ib('', a[3], IC.plus, a[2]) + ib('', '반영 (구글시트에 저장)', IC.sync, "rgOpenPend('" + a[1] + "')", a[1]));
+      row.insertAdjacentHTML('afterend', '<div class="rg-pend" data-m="' + a[1] + '" onclick="rgOpenPend(\'' + a[1] + '\')"><span></span>' + IC.sync.replace('<svg', '<svg width="16" height="16"') + '</div>');
+    });
+    ['tab-rates-bill', 'tab-rates-pay'].forEach(function (pid) {
+      var p = $(pid), seg = p && p.querySelector('.rt-seg'); if (!seg) return;
+      var row = seg.parentNode; if (row.querySelector('.rg-ib')) return;
+      var bill = pid === 'tab-rates-bill';
+      row.setAttribute('data-rgrow', 1);
+      var html = (bill ? ib('rg-first', '새 단가표', IC.plus, 'rgRateNewTab()') : '') + ib('rg-ed' + (bill ? '' : ' rg-first'), bill ? '청구단가 편집' : '지급단가 편집', IC.edit, "rgRateEdit('" + (bill ? 'bill' : 'pay') + "')") + ib('', '반영 (구글시트에 저장)', IC.sync, "rgOpenPend('rate')", 'rate');
+      var ext = row.querySelector('a.dc-ib, .dc-ib, .rt-ext');
+      if (row === p) { // 단추 줄이 따로 없으면 만들어 줌
+        var wrap = document.createElement('div'); wrap.className = 'rt-seg-row'; seg.parentNode.insertBefore(wrap, seg); wrap.appendChild(seg); wrap.insertAdjacentHTML('beforeend', '<span class="rt-sp"></span>' + html); return;
+      }
+      if (ext) ext.insertAdjacentHTML('beforebegin', html); else row.insertAdjacentHTML('beforeend', html);
+    });
+    rgBadges();
+  }
+
+  // ── 단가 편집 ──
+  var RE = { mode: '' }; // 'bill' | 'pay'
+  function rawTab(tab) { return (PM.rr && PM.rr[tab]) || []; }
+  function rebuildRates() {
+    RATES_RAW = {}; PM.prem = {};
+    Object.keys(PM.rr || {}).forEach(function (tab) {
+      PM.prem[tab] = {};
+      RATES_RAW[tab] = PM.rr[tab].filter(function (r) { return !r._del; }).map(function (r) { PM.prem[tab][r.cat] = r.prem; return [r.cat, r.base].concat(ALL_COLS.map(function (w) { return r.pay[w] != null ? r.pay[w] : 0; })); });
+    });
+  }
+  function applyOps(tab, ops) {
+    var rows = PM.rr[tab] = PM.rr[tab] || [];
+    ops.forEach(function (o) {
+      var orig = o.orig || o.cat, r = rows.filter(function (x) { return x.cat === orig; })[0], v = o.vals || {};
+      if (o.op === 'delete') { if (r) r._del = true; return; }
+      if (!r) { if (o.op === 'add' || o.op === 'update') { r = { cat: o.cat, unit: 0, cnt: 1, base: 0, prem: 0, pay: {} }; rows.push(r); } else return; }
+      r._del = false; if (o.cat) r.cat = o.cat;
+      var rate = r.base ? r.prem / r.base - 1 : 0;
+      if (v['1인기준'] != null && v['1인기준'] !== '') r.unit = num(v['1인기준']);
+      if (v['작업단위'] != null && v['작업단위'] !== '') r.cnt = num(v['작업단위']);
+      if (v['고급요율'] != null && v['고급요율'] !== '') { var g = num(v['고급요율']); rate = g > 1 ? g / 100 : g; }
+      if (v['1인기준'] != null || v['작업단위'] != null || v['고급요율'] != null) { r.base = Math.round(r.unit * r.cnt); r.prem = Math.round(r.base * (1 + rate)); }
+      ALL_COLS.forEach(function (w) { if (v[w] != null && v[w] !== '') r.pay[w] = num(v[w]); });
+    });
+  }
+  window.rgReapply = function () {
+    if (!PM.rrBase) return;
+    PM.rr = JSON.parse(JSON.stringify(PM.rrBase));
+    PEND.forEach(function (p) { if (p.action === 'pm_rate_ops') applyOps(p.data.tab, p.data.ops); });
+    rebuildRates(); try { buildRateTabs(); renderAll(); } catch (e) {}
+  };
+  var _pmApply = window.pmApply;
+  window.pmApply = function (d) {
+    _pmApply(d);
+    PM.rrBase = JSON.parse(JSON.stringify(d.rates || {}));
+    if (PEND.some(function (p) { return p.menu === 'rate'; })) { PM.rr = JSON.parse(JSON.stringify(PM.rrBase)); PEND.forEach(function (p) { if (p.action === 'pm_rate_newtab' && !PM.rr[p.data.name]) PM.rr[p.data.name] = JSON.parse(JSON.stringify(PM.rr[p.data.from] || [])); if (p.action === 'pm_rate_ops') applyOps(p.data.tab, p.data.ops); }); rebuildRates(); }
+    else PM.rr = JSON.parse(JSON.stringify(PM.rrBase));
+  };
+  (function () { try { var c = JSON.parse(localStorage.getItem('pm_v2') || 'null'); if (c && c.rates) { PM.rrBase = c.rates; rgReapply(); } } catch (e) {} })();
+  function pct(r) { return r.base ? Math.round((r.prem / r.base - 1) * 1000) / 10 : 0; }
+  function inp(cls, val, extra) { return '<input class="' + cls + '" value="' + esc(val == null ? '' : String(val)) + '" data-o="' + esc(val == null ? '' : String(val)) + '"' + (extra || '') + ' oninput="this.classList.toggle(\'chg\',this.value!==this.getAttribute(\'data-o\'))">'; }
+  window.rgRateEdit = function (mode) {
+    if (RE.mode === mode) { rgRateCancel(); return; }
+    RE.mode = mode; RE.tab = rtF; RE.del = {}; RE.newN = 0;
+    var rows = rawTab(rtF).filter(function (r) { return !r._del; }), host = $(mode === 'bill' ? 'mc-bill' : 'mc-pay');
+    document.querySelectorAll('.rg-ed').forEach(function (b) { b.classList.toggle('on', true); });
+    if (mode === 'bill') {
+      host.innerHTML = '<div class="re-box re-bill"><div class="re-h"><span>항목</span><span>1인기준</span><span>단위</span><span>고급%</span><span></span></div><div id="re-rows">' +
+        rows.map(function (r, i) { return reBillRow(r, i); }).join('') + '</div>' +
+        '<div class="re-note">기본단가 = 1인기준 × 단위, 고급단가 = 기본단가 × (1 + 고급%) 로 시트에서 자동 계산돼요. 빼기는 시트에서 지우지 않고 \'활성\' 체크만 해제해요.</div>' +
+        '<div class="re-f"><button type="button" onclick="rgRateAddRow()">+ 항목 추가</button><span class="sp"></span><button type="button" onclick="rgRateCancel()">취소</button><button type="button" class="p" onclick="rgRateDone()">완료</button></div></div>';
+    } else {
+      var cols = pmCols().filter(function (nm) { return selLitters.has(nm); });
+      RE.cols = cols;
+      host.innerHTML = '<div class="re-box"><div class="re-pay"><table><thead><tr><th>항목</th><th>기본단가</th>' + cols.map(function (c) { return '<th>' + esc(c) + '</th>'; }).join('') + '</tr></thead><tbody>' +
+        rows.map(function (r) { return '<tr data-cat="' + esc(r.cat) + '"><td>' + esc(r.cat) + '</td><td style="text-align:right;font-size:12px;color:var(--txt3)">' + wn(r.base) + '</td>' + cols.map(function (c) { return '<td>' + inp('', r.pay[c] != null ? r.pay[c] : '', ' inputmode="numeric" data-w="' + esc(c) + '"') + '</td>'; }).join('') + '</tr>'; }).join('') +
+        '</tbody></table></div><div class="re-note">외주처 단추로 고칠 사람을 골라 보여줄 수 있어요. 바꾼 칸은 파란 테두리로 표시돼요.</div>' +
+        '<div class="re-f"><span class="sp"></span><button type="button" onclick="rgRateCancel()">취소</button><button type="button" class="p" onclick="rgRateDone()">완료</button></div></div>';
+    }
+  };
+  function reBillRow(r, i, isNew) {
+    return '<div class="re-r" data-cat="' + (isNew ? '' : esc(r.cat)) + '">' + inp('', r.cat, ' placeholder="예: 4인"') + inp('n', r.unit || '', ' inputmode="numeric"') + inp('n', r.cnt || '', ' inputmode="numeric"') + inp('n', r.base ? pct(r) : '', ' inputmode="decimal"') +
+      '<button type="button" class="re-x" title="빼기" onclick="rgRateDelRow(this)">' + IC.x + '</button>' + (isNew ? '<small>새 항목 · 지급단가는 기본단가로 채워져요 (이유나·이혜선처럼 모든 항목이 같은 금액인 칸은 그 금액)</small>' : '<small>기본 ' + wn(r.base) + ' · 고급 ' + wn(r.prem) + '</small>') + '</div>';
+  }
+  window.rgRateAddRow = function () {
+    var rows = rawTab(RE.tab), last = rows[rows.length - 1] || { prem: 0, base: 0 };
+    $('re-rows').insertAdjacentHTML('beforeend', reBillRow({ cat: '', unit: '', cnt: 1, base: last.base ? 1 : 0, prem: last.base ? last.prem / last.base : 0 }, 0, true));
+    var el = $('re-rows').lastElementChild; el.querySelectorAll('input')[3].value = last.base ? pct(last) : ''; el.querySelector('input').focus();
+  };
+  window.rgRateDelRow = function (b) {
+    var r = b.closest('.re-r'); if (!r.getAttribute('data-cat')) { r.remove(); return; }
+    r.classList.toggle('del'); b.innerHTML = r.classList.contains('del') ? IC.undo : IC.x;
+  };
+  window.rgRateCancel = function () { RE.mode = ''; document.querySelectorAll('.rg-ed').forEach(function (b) { b.classList.remove('on'); }); renderAll(); };
+  window.rgRateDone = function () {
+    var ops = [], tab = RE.tab, labels = [];
+    if (RE.mode === 'bill') {
+      var rows = rawTab(tab);
+      document.querySelectorAll('#re-rows .re-r').forEach(function (el) {
+        var o = el.getAttribute('data-cat'), ins = el.querySelectorAll('input'), v = [].map.call(ins, function (x) { return x.value.trim(); });
+        if (el.classList.contains('del')) { ops.push({ op: 'delete', orig: o }); labels.push('빼기 ' + o); return; }
+        if (!o) {
+          if (!v[0]) return;
+          var unit = num(v[1]), cnt = num(v[2]) || 1, base = Math.round(unit * cnt), vals = { '1인기준': unit, '작업단위': cnt, '고급요율': v[3] === '' ? '' : num(v[3]) };
+          ALL_COLS.forEach(function (w) { var vs = rows.map(function (r) { return r.pay[w]; }).filter(function (x) { return x != null; }); var same = vs.length > 1 && vs.every(function (x) { return x === vs[0]; }) && vs[0] !== (rows[0] || {}).base; vals[w] = same ? vs[0] : base; });
+          ops.push({ op: 'add', cat: v[0], vals: vals }); labels.push('추가 ' + v[0]); return;
+        }
+        var r = rows.filter(function (x) { return x.cat === o; })[0] || {}, ch = {};
+        if (v[1] !== '' && num(v[1]) !== r.unit) ch['1인기준'] = num(v[1]);
+        if (v[2] !== '' && num(v[2]) !== r.cnt) ch['작업단위'] = num(v[2]);
+        if (v[3] !== '' && Math.abs(num(v[3]) - pct(r)) > 0.05) ch['고급요율'] = num(v[3]);
+        if (Object.keys(ch).length || (v[0] && v[0] !== o)) { ops.push({ op: 'update', orig: o, cat: v[0] || o, vals: ch }); labels.push('수정 ' + (v[0] || o)); }
+      });
+    } else {
+      document.querySelectorAll('.re-pay tbody tr').forEach(function (tr) {
+        var ch = {}; tr.querySelectorAll('input.chg').forEach(function (x) { if (x.value.trim() !== '') ch[x.getAttribute('data-w')] = num(x.value); });
+        if (Object.keys(ch).length) { var c = tr.getAttribute('data-cat'); ops.push({ op: 'update', orig: c, cat: c, vals: ch }); labels.push(c + ' 지급 ' + Object.keys(ch).join('·')); }
+      });
+    }
+    RE.mode = ''; document.querySelectorAll('.rg-ed').forEach(function (b) { b.classList.remove('on'); });
+    if (!ops.length) { renderAll(); toast('바뀐 내용이 없어요'); return; }
+    pendAdd('rate', 'pm_rate_ops', { tab: tab, ops: ops }, tab + ' · ' + labels.join(', '));
+    applyOps(tab, ops); rebuildRates(); renderAll();
+    toast('반영 대기에 담았어요 — 반영을 눌러 저장하세요');
+  };
+  window.rgRateNewTab = function () {
+    var name = (prompt('새 단가표(소속사) 이름을 적어주세요\n예: CUBE') || '').trim(); if (!name) return;
+    if (RATES_RAW[name]) { toast('이미 있는 단가표예요'); return; }
+    var from = (prompt('어느 단가표를 복사해서 시작할까요?', rtF || 'STARSHIP') || '').trim(); if (!from) return;
+    if (!RATES_RAW[from]) { toast('"' + from + '" 단가표가 없어요'); return; }
+    pendAdd('rate', 'pm_rate_newtab', { name: name, from: from }, '새 단가표 ' + name + ' (' + from + ' 복사)');
+    PM.rr[name] = JSON.parse(JSON.stringify(PM.rr[from] || [])); rtF = name; rebuildRates(); buildRateTabs(); renderAll();
+    toast('반영 대기에 담았어요 — 반영을 눌러야 시트에 탭이 생겨요');
+  };
+  // 새 단가표 대기 중: 화면에서도 보이게
+  var _reap = window.rgReapply;
+  window.rgReapply = function () {
+    if (!PM.rrBase) return;
+    PM.rr = JSON.parse(JSON.stringify(PM.rrBase));
+    PEND.forEach(function (p) { if (p.action === 'pm_rate_newtab' && !PM.rr[p.data.name]) PM.rr[p.data.name] = JSON.parse(JSON.stringify(PM.rr[p.data.from] || [])); if (p.action === 'pm_rate_ops') applyOps(p.data.tab, p.data.ops); });
+    rebuildRates(); try { buildRateTabs(); renderAll(); } catch (e) {}
+  };
+  // 편집 중에는 다시 그리지 않기
+  var _rb = window.renderBill, _rp = window.renderPay;
+  window.renderBill = function () { if (RE.mode === 'bill' && RE.tab === rtF) return; if (RE.mode === 'bill') RE.mode = ''; _rb(); };
+  window.renderPay = function () { if (RE.mode === 'pay' && RE.tab === rtF) { RE.mode = ''; var m = 'pay'; _rp(); rgRateEdit(m); return; } _rp(); };
+
+  // ── 첫 화면 = 문구 ──
+  var brand = document.querySelector('.brand'); if (brand) brand.setAttribute('onclick', "switchTab('taxbill')");
+  var _lo = window.doLogout; window.doLogout = function () { _lo.apply(this, arguments); try { switchTab('taxbill'); } catch (e) {} };
+  var _sw = window.switchTab; window.switchTab = function (t) { if (RE.mode) { RE.mode = ''; document.querySelectorAll('.rg-ed').forEach(function (b) { b.classList.remove('on'); }); } _sw(t); addIcons(); };
+  addIcons();
+  try { switchTab('taxbill'); } catch (e) {}
+})();
+</script>
 </body>
 
 </html>
