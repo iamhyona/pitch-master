@@ -277,12 +277,7 @@ select.fi option{background:var(--sur2)}
       <div id="tab-litt" class="tab-panel">
         <div id="guest-lt-notice" class="guest-notice" style="display:none">이름과 이메일만 표시됩니다</div>
         <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
-          <div class="srch"><span style="color:var(--txt3)">⌕</span><input id="q-lt" type="text" placeholder="이름, 이메일 검색" oninput="renderLt()"></div>
-          <div class="ftabs">
-            <button class="ft on" onclick="fltLt('all',this)">전체</button>
-            <button class="ft" onclick="fltLt('원천세',this)">원천세</button>
-            <button class="ft" onclick="fltLt('사업자',this)">사업자</button>
-          </div>
+          <div class="srch"><span style="color:var(--txt3)">⌕</span><input id="q-lt" type="text" placeholder="이름·이메일·원천세·사업자 검색" oninput="ltP=0;renderLt()"></div>
           <button class="btn btn-p" id="btn-add-lt" style="display:none" onclick="openMo('mo-lt',-1)">+ 추가</button>
         </div>
         <div id="mc-lt"></div>
@@ -986,7 +981,7 @@ function renderAg(){
 function renderLt(){
   var q=(gv('q-lt')||'').toLowerCase();
   document.getElementById('guest-lt-notice').style.display=SESSION.role==='guest'?'':'none';
-  var data=DB.litters.filter(function(l){return (!q||(l.name||'').toLowerCase().includes(q)||((l.email||'').toLowerCase().includes(q)))&&(ltF==='all'||l.tax===ltF);}).sort(function(a,b){return b.name.localeCompare(a.name,'ko');});
+  var data=DB.litters.filter(function(l){return !q||[l.name,l.email,l.tax,l.ceo].join(' ').toLowerCase().includes(q);}).sort(function(a,b){return String(a.name||'').localeCompare(String(b.name||''),'ko');}); // 2026-10-12: 원천세/사업자 탭 없앰 → 검색으로, 가나다순
   var slice=data.slice(ltP*PER,(ltP+1)*PER);
   var detail=canSeeDetail();
   var cards='';var sd=[];
