@@ -403,7 +403,7 @@ select.fi option{background:var(--sur2)}
           <div class="row2" style="margin-bottom:8px">
             <div class="fg">
               <label class="fl">프로젝트명<span class="pf-tg r">*수기 작성</span></label>
-              <input class="fi sm" id="inv-project" placeholder="예: 미야오 신규 앨범">
+              <input class="fi sm" id="inv-project" placeholder="예: 신규앨범MV연동">
             </div>
             <div class="fg">
               <label class="fl">아티스트<span class="pf-tg">*드롭다운 선택</span></label>
@@ -3362,7 +3362,7 @@ function woHead(ck, artist, title, d6, t) {
 // 2026-10-12: 견적서 작성 — 작업 항목: 체크(삭제·순서 이동) · 작업구분/작업 내용 · 컷수/컷당 단가/소계
 function invTypeOpts() {
   var rows = RATES_RAW[gv('inv-agency')] || [];
-  return '<option value="">작업구분</option>' + rows.map(function (r) { return '<option value="' + esc(r[0]) + '">' + esc(r[0]) + '</option>'; }).join('') + '<option value="__direct__">직접 입력</option>';
+  return '<option value="">작업구분 선택</option>' + rows.map(function (r) { return '<option value="' + esc(r[0]) + '">' + esc(r[0]) + '</option>'; }).join('') + '<option value="__direct__">직접 입력</option>';
 }
 function addInvItem() {
   var id = ++INV_ITEM_ID; INV_ITEMS.push({ id: id });
@@ -3372,8 +3372,8 @@ function addInvItem() {
     '<select class="fi sm" id="inv-type-' + id + '" onchange="onInvTypeChange(' + id + ')">' + invTypeOpts() + '</select>' +
     '<input class="fi sm inv-span2" id="inv-desc-' + id + '" placeholder="작업 내용 (예: 모노코어 블랙착 1순위 루카)" oninput="calcInvTotal()">' +
     '<span class="inv-no"></span>' +
-    '<input class="fi sm" id="inv-qty-' + id + '" type="number" inputmode="numeric" placeholder="컷수" min="1" style="text-align:right" oninput="calcInvTotal()">' +
-    '<input class="fi sm" id="inv-price-' + id + '" type="text" inputmode="numeric" placeholder="컷당 단가" style="text-align:right" oninput="onInvPriceInput(' + id + ')">' +
+    '<input class="fi sm" id="inv-qty-' + id + '" type="number" inputmode="numeric" placeholder="컷수 (숫자만 수기 입력)" min="1" style="text-align:right" oninput="calcInvTotal()">' +
+    '<input class="fi sm" id="inv-price-' + id + '" type="text" inputmode="numeric" placeholder="소속사 단가 자동반영" style="text-align:right" oninput="onInvPriceInput(' + id + ')">' +
     '<div class="inv-sub"><span>소계</span><b id="inv-amount-' + id + '">0</b></div>' +
     '<div class="inv-op"><label><input type="checkbox" id="inv-urgent-' + id + '" onchange="calcInvTotal()">긴급 +25%</label>' +
     '<label><input type="checkbox" id="inv-premium-' + id + '" onchange="onInvPremiumChange(' + id + ')">고급단가</label></div></div>';
@@ -3384,7 +3384,7 @@ function onInvAgencyChange() {
   INV_ITEMS.forEach(function (it) { var s = document.getElementById('inv-type-' + it.id); if (!s) return; var v = s.value; s.innerHTML = invTypeOpts(); if (v) s.value = v; });
   invPh(); calcInvTotal();
 }
-(function () { var oc = calcInvTotal; calcInvTotal = function () { oc.apply(this, arguments); INV_ITEMS.forEach(function (it) { var b = document.getElementById('inv-amount-' + it.id); if (!b) return; var z = !getItemAmount(it.id); b.classList.toggle('z', z); if (z) b.textContent = '소계'; }); }; })();
+(function () { var oc = calcInvTotal; calcInvTotal = function () { oc.apply(this, arguments); INV_ITEMS.forEach(function (it) { var b = document.getElementById('inv-amount-' + it.id); if (!b) return; var z = !getItemAmount(it.id); b.classList.toggle('z', z); if (z) b.textContent = '자동 계산 영역'; }); }; })();
 function invChecked() { return [].slice.call(document.querySelectorAll('#inv-items .inv-cb:checked')).map(function (e) { return +e.dataset.id; }); }
 function invCkSync() {
   var ids = invChecked();
