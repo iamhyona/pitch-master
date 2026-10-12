@@ -3272,13 +3272,15 @@ function woCK(k) {
   if (!c) { var h = 0; for (var i = 0; i < k.length; i++) h = (h * 31 + k.charCodeAt(i)) >>> 0; c = WO_CKP[h % WO_CKP.length]; }
   return '<span class="tag wo-ck" style="background:' + c[0] + ';color:' + c[1] + '">' + esc(k) + '</span>';
 }
+// 수정시각: YY.MM.DD HH:MM (초·'수정'은 길어서 뺌)
+function woStamp(t) { if (!t) return ''; var d = new Date(t), p = function (n) { return ('0' + n).slice(-2); }; return p(d.getFullYear() % 100) + '.' + p(d.getMonth() + 1) + '.' + p(d.getDate()) + ' ' + p(d.getHours()) + ':' + p(d.getMinutes()); }
 function woHead(ck, artist, title, d6, t) {
   var parts = String(title || '').split(' · ').map(function (x) { return x.trim(); }).filter(Boolean);
   var mgr = parts.length > 1 ? parts.pop() : '', proj = parts.join(' ');
   return '<div class="wo-g"><div class="wo-ckr">' + woCK(ck) + '</div>' +
     '<span class="wo-dt">' + woDateW(d6) + '</span>' +
     '<div class="wo-t">' + (artist ? '<b>' + esc(artist) + '</b>' : '') + (proj ? '<span class="wo-pj">' + esc(proj) + '</span>' : '') + (mgr ? '<span class="wo-mg">' + esc(mgr) + '</span>' : '') + '</div>' +
-    '<span class="wo-ago">' + woAgo(t) + ' 수정</span></div>';
+    '<span class="wo-ago">' + woStamp(t) + '</span></div>';
 }
 </script>
 <style>
