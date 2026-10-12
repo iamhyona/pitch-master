@@ -4735,6 +4735,34 @@ function woDlSave() {
   };
 })();
 </script>
+<style>
+/* 2026-10-13: 링크 아이콘 — 시트로 가면 표, 드라이브 폴더로 가면 폴더 */
+a.rg-lk{gap:6px}
+a.rg-lk svg{width:16px;height:16px;flex:none}
+</style>
+<script>
+(function () {
+  var SH = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M3 9h18M3 15h18M9 3v18"/></svg>';
+  var FD = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>';
+  function kind(h) { h = String(h || ''); return /docs\.google\.com\/spreadsheets/.test(h) ? 'sheet' : (/drive\.google\.com\/drive\/(u\/\d+\/)?folders/.test(h) ? 'folder' : ''); }
+  // 맨 위 아이콘: PITCH_DB 폴더로 가므로 폴더 모양
+  function fixHeader() {
+    document.querySelectorAll('header a.ib').forEach(function (a) { var k = kind(a.href); if (k && a.getAttribute('data-ic') !== k) { a.innerHTML = k === 'sheet' ? SH : FD; a.setAttribute('data-ic', k); } });
+  }
+  // 상세 창 등 글자 링크: 앞에 아이콘, 뒤 ↗ 표시는 뺌
+  function fixLinks(root) {
+    (root || document).querySelectorAll('a[target="_blank"]').forEach(function (a) {
+      if (a.closest('header') || a.classList.contains('ib') || a.classList.contains('dc-ib') || a.querySelector('svg') || a.getAttribute('data-ic')) return;
+      var k = kind(a.getAttribute('href')); if (!k) return;
+      a.setAttribute('data-ic', k); a.classList.add('rg-lk');
+      a.innerHTML = (k === 'sheet' ? SH : FD) + '<span>' + esc(a.textContent.replace(/\s*[↗→]\s*$/, '').trim()) + '</span>';
+      if (!/inline-flex|flex/.test(getComputedStyle(a).display)) { a.style.display = 'inline-flex'; a.style.alignItems = 'center'; }
+    });
+  }
+  fixHeader(); fixLinks();
+  new MutationObserver(function () { fixHeader(); fixLinks(); }).observe(document.body, { childList: true, subtree: true });
+})();
+</script>
 </body>
 
 </html>
