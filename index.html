@@ -735,7 +735,7 @@ function loadSheetData(){
 function showSyncBar(type,msg){var el=document.getElementById('sync-bar');if(!el)return;el.style.display='flex';el.className='sync-bar'+(type!=='loading'?' '+type:'');el.innerHTML=(type==='loading'?'<span class="spin">↻</span> ':'')+msg;}
 function hideSyncBar(){var el=document.getElementById('sync-bar');if(el)el.style.display='none';}
 
-var CUR='dash',ltF='all',rtF='YG',agP=0,ltP=0,rtBillP=0,rtPayP=0,EI=-1,PER=20;
+var CUR='dash',ltF='all',rtF='STARSHIP',agP=0,ltP=0,rtBillP=0,rtPayP=0,EI=-1,PER=20;
 var dashShowAllLt=false,dashShowAllAg=false;
 var ALL_COLS=['김현수','박현아','강영순','최현경','이은지','권미향','김슬기','기타'];
 var selLitters=new Set(['최현경','이은지','권미향']);
@@ -1678,8 +1678,8 @@ function pmApply(d) {
       return [r.cat, r.base].concat(ALL_COLS.map(function (w) { return r.pay[w] != null ? r.pay[w] : 0; }));
     });
   });
-  // 2026-10-12: 지급단가 기본 표시 = 최현경·이은지·권미향·이유나
-  var _def = ['최현경', '이은지', '권미향', '이유나'].filter(function (n) { return ALL_COLS.indexOf(n) >= 0; });
+  // 2026-10-12: 지급단가 기본 표시 = 최현경·이은지·이유나
+  var _def = ['최현경', '이은지', '이유나'].filter(function (n) { return ALL_COLS.indexOf(n) >= 0; });
   selLitters = new Set(_def.length ? _def : ALL_COLS);
 }
 function loadSheetData() {
@@ -1820,7 +1820,7 @@ function initInvoiceTab() {
   if (agencySel) {
     var keep = agencySel.value, tabs = Object.keys(RATES_RAW);
     agencySel.innerHTML = tabs.map(function (k) { return '<option value="' + esc(k) + '">' + esc(k) + '</option>'; }).join('') + '<option value="">단가표 없음 (직접 입력)</option>';
-    agencySel.value = keep || tabs[0] || '';
+    agencySel.value = keep || (tabs.indexOf('STARSHIP') >= 0 ? 'STARSHIP' : tabs[0]) || ''; // 2026-10-12: 단가 기준 소속사 기본 = STARSHIP
   }
   var today = tbToday();
   ['inv-write', 'inv-done', 'inv-date'].forEach(function (id) { var el = document.getElementById(id); if (el && !el.value) el.value = today; });
@@ -3817,6 +3817,11 @@ function txToggle(id, ym) {
 #mc-ag .mc-name{font-size:16px!important;font-weight:800!important}
 .ag-rows{display:flex;flex-direction:column;gap:2px;margin-top:8px}
 .ag-rows .lt-r{font-size:14px}
+</style>
+<style>
+/* 2026-10-12: 지급단가 표 금액 줄바꿈 없이 (좁으면 가로 스크롤) */
+#tab-rates-pay .rate-table-box{overflow-x:auto}
+#tab-rates-pay .rate-table-box th,#tab-rates-pay .rate-table-box td{white-space:nowrap;font-size:12px}
 </style>
 </body>
 
