@@ -3710,6 +3710,69 @@ function dcRender(type) {
 /* 2026-10-12: 기간 날짜 줄 아래 구분선 (머리 영역과 소속사 칩 사이) */
 .dc-box .dc-per2{margin:0 -18px 2px;padding:0 18px 12px;border-bottom:1px solid var(--line)}
 </style>
+<style>
+/* 2026-10-12: 작업내역·지급내역·청구내역·원천세 — 위 검색/필터 박스와 아래 목록 박스를 나눔 */
+#wo-box,.dc-box{background:none!important;border:0!important;box-shadow:none!important;overflow:visible!important;border-radius:0!important}
+#wo-box>.tc-h,.dc-box>.tc-h{background:#fff;border-radius:20px 20px 0 0}
+#wo-box>.wo-bar,.dc-box>.wo-bar{background:#fff;border-radius:0 0 20px 20px;border-bottom:0!important;margin-bottom:10px}
+#wo-box>.wo-list,#dc-invoice>.wo-list,#dc-pay>.wo-list{background:#fff;border-radius:20px;overflow:hidden}
+#dc-tx>.tc-h{background:none!important;border-bottom:0!important;margin-bottom:10px;padding:0!important}
+#dc-tx>.tc-h .dc-ib{background:#fff}
+/* 원천세: 달마다 박스 · 토글로 상세 */
+#dc-tx>.wo-list{background:none}
+.tx-c{background:#fff;border-radius:20px;margin-bottom:10px;overflow:hidden}
+.tx-c .tx-card{color:var(--txt);border-bottom:0;padding:16px 18px;-webkit-appearance:none;appearance:none}
+.tx-card .t b{color:var(--txt)}
+.tx-card .g em{color:var(--txt)}
+.tx-card .t{align-items:center}
+.tx-card .t .tx-r{display:flex;align-items:center;gap:8px}
+.tx-chv{width:18px;height:18px;color:var(--txt3);transition:transform .2s}
+.tx-c.open .tx-chv{transform:rotate(180deg)}
+.tx-dt{display:none;padding:0 18px 16px}
+.tx-c.open .tx-dt{display:block}
+.tx-dt .dc-rows{margin-top:8px}
+.tx-dt .tx-more{width:100%;height:40px;margin-top:10px;border:0;border-radius:12px;background:var(--chip);font-family:inherit;font-size:13px;font-weight:600;color:var(--txt2);cursor:pointer}
+</style>
+<script>
+// 2026-10-12: 원천세 — 달마다 박스, 누르면 펼쳐서 작업자별 합계 바로 보기 (상세내역·메모는 버튼으로)
+var TX_OPEN = {}, TX_DET = {};
+function txRender() {
+  var lb = document.querySelector('#dc-tx .wo-list'); if (!lb) return;
+  var dl = document.querySelector('#dc-tx .dc-drive'); if (dl && TX.folder) dl.href = WO_DRIVE + TX.folder;
+  var msg = function (t) { lb.innerHTML = '<div class="tx-c"><div class="wo-empty">' + t + '</div></div>'; };
+  if (TX.loading && !TX.items.length) return msg('드라이브에서 불러오는 중... (처음엔 20초쯤 걸려요)');
+  if (TX.err && !TX.items.length) return msg('⚠ ' + esc(TX.err));
+  if (!TX.items.length) return msg('원천징수내역서가 없어요');
+  var chv = '<svg class="tx-chv" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>';
+  lb.innerHTML = TX.items.map(function (x) {
+    var s = x.sum || {}, mm = (TX.memos[x.ym] || {}).memo || '', op = !!TX_OPEN[x.id];
+    return '<div class="tx-c' + (op ? ' open' : '') + '" data-id="' + esc(x.id) + '"><button type="button" class="tx-card" onclick="txToggle(\'' + esc(x.id) + '\',\'' + x.ym + '\')"><div class="t"><b>' + txYm(x.ym) + '</b><span class="tx-r"><span>' + esc(s['인원 · 건수'] || '') + '</span>' + chv + '</span></div>' +
+      '<div class="g"><div><small>지급총액</small><em>' + esc(s['지급총액'] || '-') + '</em></div><div><small>원천징수</small><em>' + esc(s['원천징수 합계'] || '-') + '</em></div><div><small>실지급액</small><em>' + esc(s['실지급액 합계'] || '-') + '</em></div></div>' +
+      (mm ? '<div class="m">' + esc(mm) + '</div>' : '') + '</button><div class="tx-dt">' + txInner(x.id, x.ym) + '</div></div>';
+  }).join('');
+}
+function txInner(id, ym) {
+  var d = TX_DET[id];
+  if (!d) return '<div class="wo-empty" style="padding:8px 0">불러오는 중...</div>';
+  if (d.err) return '<div class="wo-empty" style="padding:8px 0">⚠ ' + esc(d.err) + '</div>';
+  var W = d.workers || { rows: [] };
+  var rows = W.rows.filter(function (r) { return r[1] && r[1] !== '합계' && r[0] !== ''; });
+  var h = '<div class="tx-sec" style="margin:2px 2px 0">작업자별 합계</div>' + (rows.length ? '<div class="dc-rows">' + rows.map(function (r) {
+    return '<div class="dc-row"><div class="t"><b>' + esc(r[1]) + ' <span style="font-size:12px;color:var(--txt3);font-weight:500">' + esc(r[3]) + '건</span></b><span>' + esc(r[8]) + '</span></div><div class="s">' + esc(r[2]) + ' · 지급 ' + esc(r[4]) + ' · 원천 ' + esc(r[7]) + '</div></div>';
+  }).join('') + '</div>' : '<div class="wo-empty" style="padding:8px 0">내역이 없어요</div>');
+  return h + '<button type="button" class="tx-more" onclick="txOpen(\'' + esc(id) + '\',\'' + ym + '\')">작업 상세내역 · 메모 · 시트 열기</button>';
+}
+function txToggle(id, ym) {
+  TX_OPEN[id] = !TX_OPEN[id];
+  var c = document.querySelector('#dc-tx .tx-c[data-id="' + id + '"]'); if (c) c.classList.toggle('open', TX_OPEN[id]);
+  if (TX_OPEN[id] && !TX_DET[id]) {
+    woGet('&tx=' + encodeURIComponent(id), function (d) {
+      TX_DET[id] = d && d.ok ? d : { err: (d && d.error) || '불러오지 못했어요' };
+      var e = document.querySelector('#dc-tx .tx-c[data-id="' + id + '"] .tx-dt'); if (e) e.innerHTML = txInner(id, ym);
+    });
+  }
+}
+</script>
 </body>
 
 </html>
