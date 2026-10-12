@@ -470,7 +470,8 @@ select.fi option{background:var(--sur2)}
       <div class="fg"><label class="fl">주소</label><input class="fi sm" id="sd-addr" value="서울특별시 서초구 사임당로8길 13, 4층 402호 K243호"></div>
       <div class="fg"><label class="fl">이메일</label><input class="fi sm" id="sd-email" value="pitchcompany@naver.com"></div>
       <div class="fg"><label class="fl">연락처</label><input class="fi sm" id="sd-tel" value="010-5021-9811 / 010-4664-4552"></div>
-      <div class="row2"><div class="fg"><label class="fl">계좌</label><input class="fi sm" id="sd-bank" value="IBK기업은행 600-05678-04-011"></div><div class="fg"><label class="fl">예금주</label><input class="fi sm" id="sd-depositor" value="(주)핏치컴퍼니"></div></div>
+      <div class="row2"><div class="fg"><label class="fl">은행</label><input class="fi sm" id="sd-bank" value="IBK기업은행"></div><div class="fg"><label class="fl">계좌번호</label><input class="fi sm" id="sd-acct" value="600-056578-04-011" inputmode="numeric"></div></div>
+      <div class="fg"><label class="fl">예금주</label><input class="fi sm" id="sd-depositor" value="(주)핏치컴퍼니"></div>
     </div>
     <div class="md-f"><button class="btn btn-g" onclick="closeMo('mo-sender')">닫기</button><button class="btn btn-p" onclick="saveSender()">저장</button></div>
   </div>
@@ -1202,10 +1203,14 @@ var SENDER_INFO = {
   addr:      '서울특별시 서초구 사임당로8길 13, 4층 402호 K243호',
   email:     'pitchcompany@naver.com',
   tel:       '010-5021-9811 / 010-4664-4552',
-  bank:      'IBK기업은행 600-05678-04-011',
+  bank:      'IBK기업은행',
+  acct:      '600-056578-04-011', // 2026-10-12: 통장사본 기준으로 바로잡음 (예전 값 600-05678-04-011은 '5' 빠짐)
   depositor: '(주)핏치컴퍼니'
 };
 try { var _sd=localStorage.getItem('pm_sender'); if(_sd) SENDER_INFO=JSON.parse(_sd); } catch(e){}
+// 예전 저장값: 은행+계좌가 한 칸 · 계좌번호 오타 → 은행/계좌번호 나누고 바로잡기, 입력칸에도 저장값 채우기
+(function(){ var b=String(SENDER_INFO.bank||''), m=b.match(/^(.*?)\s*([0-9][0-9-]+)$/); if(m&&!SENDER_INFO.acct){ SENDER_INFO.bank=m[1].trim(); SENDER_INFO.acct=m[2]; } if(!SENDER_INFO.acct||SENDER_INFO.acct==='600-05678-04-011') SENDER_INFO.acct='600-056578-04-011'; if(!SENDER_INFO.bank) SENDER_INFO.bank='IBK기업은행';
+  document.addEventListener('DOMContentLoaded',function(){ var f={company:'sd-company',ceo:'sd-ceo',biz:'sd-biz',addr:'sd-addr',email:'sd-email',tel:'sd-tel',bank:'sd-bank',acct:'sd-acct',depositor:'sd-depositor'}; Object.keys(f).forEach(function(k){ var e=document.getElementById(f[k]); if(e&&SENDER_INFO[k]) e.value=SENDER_INFO[k]; }); }); })();
 
 function saveSender() {
   SENDER_INFO = {
@@ -1216,6 +1221,7 @@ function saveSender() {
     email:     document.getElementById('sd-email').value,
     tel:       document.getElementById('sd-tel').value,
     bank:      document.getElementById('sd-bank').value,
+    acct:      document.getElementById('sd-acct').value,
     depositor: document.getElementById('sd-depositor').value,
   };
   try { localStorage.setItem('pm_sender', JSON.stringify(SENDER_INFO)); } catch(e){}
