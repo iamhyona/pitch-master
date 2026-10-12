@@ -199,6 +199,9 @@ select.fi option{background:var(--sur2)}
   <div class="tabs-wrapper">
     <div class="tabs">
       <div class="tab active" data-tab="dash" id="tab-btn-dash">작업내역</div>
+      <div class="tab" data-tab="iv">청구서</div>
+      <div class="tab" data-tab="py">지급내역</div>
+      <div class="tab" data-tab="tx">원천세</div>
       <div class="tab" data-tab="agencies">거래처</div>
       <div class="tab" data-tab="litt">리터쳐</div>
       <div class="tab" data-tab="rates-bill" id="tab-btn-rates-bill">청구단가</div>
@@ -240,6 +243,26 @@ select.fi option{background:var(--sur2)}
         </div>
       </div>
 
+      <div id="tab-iv" class="tab-panel">
+        <div class="tc dc-box" id="dc-invoice">
+          <div class="tc-h"><span class="tc-t">청구서</span><button class="btn btn-g" onclick="dcLoad('invoice',true)" title="드라이브에서 다시 불러오기">↻</button><a class="btn btn-g dc-drive" href="#" target="_blank" style="text-decoration:none">드라이브 ↗</a></div>
+          <div class="wo-bar"></div>
+          <div class="wo-list"></div>
+        </div>
+      </div>
+      <div id="tab-py" class="tab-panel">
+        <div class="tc dc-box" id="dc-pay">
+          <div class="tc-h"><span class="tc-t">지급내역</span><button class="btn btn-g" onclick="dcLoad('pay',true)" title="드라이브에서 다시 불러오기">↻</button><a class="btn btn-g dc-drive" href="#" target="_blank" style="text-decoration:none">드라이브 ↗</a></div>
+          <div class="wo-bar"></div>
+          <div class="wo-list"></div>
+        </div>
+      </div>
+      <div id="tab-tx" class="tab-panel">
+        <div class="tc dc-box" id="dc-tx">
+          <div class="tc-h"><span class="tc-t">원천세 <span class="wo-sub" style="font-weight:400">· 세무사제출용</span></span><button class="btn btn-g" onclick="txLoad(true)" title="드라이브에서 다시 불러오기">↻</button><a class="btn btn-g dc-drive" href="#" target="_blank" style="text-decoration:none">드라이브 ↗</a></div>
+          <div class="wo-list"></div>
+        </div>
+      </div>
       <!-- 거래처 -->
       <div id="tab-agencies" class="tab-panel">
         <div id="guest-ag-notice" class="guest-notice" style="display:none">기본 정보만 표시됩니다</div>
@@ -1013,7 +1036,7 @@ function buildRateTabs(){
     el.innerHTML=agencies.map(function(k){return '<option value="'+esc(k)+'"'+(k===rtF?' selected':'')+'>'+esc(k)+'</option>';}).join('');
     el.value=rtF;
   });
-  document.querySelectorAll('.rate-litter-btn').forEach(function(b){b.classList.toggle('on',selLitters.has(b.dataset.litter)||b.dataset.litter==='all');});
+  document.querySelectorAll('.rate-litter-btn').forEach(function(b){b.classList.toggle('on',b.dataset.litter==='all'?pmCols().every(function(c){return selLitters.has(c);}):selLitters.has(b.dataset.litter));});
 }
 function switchRateSelect(k,tab){rtF=k;rtBillP=0;rtPayP=0;['rate-select-bill','rate-select-pay'].forEach(function(id){var el=document.getElementById(id);if(el)el.value=k;});if(tab==='bill')renderBill();else renderPay();}
 function switchLitter(litter){
@@ -1031,9 +1054,9 @@ function switchLitter(litter){
 }
 function renderBill(){
   var rows=RATES_RAW[rtF]||[];
-  var html='<div class="rate-table-box"><table><thead><tr><th>항목</th><th style="text-align:right">단가</th></tr></thead><tbody>';
-  rows.forEach(function(r){html+='<tr><td class="proj-nm">'+esc(r[0])+'</td><td class="base-val">'+wn(r[1])+'</td></tr>';});
-  html+='</tbody></table></div>';
+  // 2026-10-12: 2열로 나눠 보여주기 (스크롤 줄이기)
+  var half=Math.ceil(rows.length/2), tb=function(part){return '<div class="rate-table-box" style="min-width:0"><table style="table-layout:fixed;width:100%"><thead><tr><th>항목</th><th style="text-align:right;width:42%">단가</th></tr></thead><tbody>'+part.map(function(r){return '<tr><td class="proj-nm" style="overflow-wrap:anywhere">'+esc(r[0])+'</td><td class="base-val">'+wn(r[1])+'</td></tr>';}).join('')+'</tbody></table></div>';};
+  var html='<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;align-items:start">'+tb(rows.slice(0,half))+tb(rows.slice(half))+'</div>';
   document.getElementById('mc-bill').innerHTML=rows.length?html:'<div style="padding:24px;text-align:center;color:var(--txt3);font-size:12px">데이터 없음</div>';
   document.getElementById('pi-rt-bill').textContent='';
   document.getElementById('pb-rt-bill').innerHTML='';
@@ -1647,7 +1670,9 @@ function pmApply(d) {
       return [r.cat, r.base].concat(ALL_COLS.map(function (w) { return r.pay[w] != null ? r.pay[w] : 0; }));
     });
   });
-  selLitters = new Set(ALL_COLS);
+  // 2026-10-12: 지급단가 기본 표시 = 최현경·이은지·권미향·이유나
+  var _def = ['최현경', '이은지', '권미향', '이유나'].filter(function (n) { return ALL_COLS.indexOf(n) >= 0; });
+  selLitters = new Set(_def.length ? _def : ALL_COLS);
 }
 function loadSheetData() {
   showSyncBar('loading', 'PITCH_DB에서 불러오는 중...');
@@ -2517,16 +2542,16 @@ td{overflow-wrap:anywhere}
 .wo-ago{flex:none;font-size:11px;color:var(--faint)}
 /* 2026-10-12: 리터쳐 카드 */
 .lt-c{padding:16px 18px 6px}
-.lt-h{display:flex;align-items:center;gap:8px;margin-bottom:8px}
-.lt-p{display:flex;flex-direction:column;gap:6px;padding-bottom:10px}
-.lt-r{display:flex;align-items:center;gap:12px;font-size:14px;min-height:24px}
+.lt-h{display:flex;align-items:center;gap:8px;margin-bottom:4px}
+.lt-p{display:flex;flex-direction:column;gap:1px;padding-bottom:10px}
+.lt-r{display:flex;align-items:center;gap:12px;font-size:14px;min-height:26px}
 .lt-k{flex:none;width:72px;font-size:12px;font-weight:600;color:var(--txt3)}
 .lt-v{flex:1;min-width:0;display:flex;align-items:center;gap:6px;flex-wrap:wrap;color:var(--txt);overflow-wrap:anywhere;text-align:left}
 .lt-v .copyable{padding:1px 0;text-decoration:none}
-.lt-tg{margin-left:auto;width:32px;height:32px;border:0;border-radius:50%;background:var(--chip);display:flex;align-items:center;justify-content:center;padding:0;color:var(--txt2);cursor:pointer}
+.lt-tg{margin-left:auto;width:28px;height:28px;border:0;background:none;display:flex;align-items:center;justify-content:center;padding:0;color:var(--txt3);cursor:pointer}
 .lt-tg .mc-chv{font-size:14px;line-height:1;transition:transform .2s}
 .lt-c.open .lt-tg .mc-chv{transform:rotate(180deg)}
-.lt-c .mc-body.lt-more{border-top:0;padding:0 0 10px;margin-top:-4px;display:none}
+.lt-c .mc-body.lt-more{border-top:0;padding:0 0 10px;margin-top:-9px;display:none}
 .lt-c.open .mc-body.lt-more{display:flex}
 .lt-c.open{box-shadow:none}
 </style>
@@ -2703,6 +2728,218 @@ woFillAddW = function () {
 };
 var _woAddW0 = woAddWorker;
 woAddWorker = function () { _woAddW0(); var s = document.getElementById('wo-addw'); if (s) s.value = ''; };
+</script>
+<style>
+/* 2026-10-12: 청구서 · 지급내역 · 원천세 탭 */
+.dc-box .tc-h{flex-wrap:wrap}
+.dc-sum{display:flex;flex-direction:column;gap:2px;margin-top:-6px}
+.dc-sum .wd-m{font-size:13px}
+.dc-kv{display:flex;flex-direction:column;gap:4px;background:var(--chip);border-radius:14px;padding:12px 14px}
+.dc-kv .r{display:flex;align-items:center;gap:10px;font-size:14px;min-height:30px}
+.dc-kv .k{flex:none;width:96px;font-size:12px;font-weight:600;color:var(--txt3)}
+.dc-kv .v{flex:1;min-width:0;overflow-wrap:anywhere}
+.dc-in{width:100%;border:0;background:#fff;border-radius:9px;height:32px;padding:0 10px;font-family:inherit;font-size:15px;color:var(--txt);outline:0;-webkit-appearance:none;appearance:none;text-align:right}
+.dc-in.l{text-align:left}
+.dc-in:focus{box-shadow:0 0 0 2px var(--acc) inset}
+.dc-in.ch{background:#e8f3ff}
+.dc-rows{background:var(--chip);border-radius:14px;overflow:hidden}
+.dc-row{padding:10px 14px;border-top:1px solid #e9ecef}
+.dc-row:first-child{border-top:0}
+.dc-row .t{display:flex;align-items:baseline;justify-content:space-between;gap:10px}
+.dc-row .t b{font-size:14px;font-weight:600;min-width:0;overflow-wrap:anywhere}
+.dc-row .t span{flex:none;font-size:14px;font-weight:700}
+.dc-row .s{display:flex;align-items:center;flex-wrap:wrap;gap:6px;margin-top:6px;font-size:12px;color:var(--txt3)}
+.dc-row .s .dc-in{width:96px;height:30px;font-size:14px}
+.dc-row .s .dc-in.pct{width:70px}
+.dc-tot{display:flex;flex-direction:column;gap:2px;padding:4px 2px}
+.dc-tot .r{display:flex;justify-content:space-between;font-size:14px;color:var(--txt2)}
+.dc-tot .r:last-child{font-size:17px;font-weight:800;color:var(--txt)}
+.dc-note{font-size:12px;color:var(--txt3)}
+.tx-card{display:block;width:100%;text-align:left;border:0;background:none;padding:14px 18px;border-bottom:1px solid var(--line);font-family:inherit;cursor:pointer}
+.tx-card:last-child{border-bottom:0}
+.tx-card .t{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.tx-card .t b{font-size:16px;font-weight:700}
+.tx-card .t span{font-size:13px;color:var(--txt3)}
+.tx-card .g{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:8px}
+.tx-card .g div{background:var(--chip);border-radius:10px;padding:7px 9px}
+.tx-card .g small{display:block;font-size:11px;color:var(--txt3)}
+.tx-card .g em{font-style:normal;font-size:13px;font-weight:700}
+.tx-card .m{margin-top:8px;font-size:13px;color:var(--txt2);white-space:pre-wrap;overflow-wrap:anywhere}
+.tx-memo{width:100%;min-height:96px;border:0;background:var(--chip);border-radius:14px;padding:12px 14px;font-family:inherit;font-size:15px;line-height:1.6;color:var(--txt);outline:0;resize:vertical}
+.tx-memo:focus{box-shadow:0 0 0 2px var(--acc) inset}
+.tx-sec{font-size:14px;font-weight:800;margin:6px 2px -4px}
+</style>
+<div class="mo" id="mo-doc">
+  <div class="md wide">
+    <div class="md-h"><span class="md-t" id="dc-title">문서</span><button class="xb" onclick="dcClose()">✕</button></div>
+    <div class="md-b" id="dc-body"></div>
+  </div>
+</div>
+<script>
+// 2026-10-12 (현아): 메뉴 — 청구서 · 지급내역 (03_청구서 · 04_지급내역서 폴더 그대로) 보기·수정, 원천세(05_세무사제출용) 월별 확인 + 메모
+//  - 고칠 수 있는 칸: 청구서 = 검수완료일·작성일·항목 단가 / 지급내역 = 작성일자·지급일자·단가·수수료
+//    (작업내역·컷수는 작업내역서에서 자동으로 만들어져서 작업내역서에서 고침)
+//  - 저장은 바꾼 칸만, 그 사이 시트에서 바뀐 칸은 덮어쓰지 않음
+var DC = { invoice: { items: [], folders: [], folder: '', q: '', loaded: false, loading: false }, pay: { items: [], folders: [], folder: '', q: '', loaded: false, loading: false }, cur: null };
+var TX = { items: [], memos: {}, loaded: false, loading: false, cur: null };
+function dcLoad(type, fresh) {
+  var S = DC[type]; if (!PM_K || S.loading) return;
+  S.loading = true; dcRender(type);
+  woGet('&dl=' + type + (fresh ? '&fresh=1' : ''), function (d) {
+    S.loading = false;
+    if (!d.ok) { S.err = d.error || '불러오지 못했어요'; dcRender(type); return; }
+    S.err = ''; S.items = d.items || []; S.folders = d.folders || []; S.root = d.root; S.loaded = true; dcRender(type);
+  });
+}
+function dcRender(type) {
+  var S = DC[type], box = document.getElementById('dc-' + type); if (!box) return;
+  var fl = S.folders.filter(function (f) { return f.n > 0 || f.name === S.folder; });
+  box.querySelector('.wo-bar').innerHTML = '<button class="wo-chip' + (S.folder ? '' : ' on') + '" onclick="dcFolder(\'' + type + '\',\'\')">전체<b>' + S.items.length + '</b></button>' +
+    fl.map(function (f) { return '<button class="wo-chip' + (S.folder === f.name ? ' on' : '') + '" data-f="' + esc(f.name) + '" onclick="dcFolder(\'' + type + '\',this.dataset.f)">' + esc(f.name) + '<b>' + f.n + '</b></button>'; }).join('') +
+    '<input class="wo-srch" placeholder="아티스트·프로젝트' + (type === 'pay' ? '·작업자' : '') + ' 검색" value="' + esc(S.q) + '" oninput="DC.' + type + '.q=this.value;dcList(\'' + type + '\')">';
+  var dl = box.querySelector('.dc-drive'); if (dl) { var cf = S.folders.filter(function (f) { return f.name === S.folder; })[0]; dl.href = WO_DRIVE + (cf ? cf.id : (S.root || '')); }
+  dcList(type);
+}
+function dcFolder(type, f) { DC[type].folder = f || ''; dcRender(type); }
+function dcList(type) {
+  var S = DC[type], lb = document.querySelector('#dc-' + type + ' .wo-list'); if (!lb) return;
+  if (S.loading && !S.items.length) { lb.innerHTML = '<div class="wo-empty">드라이브에서 불러오는 중...</div>'; return; }
+  if (S.err && !S.items.length) { lb.innerHTML = '<div class="wo-empty">⚠ ' + esc(S.err) + '</div>'; return; }
+  var q = S.q.trim().toLowerCase();
+  var v = S.items.filter(function (x) { return (!S.folder || x.folder === S.folder) && (!q || [x.clientKey, x.artist, x.title, x.date6, x.worker, x.folder].join(' ').toLowerCase().indexOf(q) >= 0); });
+  if (!v.length) { lb.innerHTML = '<div class="wo-empty">' + (S.loaded ? '문서가 없어요' : '') + '</div>'; return; }
+  lb.innerHTML = v.map(function (x) {
+    return '<div class="wo-item" data-id="' + esc(x.id) + '" onclick="dcOpen(this.dataset.id)"><div class="wo-l1"><b>' + esc(x.artist || x.clientKey) + '</b><span class="wo-dt">' + woDateW(x.date6) + '</span></div>' +
+      '<div class="wo-l2">' + esc(x.clientKey) + (x.title ? ' · ' + esc(x.title) : '') + '</div>' +
+      '<div class="wo-l3"><span class="wo-wl">' + (type === 'pay' && x.worker ? '<span class="wo-w">' + esc(x.worker) + '</span>' : (x.sub ? '<span class="wo-w">' + esc(x.sub) + '</span>' : '')) + '</span><span class="wo-ago">' + woAgo(x.t) + ' 수정</span></div></div>';
+  }).join('');
+}
+function dcDirty() { var d = DC.cur; return !!(d && d.cells && Object.keys(d.cells).some(function (k) { return String(d.cells[k].val).trim() !== String(d.cells[k].old).trim(); })); }
+function dcClose() { if (dcDirty() && !confirm('저장하지 않은 수정이 있어요. 닫을까요?')) return; closeMo('mo-doc'); DC.cur = null; TX.cur = null; }
+function dcOpen(id) {
+  DC.cur = { id: id }; TX.cur = null;
+  document.getElementById('dc-title').textContent = '불러오는 중...';
+  document.getElementById('dc-body').innerHTML = '<div class="wo-empty">불러오는 중...</div>';
+  openMo('mo-doc');
+  woGet('&dv=' + encodeURIComponent(id), function (d) {
+    if (!DC.cur || DC.cur.id !== id) return;
+    if (!d.ok) { document.getElementById('dc-body').innerHTML = '<div class="wo-empty">⚠ ' + esc(d.error || '불러오지 못했어요') + '</div>'; return; }
+    d.cells = {}; DC.cur = d; dcDetail();
+  });
+}
+function dcCell(a1, old) { var d = DC.cur; if (!d.cells[a1]) d.cells[a1] = { a1: a1, old: old, val: old }; return d.cells[a1]; }
+function dcIn(a1, old, cls) { var c = dcCell(a1, old), ch = String(c.val).trim() !== String(c.old).trim(); return '<input class="dc-in ' + (cls || '') + (ch ? ' ch' : '') + '" value="' + esc(c.val) + '" oninput="dcEd(\'' + a1 + '\',this)">'; }
+function dcEd(a1, el) { var c = DC.cur.cells[a1]; c.val = el.value; el.classList.toggle('ch', String(c.val).trim() !== String(c.old).trim()); dcBar(); }
+function dcBar() {
+  var n = Object.keys(DC.cur.cells).filter(function (k) { var c = DC.cur.cells[k]; return String(c.val).trim() !== String(c.old).trim(); }).length;
+  var bar = document.getElementById('dc-bar');
+  if (!n) { if (bar) bar.remove(); return; }
+  if (!bar) { bar = document.createElement('div'); bar.className = 'wd-bar'; bar.id = 'dc-bar'; document.getElementById('dc-body').appendChild(bar); }
+  bar.innerHTML = '<button class="wd-save" onclick="dcSave()">' + n + '칸 저장</button>';
+}
+function dcDetail() {
+  var d = DC.cur, b = document.getElementById('dc-body'), inv = d.type === 'invoice', it = DC[d.type].items.filter(function (x) { return x.id === d.id; })[0] || {};
+  document.getElementById('dc-title').textContent = it.artist || (inv ? '청구서' : '지급내역서');
+  var get = function (k) { var x = (d.info || []).filter(function (i) { return i.k === k; })[0]; return x ? x.v : ''; };
+  var h = '<div class="dc-sum"><div class="wd-p">' + esc(it.title || '') + '</div><div class="wd-m">' + esc([it.clientKey, inv ? get('담당자') : get('작업자')].filter(String).join(' · ')) + '</div>' +
+    '<div class="wd-links"><a href="' + esc(d.url) + '" target="_blank">시트 열기 ↗</a></div></div>';
+  var editInfo = (d.edit && d.edit.info) || [];
+  var skip = inv ? ['수신처', '담당자', '작업링크'] : ['프로젝트', '작업자'];
+  h += '<div class="dc-kv">' + (d.info || []).filter(function (x) { return skip.indexOf(x.k) < 0 && (x.v || editInfo.indexOf(x.a1) >= 0); }).map(function (x) {
+    return '<div class="r"><span class="k">' + esc(x.k) + '</span><span class="v">' + (editInfo.indexOf(x.a1) >= 0 ? dcIn(x.a1, x.v, 'l') : esc(x.v)) + '</span></div>';
+  }).join('') + '</div>';
+  h += '<div class="dc-rows">' + (d.rows || []).map(function (r) {
+    var v = r.v;
+    if (inv) return '<div class="dc-row"><div class="t"><b>' + esc(v[1] || '-') + '</b><span>' + esc(v[4]) + '</span></div><div class="s">' + esc(v[2]) + '컷 × ' + (r.f[3] ? esc(v[3]) : dcIn('E' + r.r, v[3])) + '</div></div>';
+    return '<div class="dc-row"><div class="t"><b>' + esc(v[1] || '-') + '</b><span>' + esc(v[4]) + '</span></div><div class="s">' + esc(v[2]) + '컷 · 단가 ' + (r.f[5] ? esc(v[5]) : dcIn('G' + r.r, v[5])) +
+      ' · 수수료 ' + (r.f[6] ? esc(v[6]) : dcIn('H' + r.r, v[6], 'pct')) + ' → 컷당 ' + esc(v[3]) + '</div></div>';
+  }).join('') + '</div>';
+  h += '<div class="dc-tot">' + (d.total || []).map(function (t) { return '<div class="r"><span>' + esc(t.k) + '</span><span>' + esc(t.v) + '</span></div>'; }).join('') + '</div>';
+  h += '<div class="dc-note">' + (inv ? '작성일·검수완료일·단가를 고칠 수 있어요.' : '작성일자·지급일자·단가·수수료를 고칠 수 있어요.') + ' 작업내역·컷수는 작업내역서에서 고치면 자동으로 반영돼요.</div>';
+  b.innerHTML = h; dcBar();
+}
+function dcSave() {
+  var d = DC.cur, cells = Object.keys(d.cells).map(function (k) { return d.cells[k]; }).filter(function (c) { return String(c.val).trim() !== String(c.old).trim(); });
+  if (!cells.length) return;
+  var bar = document.querySelector('#dc-bar .wd-save'); if (bar) { bar.disabled = true; bar.textContent = '저장 중...'; }
+  woPost('pm_doc_save', { id: d.id, cells: cells }, function (res) {
+    if (!res.ok) { toast('저장 실패: ' + (res.error || '')); if (bar) { bar.disabled = false; bar.textContent = '다시 저장'; } return; }
+    var sk = (res.skipped || []);
+    if (sk.length) alert(res.changed + '칸 저장했어요.\n\n아래 칸은 저장하지 않았어요:\n' + sk.map(function (s) { return '· ' + s.a1 + ' ' + s.why + (s.now ? ' (지금 값: ' + s.now + ')' : ''); }).join('\n'));
+    else toast(res.changed + '칸 저장했어요 · 시트에 반영됨');
+    var id = d.id; DC.cur = null; dcOpen(id); DC[d.type].loaded = false; dcLoad(d.type, true);
+  });
+}
+
+// ── 원천세 (05_세무사제출용) ──
+function txLoad(fresh) {
+  if (!PM_K || TX.loading) return;
+  TX.loading = true; txRender();
+  woGet('&tx=list' + (fresh ? '&fresh=1' : ''), function (d) {
+    TX.loading = false;
+    if (!d.ok) { TX.err = d.error || '불러오지 못했어요'; txRender(); return; }
+    TX.err = ''; TX.items = d.items || []; TX.memos = d.memos || {}; TX.folder = d.folder; TX.loaded = true; txRender();
+  });
+}
+function txYm(ym) { return ym.slice(0, 4) + '년 ' + ym.slice(5) + '월'; }
+function txRender() {
+  var lb = document.querySelector('#dc-tx .wo-list'); if (!lb) return;
+  var dl = document.querySelector('#dc-tx .dc-drive'); if (dl && TX.folder) dl.href = WO_DRIVE + TX.folder;
+  if (TX.loading && !TX.items.length) { lb.innerHTML = '<div class="wo-empty">드라이브에서 불러오는 중... (처음엔 20초쯤 걸려요)</div>'; return; }
+  if (TX.err && !TX.items.length) { lb.innerHTML = '<div class="wo-empty">⚠ ' + esc(TX.err) + '</div>'; return; }
+  if (!TX.items.length) { lb.innerHTML = '<div class="wo-empty">원천징수내역서가 없어요</div>'; return; }
+  lb.innerHTML = TX.items.map(function (x) {
+    var s = x.sum || {}, mm = (TX.memos[x.ym] || {}).memo || '';
+    return '<button class="tx-card" onclick="txOpen(\'' + esc(x.id) + '\',\'' + x.ym + '\')"><div class="t"><b>' + txYm(x.ym) + '</b><span>' + esc(s['인원 · 건수'] || '') + '</span></div>' +
+      '<div class="g"><div><small>지급총액</small><em>' + esc(s['지급총액'] || '-') + '</em></div><div><small>원천징수</small><em>' + esc(s['원천징수 합계'] || '-') + '</em></div><div><small>실지급액</small><em>' + esc(s['실지급액 합계'] || '-') + '</em></div></div>' +
+      (mm ? '<div class="m">' + esc(mm) + '</div>' : '') + '</button>';
+  }).join('');
+}
+function txOpen(id, ym) {
+  TX.cur = { id: id, ym: ym }; DC.cur = null;
+  document.getElementById('dc-title').textContent = txYm(ym) + ' 원천세';
+  document.getElementById('dc-body').innerHTML = '<div class="wo-empty">불러오는 중...</div>';
+  openMo('mo-doc');
+  woGet('&tx=' + encodeURIComponent(id), function (d) {
+    if (!TX.cur || TX.cur.id !== id) return;
+    if (!d.ok) { document.getElementById('dc-body').innerHTML = '<div class="wo-empty">⚠ ' + esc(d.error || '불러오지 못했어요') + '</div>'; return; }
+    d.ym = ym; TX.cur = d; txDetail();
+  });
+}
+function txDetail() {
+  var d = TX.cur, s = d.sum || {}, memo = (TX.memos[d.ym] || {}).memo || '', at = (TX.memos[d.ym] || {}).at || '';
+  var h = '<div class="dc-sum"><div class="wd-m">' + esc(s['인원 · 건수'] || '') + ' · 작성 ' + esc(s['작성일'] || '') + '</div><div class="wd-links"><a href="' + esc(d.url) + '" target="_blank">시트 열기 ↗</a>' +
+    (TX.folder ? '<a href="' + WO_DRIVE + TX.folder + '" target="_blank">05_세무사제출용 ↗</a>' : '') + '</div></div>';
+  h += '<div class="dc-tot" style="background:var(--chip);border-radius:14px;padding:12px 14px">' + [['지급총액', s['지급총액']], ['원천징수 합계', s['원천징수 합계']], ['실지급액 합계', s['실지급액 합계']]].map(function (x) { return '<div class="r"><span>' + x[0] + '</span><span>' + esc(x[1] || '-') + '</span></div>'; }).join('') + '</div>';
+  h += '<div class="tx-sec">메모' + (at ? ' <span class="dc-note" style="font-weight:500">· ' + esc(at) + ' 수정</span>' : '') + '</div>' +
+    '<textarea class="tx-memo" id="tx-memo" placeholder="세무사 전달사항, 확인할 것 등">' + esc(memo) + '</textarea>' +
+    '<button class="btn btn-p" style="height:42px" onclick="txMemoSave()">메모 저장</button>';
+  var W = d.workers || { rows: [] }, D = d.detail || { rows: [] };
+  if (W.rows.length) h += '<div class="tx-sec">작업자별 합계</div><div class="dc-rows">' + W.rows.filter(function (r) { return r[1] && r[1] !== '합계' && r[0] !== ''; }).map(function (r) {
+    return '<div class="dc-row"><div class="t"><b>' + esc(r[1]) + ' <span style="font-size:12px;color:var(--txt3);font-weight:500">' + esc(r[3]) + '건</span></b><span>' + esc(r[8]) + '</span></div><div class="s">' + esc(r[2]) + ' · 지급 ' + esc(r[4]) + ' · 원천 ' + esc(r[7]) + '</div></div>';
+  }).join('') + '</div>';
+  if (D.rows.length) h += '<div class="tx-sec">작업 상세내역</div><div class="dc-rows">' + D.rows.filter(function (r) { return r[1] && r[0] !== ''; }).map(function (r) {
+    return '<div class="dc-row"><div class="t"><b>' + esc(r[4] || '-') + '</b><span>' + esc(r[5]) + '</span></div><div class="s">' + esc(r[1]) + ' · ' + esc(r[3]) + ' · 원천 ' + esc(r[8]) + ' · 실지급 ' + esc(r[9]) + '</div></div>';
+  }).join('') + '</div>';
+  document.getElementById('dc-body').innerHTML = h;
+}
+function txMemoSave() {
+  var d = TX.cur, v = document.getElementById('tx-memo').value, old = (TX.memos[d.ym] || {}).memo || '';
+  if (v.trim() === old.trim()) { toast('바뀐 내용이 없어요'); return; }
+  woPost('pm_tx_memo', { ym: d.ym, memo: v, old: old }, function (res) {
+    if (!res.ok) { toast(res.error || '저장 실패'); return; }
+    TX.memos[d.ym] = { memo: v, at: '방금' }; toast('메모 저장했어요 · 05_세무사제출용 메모 시트에 반영됨'); txDetail(); txRender();
+  });
+}
+var _dcSwitch = switchTab;
+switchTab = function (t) {
+  _dcSwitch(t);
+  if (t === 'iv') { if (!DC.invoice.loaded) dcLoad('invoice'); else dcRender('invoice'); }
+  if (t === 'py') { if (!DC.pay.loaded) dcLoad('pay'); else dcRender('pay'); }
+  if (t === 'tx') { if (!TX.loaded) txLoad(); else txRender(); }
+};
+var _dcLogout = doLogout;
+doLogout = function () { DC.invoice = { items: [], folders: [], folder: '', q: '', loaded: false, loading: false }; DC.pay = { items: [], folders: [], folder: '', q: '', loaded: false, loading: false }; TX = { items: [], memos: {}, loaded: false, loading: false, cur: null }; closeMo('mo-doc'); _dcLogout(); };
 </script>
 </body>
 </html>
