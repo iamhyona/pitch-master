@@ -5195,9 +5195,10 @@ a.rg-lk svg{width:16px;height:16px;flex:none}
   }
   function tip() {
     var a = document.getElementById('pf-mm-s'), b = document.getElementById('pf-mm-f'), k = kind();
-    if (a) a.title = '올해 ' + k + ' 내역 시트 열기'; if (b) b.title = k + ' 폴더 열기';
+    if (a) a.title = '올해 ' + k + ' 내역 시트 열기'; if (b) b.title = '매출매입 폴더 열기';
   }
   window.pfMmOpen = function (w) {
+    if (w === 'folder') { window.open('https://drive.google.com/drive/folders/12gK-iqG2FGIkUXQkfj9Cj_PpMinHG6SJ', '_blank'); return; } // 06_매출매입 (상위)
     var k = kind(), dv = String((document.getElementById('pf-date') || {}).value || ''), y = (dv.match(/\d{4}/) || [String(new Date().getFullYear())])[0];
     var win = window.open('about:blank', '_blank');
     woGet('&mm=' + encodeURIComponent(k) + '&y=' + y, function (d) {
