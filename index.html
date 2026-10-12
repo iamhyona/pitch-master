@@ -443,10 +443,7 @@ select.fi option{background:var(--sur2)}
               <button class="btn btn-p inv-bt" onclick="addInvItem()">+ 항목 추가</button>
             </div>
           </div>
-          <div class="inv-hd">
-            <div class="inv-r1"><label class="inv-ck"><input type="checkbox" id="inv-ckall" onchange="invCkAll(this.checked)"></label><span>작업구분<span class="pf-tg">*드롭다운 선택</span></span><span>작업 내용<span class="pf-tg r">*수기 작성</span></span></div>
-            <div class="inv-r2"><span></span><span>컷수<span class="pf-tg r">*수기 작성</span></span><span>컷당 단가<span class="pf-tg b">*자동 작성</span></span><span class="inv-amt-h">소계<span class="pf-tg b">*자동 작성</span></span></div>
-          </div>
+          <div class="inv-hd"><label class="inv-ck"><input type="checkbox" id="inv-ckall" onchange="invCkAll(this.checked)"></label><span>전체 선택</span></div>
           <div id="inv-items"></div>
         </div>
 
@@ -3325,25 +3322,42 @@ function woHead(ck, artist, title, d6, t) {
 .dc-sel,.dc-dt,.dc-hq{height:34px}
 .dc-box .wo-chip,#tab-dash .wo-chip{height:34px;display:inline-flex;align-items:center;padding-top:0;padding-bottom:0}
 .dc-sel,.dc-hq{font-size:13px}
+/* 2026-10-12: 작업 항목 — 열 맞춤 그리드(작업구분=컷수 너비) · 칸 이름은 칸 안에 · 소계 박스 · 옵션은 소계 아래 흐리게 */
+.inv-g{display:grid;grid-template-columns:24px repeat(3,minmax(0,1fr));gap:6px;align-items:center}
+.inv-span2{grid-column:span 2}
+.inv-g select[id^="inv-type-"]{grid-column:auto}
+.inv-sub{height:100%;min-height:40px;border:1px solid var(--bdr);border-radius:10px;display:flex;align-items:center;justify-content:space-between;gap:4px;padding:0 10px;box-sizing:border-box}
+.inv-sub span{font-size:11px;color:var(--faint)}
+.inv-sub b{font-size:13px;font-weight:700;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.inv-g .inv-op{grid-column:3/5;display:flex;justify-content:flex-end;gap:10px;padding:0 2px;flex-wrap:nowrap;white-space:nowrap}
+.inv-sub span{white-space:nowrap}
+.inv-sub b.z{color:var(--faint);font-weight:500}
+@media(max-width:560px){.inv-sub span{display:none}.inv-sub{justify-content:flex-end}}
+.inv-g .inv-op label{font-size:11px;color:var(--faint);gap:3px}
+.inv-g .inv-op input{width:13px;height:13px;margin:0;opacity:.55;accent-color:var(--txt3)}
+.inv-hd{flex-direction:row!important;align-items:center;gap:6px!important;font-weight:500!important;color:var(--faint)!important}
+.inv-hd .inv-ck{width:24px}
+.inv-it{gap:0!important}
 </style>
 <script>
 // 2026-10-12: 견적서 작성 — 작업 항목: 체크(삭제·순서 이동) · 작업구분/작업 내용 · 컷수/컷당 단가/소계
 function invTypeOpts() {
   var rows = RATES_RAW[gv('inv-agency')] || [];
-  return '<option value="">작업구분 선택</option>' + rows.map(function (r) { return '<option value="' + esc(r[0]) + '">' + esc(r[0]) + '</option>'; }).join('') + '<option value="__direct__">직접 입력</option>';
+  return '<option value="">작업구분</option>' + rows.map(function (r) { return '<option value="' + esc(r[0]) + '">' + esc(r[0]) + '</option>'; }).join('') + '<option value="__direct__">직접 입력</option>';
 }
 function addInvItem() {
   var id = ++INV_ITEM_ID; INV_ITEMS.push({ id: id });
   var d = document.createElement('div'); d.className = 'inv-it'; d.id = 'inv-item-' + id;
-  d.innerHTML = '<div class="inv-r1"><label class="inv-ck"><input type="checkbox" class="inv-cb" data-id="' + id + '" onchange="invCkSync()"></label>' +
+  d.innerHTML = '<div class="inv-g">' +
+    '<label class="inv-ck"><input type="checkbox" class="inv-cb" data-id="' + id + '" onchange="invCkSync()"></label>' +
     '<select class="fi sm" id="inv-type-' + id + '" onchange="onInvTypeChange(' + id + ')">' + invTypeOpts() + '</select>' +
-    '<input class="fi sm" id="inv-desc-' + id + '" placeholder="예: 모노코어 블랙착 1순위 루카" oninput="calcInvTotal()"></div>' +
-    '<div class="inv-r2"><span class="inv-no"></span>' +
+    '<input class="fi sm inv-span2" id="inv-desc-' + id + '" placeholder="작업 내용 (예: 모노코어 블랙착 1순위 루카)" oninput="calcInvTotal()">' +
+    '<span class="inv-no"></span>' +
     '<input class="fi sm" id="inv-qty-' + id + '" type="number" inputmode="numeric" placeholder="컷수" min="1" style="text-align:right" oninput="calcInvTotal()">' +
-    '<input class="fi sm" id="inv-price-' + id + '" type="text" inputmode="numeric" placeholder="단가" style="text-align:right" oninput="onInvPriceInput(' + id + ')">' +
-    '<div class="inv-amt" id="inv-amount-' + id + '">0</div></div>' +
-    '<div class="inv-op"><label><input type="checkbox" id="inv-urgent-' + id + '" onchange="calcInvTotal()"> 긴급 (+25%)</label>' +
-    '<label><input type="checkbox" id="inv-premium-' + id + '" onchange="onInvPremiumChange(' + id + ')"> 고급단가</label></div>';
+    '<input class="fi sm" id="inv-price-' + id + '" type="text" inputmode="numeric" placeholder="컷당 단가" style="text-align:right" oninput="onInvPriceInput(' + id + ')">' +
+    '<div class="inv-sub"><span>소계</span><b id="inv-amount-' + id + '">0</b></div>' +
+    '<div class="inv-op"><label><input type="checkbox" id="inv-urgent-' + id + '" onchange="calcInvTotal()">긴급 +25%</label>' +
+    '<label><input type="checkbox" id="inv-premium-' + id + '" onchange="onInvPremiumChange(' + id + ')">고급단가</label></div></div>';
   var box = document.getElementById('inv-items'); if (box) box.appendChild(d);
   invSync(); calcInvTotal();
 }
@@ -3351,6 +3365,7 @@ function onInvAgencyChange() {
   INV_ITEMS.forEach(function (it) { var s = document.getElementById('inv-type-' + it.id); if (!s) return; var v = s.value; s.innerHTML = invTypeOpts(); if (v) s.value = v; });
   invPh(); calcInvTotal();
 }
+(function () { var oc = calcInvTotal; calcInvTotal = function () { oc.apply(this, arguments); INV_ITEMS.forEach(function (it) { var b = document.getElementById('inv-amount-' + it.id); if (!b) return; var z = !getItemAmount(it.id); b.classList.toggle('z', z); if (z) b.textContent = '소계'; }); }; })();
 function invChecked() { return [].slice.call(document.querySelectorAll('#inv-items .inv-cb:checked')).map(function (e) { return +e.dataset.id; }); }
 function invCkSync() {
   var ids = invChecked();
