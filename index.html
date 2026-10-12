@@ -3322,6 +3322,20 @@ function woHead(ck, artist, title, d6, t) {
 .dc-sel,.dc-dt,.dc-hq{height:34px}
 .dc-box .wo-chip,#tab-dash .wo-chip{height:34px;display:inline-flex;align-items:center;padding-top:0;padding-bottom:0}
 .dc-sel,.dc-hq{font-size:13px}
+/* 2026-10-12: 글자·버튼 위계 정리
+   1단 섹션 제목(발송처·수신처 정보·작업 항목·패널 제목·빠른/반자동 작성) 16px 800 진한색
+   2단 칸 이름(거래처·담당자…) 12px 600 회색
+   섹션 머리 버튼(확인/편집·선택 삭제·항목 추가·새 작업내역서) 32px 13px · 섹션 머리 동그란 아이콘 32px(그림 16px)
+   앱 맨 위 아이콘 38px · 화면 맨 아래 주 버튼 48px 15px */
+.inv-sec,.pf-sec,.tc-t{font-size:16px!important;font-weight:800!important;color:var(--txt)!important;letter-spacing:-.01em}
+.inv-box>.inv-sec{margin-bottom:14px}
+.fl{font-size:12px!important;font-weight:600!important;color:var(--txt3)!important}
+.ui-pill,.inv-bt{height:32px!important;font-size:13px!important;font-weight:600!important;padding:0 13px!important}
+.pf-ic,.dc-ib,.inv-acts .dc-ib{width:32px!important;height:32px!important}
+.pf-ic svg,.dc-ib svg{width:16px!important;height:16px!important}
+.dc-hq{height:32px!important}
+#sender-preview{font-size:15px!important;font-weight:600!important;margin-top:2px}
+#tab-invoice>button.btn-p,.pf-ok{height:48px!important;font-size:15px!important;font-weight:700!important;border-radius:14px!important}
 /* 2026-10-12: 작업 항목 — 열 맞춤 그리드(작업구분=컷수 너비) · 칸 이름은 칸 안에 · 소계 박스 · 옵션은 소계 아래 흐리게 */
 .inv-g{display:grid;grid-template-columns:24px repeat(3,minmax(0,1fr));gap:6px;align-items:center}
 .inv-span2{grid-column:span 2}
