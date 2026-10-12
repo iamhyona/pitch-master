@@ -4864,6 +4864,33 @@ a.rg-lk svg{width:16px;height:16px;flex:none}
   new MutationObserver(function () { setTimeout(scan, 0); }).observe(document.body, { childList: true, subtree: true });
 })();
 </script>
+<style>
+/* 2026-10-13: 지급내역 — 위에는 작업자(사람마다 색), 아래에는 소속사 */
+#dc-pay .wo-ckr .wo-wk{display:inline-flex;align-items:center;height:18px;padding:0 8px;border-radius:4px;font-size:10px;font-weight:700}
+#dc-pay .wo-wl .wo-ck{margin:0}
+</style>
+<script>
+(function () {
+  var C = { '김현수': ['#e8f3ff', '#3182f6'], '강영순': ['#fff1e6', '#e8710a'], '이은지': ['#e7f7ee', '#12a150'], '최현경': ['#f1ebff', '#7048e8'],
+            '권미향': ['#ffeef5', '#d6336c'], '이유나': ['#e3f6f6', '#0c8599'], '이혜선': ['#fff7db', '#b7791f'] };
+  var X = [['#eef2f6', '#4e5968'], ['#f3f0ff', '#5f3dc4'], ['#ebfbee', '#2b8a3e'], ['#fff4e6', '#d9480f'], ['#e6fcf5', '#087f5b'], ['#f8f0fc', '#9c36b5'], ['#fff9db', '#e67700']];
+  function col(n) { if (C[n]) return C[n]; var h = 0; for (var i = 0; i < n.length; i++) h = (h * 31 + n.charCodeAt(i)) >>> 0; return X[h % X.length]; }
+  var _dl = dcList;
+  dcList = function (type) {
+    var r = _dl.apply(this, arguments);
+    if (type !== 'pay') return r;
+    var S = DC.pay, lb = document.querySelector('#dc-pay .wo-list'); if (!lb) return r;
+    lb.querySelectorAll('.wo-item').forEach(function (el) {
+      var x = (S.items || []).filter(function (i) { return i.id === el.getAttribute('data-id'); })[0]; if (!x) return;
+      var w = x.worker || x.sub || '', ckr = el.querySelector('.wo-ckr'), wl = el.querySelector('.wo-wl'); if (!ckr || !wl || !w) return;
+      var ck = ckr.querySelector('.wo-ck'), c = col(w);
+      wl.innerHTML = ''; if (ck) wl.appendChild(ck);
+      ckr.innerHTML = '<span class="wo-wk" style="background:' + c[0] + ';color:' + c[1] + '">' + esc(w) + '</span>';
+    });
+    return r;
+  };
+})();
+</script>
 </body>
 
 </html>
