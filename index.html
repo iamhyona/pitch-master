@@ -3656,6 +3656,37 @@ function dcRender(type) {
 <script>
 (function () { ['bill', 'pay'].forEach(function (k) { var tab = document.getElementById('tab-rates-' + k); if (!tab) return; var top = tab.querySelector('.rt-top'), box = tab.querySelector('.rate-agency-box'); if (!top || !box) return; top.classList.add('out'); tab.insertBefore(top, box); }); })();
 </script>
+<style>
+/* 2026-10-12: 작업내역 — 머리 줄 [검색칸 | + 새로고침 폴더], 소속사 칩은 한 줄 가로 스크롤 */
+#tab-dash .tc-h{flex-wrap:nowrap!important;gap:6px}
+#tab-dash .tc-h .dc-ics{margin-left:0;flex:none}
+.wo-hq{flex:1;min-width:0;height:32px;border:0;border-radius:999px;background:var(--chip);padding:0 14px;font-family:inherit;font-size:13px;color:var(--txt);outline:0}
+.wo-hq::placeholder{color:var(--faint)}
+.dc-ib.wo-add{background:var(--txt);color:#fff}
+#wo-folders{flex-wrap:nowrap!important;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+#wo-folders::-webkit-scrollbar{display:none}
+#wo-folders .wo-chip{flex:none}
+#wo-folders .wo-srch{display:none!important}
+</style>
+<script>
+(function () {
+  var hd = document.querySelector('#tab-dash .tc-h');
+  if (hd) {
+    var nb = hd.querySelector('button[onclick="woNew()"]');
+    if (nb) { var b = document.createElement('button'); b.type = 'button'; b.className = 'dc-ib wo-add'; b.title = '새 작업내역서'; b.setAttribute('onclick', 'woNew()'); b.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>'; nb.replaceWith(b); }
+    var q = document.createElement('input'); q.className = 'wo-hq'; q.id = 'wo-hq'; q.placeholder = '아티스트·프로젝트·작업자 검색';
+    q.addEventListener('input', function () { WO.q = this.value; woRenderList(); });
+    hd.insertBefore(q, hd.firstChild);
+  }
+  var or = woRender;
+  woRender = function () {
+    var fb = document.getElementById('wo-folders'), sl = fb ? fb.scrollLeft : 0;
+    or.apply(this, arguments);
+    if (fb) fb.scrollLeft = sl;
+    var q = document.getElementById('wo-hq'); if (q && document.activeElement !== q) q.value = WO.q || '';
+  };
+})();
+</script>
 </body>
 
 </html>
