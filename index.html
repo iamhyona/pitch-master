@@ -3355,7 +3355,14 @@ function woHead(ck, artist, title, d6, t) {
 .inv-g .inv-op{grid-column:3/5;display:flex;justify-content:flex-end;gap:10px;padding:0 2px;flex-wrap:nowrap;white-space:nowrap}
 .inv-sub span{white-space:nowrap}
 .inv-sub b.z{color:var(--faint);font-weight:500}
-@media(max-width:560px){.inv-sub span{display:none}.inv-sub{justify-content:flex-end}}
+/* 칸 안: 왼쪽 작은 이름 / 오른쪽 정렬 내용 (소계와 같은 방식) */
+.inv-f{position:relative;min-width:0}
+.inv-fl{position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:11px;color:var(--faint);pointer-events:none;z-index:1;white-space:nowrap}
+.inv-f .fi{width:100%;text-align:right;padding-left:42px!important}
+.inv-f select.fi{text-align-last:right;padding-right:30px!important}
+.inv-sub{padding:0 12px!important}
+.inv-f .fi::placeholder{color:var(--faint)}
+@media(max-width:560px){.inv-fl{left:10px}.inv-f .fi{padding-left:36px!important;padding-right:10px!important}.inv-f select.fi{padding-right:24px!important;background-position:right 8px center}.inv-f .fi,.inv-f .fi::placeholder{font-size:12px}.inv-sub{padding:0 8px!important}.inv-sub b{font-size:12px}}
 .inv-g .inv-op label{font-size:11px;color:var(--faint);gap:3px}
 .inv-g .inv-op input{width:13px;height:13px;margin:0;opacity:.55;accent-color:var(--txt3)}
 .inv-hd{flex-direction:row!important;align-items:center;gap:6px!important;font-weight:500!important;color:var(--faint)!important}
@@ -3366,22 +3373,23 @@ function woHead(ck, artist, title, d6, t) {
 // 2026-10-12: 견적서 작성 — 작업 항목: 체크(삭제·순서 이동) · 작업구분/작업 내용 · 컷수/컷당 단가/소계
 function invTypeOpts() {
   var rows = RATES_RAW[gv('inv-agency')] || [];
-  return '<option value="">작업구분 선택</option>' + rows.map(function (r) { return '<option value="' + esc(r[0]) + '">' + esc(r[0]) + '</option>'; }).join('') + '<option value="__direct__">직접 입력</option>';
+  return '<option value="">작업 선택</option>' + rows.map(function (r) { return '<option value="' + esc(r[0]) + '">' + esc(r[0]) + '</option>'; }).join('') + '<option value="__direct__">직접 입력</option>';
 }
 function addInvItem() {
   var id = ++INV_ITEM_ID; INV_ITEMS.push({ id: id });
   var d = document.createElement('div'); d.className = 'inv-it'; d.id = 'inv-item-' + id;
   d.innerHTML = '<div class="inv-g">' +
     '<label class="inv-ck"><input type="checkbox" class="inv-cb" data-id="' + id + '" onchange="invCkSync()"></label>' +
-    '<select class="fi sm" id="inv-type-' + id + '" onchange="onInvTypeChange(' + id + ')">' + invTypeOpts() + '</select>' +
-    '<input class="fi sm inv-span2" id="inv-desc-' + id + '" placeholder="작업 내용 (예: 모노코어 블랙착 1순위 루카)" oninput="calcInvTotal()">' +
+    '<div class="inv-f"><span class="inv-fl">구분</span><select class="fi sm" id="inv-type-' + id + '" onchange="onInvTypeChange(' + id + ')">' + invTypeOpts() + '</select></div>' +
+    '<div class="inv-f inv-span2"><span class="inv-fl">내용</span><input class="fi sm" id="inv-desc-' + id + '" placeholder="예: 모노코어 블랙착 1순위 루키" oninput="calcInvTotal()"></div>' +
     '<span class="inv-no"></span>' +
-    '<input class="fi sm" id="inv-qty-' + id + '" type="number" inputmode="numeric" placeholder="컷수 (숫자만 수기 입력)" min="1" style="text-align:right" oninput="calcInvTotal()">' +
-    '<input class="fi sm" id="inv-price-' + id + '" type="text" inputmode="numeric" placeholder="소속사 단가 자동반영" style="text-align:right" oninput="onInvPriceInput(' + id + ')">' +
+    '<div class="inv-f"><span class="inv-fl">컷수</span><input class="fi sm" id="inv-qty-' + id + '" type="number" inputmode="numeric" placeholder="숫자만 수기 입력" min="1" oninput="calcInvTotal()"></div>' +
+    '<div class="inv-f"><span class="inv-fl">단가</span><input class="fi sm" id="inv-price-' + id + '" type="text" inputmode="numeric" placeholder="소속사 자동 연동" oninput="onInvPriceInput(' + id + ')"></div>' +
     '<div class="inv-sub"><span>소계</span><b id="inv-amount-' + id + '">0</b></div>' +
     '<div class="inv-op"><label><input type="checkbox" id="inv-urgent-' + id + '" onchange="calcInvTotal()">긴급 +25%</label>' +
     '<label><input type="checkbox" id="inv-premium-' + id + '" onchange="onInvPremiumChange(' + id + ')">고급단가</label></div></div>';
   var box = document.getElementById('inv-items'); if (box) box.appendChild(d);
+  d.querySelector('select').classList.add('ph');
   invSync(); calcInvTotal();
 }
 function onInvAgencyChange() {
