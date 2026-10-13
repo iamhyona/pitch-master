@@ -5352,6 +5352,32 @@ a.rg-lk svg{width:16px;height:16px;flex:none}
 #mc-lt .lt-k{line-height:20px;margin-top:-1px}
 #mc-lt .lt-v{min-height:20px}
 </style>
+
+<style>
+/* 2026-10-13 (현아): 달력에서 날짜 고르고 바로 일정 추가 */
+.sch-det .sch-addd{display:inline-flex;align-items:center;gap:4px;margin-top:10px;border:0;background:var(--chip);color:var(--txt);border-radius:10px;padding:8px 12px;font:inherit;font-size:13px;font-weight:700;cursor:pointer}
+</style>
+<script>
+// 2026-10-13 (현아): 달력 날짜 상세 아래 '+ 이 날 일정 추가' → 세부 등록에 날짜 채워서 바로 입력
+(function () {
+  window.schAddOn = function (k) {
+    if (window.saMode) saMode('d');
+    var d = document.getElementById('sa-d'), t = document.getElementById('sa-t');
+    if (d) d.value = k;
+    var b = document.getElementById('sch-add'); if (b) b.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    if (t) setTimeout(function () { t.focus(); }, 250);
+  };
+  var _r = window.schRender;
+  window.schRender = function () {
+    _r.apply(this, arguments);
+    var det = document.querySelector('#sch-box .sch-det');
+    if (det && window.SCH && !det.querySelector('.sch-addd')) {
+      det.insertAdjacentHTML('beforeend', '<button type="button" class="sch-addd" onclick="schAddOn(\'' + SCH.sel + '\')">+ 이 날 일정 추가</button>');
+    }
+  };
+  if (window.SCH && document.getElementById('sch-box')) schRender();
+})();
+</script>
 </body>
 
 </html>
