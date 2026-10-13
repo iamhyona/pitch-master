@@ -2100,7 +2100,7 @@ function pfLoadDoc(id) {
     pfBuild();
   }).catch(function () { hint.textContent = '읽기 실패'; });
 }
-(function () { var t = document.getElementById('tab-btn-taxbill'); if (t) t.textContent = '문구'; })();
+(function () { var t = document.getElementById('tab-btn-taxbill'); if (t) t.textContent = '기록'; })();
 
 </script>
 <script>
@@ -5056,6 +5056,17 @@ a.rg-lk svg{width:16px;height:16px;flex:none}
 .sch-msg{text-align:center;padding:6px 0 2px}
 </style>
 <script>
+// 2026-10-13 (현아): 일정 — 프로젝트별 색(시트와 같은 색) · 마감은 굵게 · 소속사는 회색
+window.schKey = function (t) { var w = String(t || '').replace(/\(.*?\)/g, ' ').trim().split(/\s+/).slice(0, 2); if (w[1]) w[1] = w[1].replace(/\d+\s*(세트|장|컷|종|명)?$/, ''); return w.filter(String).join(' '); };
+window.schDL = function (t, r) { return r === 2 || /마감|납기|최종/.test(String(t)); };
+window.schSty = function (t, r, D) {
+  if (r === 1) return 'background:#f2f4f6;color:#4e5968';
+  var P = ['#3182f6', '#0f9f5f', '#8b5cf6', '#d97706', '#0d9488', '#db2777', '#65a30d', '#a16207'], k = schKey(t), c = D && D.colors && D.colors[k];
+  if (!c) { var h = 0; for (var i = 0; i < k.length; i++) h = (h * 31 + k.charCodeAt(i)) % 9973; c = P[h % P.length]; }
+  return 'background:' + c + '1a;color:' + c + (schDL(t, r) ? ';font-weight:800' : '');
+};
+</script>
+<script>
 // 2026-10-13 (현아 요청): 작업내역 달력 — 1행 핏치 일정(작업내역서 요청일·마감일 자동) · 2행 소속사 일정 · 3행 공식 일정
 (function () {
   var SV = 'viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"';
@@ -5095,15 +5106,15 @@ a.rg-lk svg{width:16px;height:16px;flex:none}
     var today = ymd(new Date());
     var h = '<div class="sch-h"><button class="sch-ib" title="이전 달" onclick="schGo(-1)">' + I.l + '</button><b>' + y + '년 ' + m + '월</b><button class="sch-ib" title="다음 달" onclick="schGo(1)">' + I.r + '</button><span class="sp"></span>' +
       (D && D.url ? '<a class="sch-ib" title="구글시트에서 열기" href="' + esc(D.url) + '" target="_blank" rel="noopener">' + I.sh + '</a>' : '') + '</div>' +
-      '<div class="sch-lg">' + LB.map(function (t, i) { return '<span><i style="background:' + ['#3182f6', '#8b95a1', '#f04452'][i] + '"></i>' + t + '</span>'; }).join('') + '</div>';
+      '<div class="sch-lg"><span>프로젝트별 색상</span><span>·</span><span><b style="color:var(--txt)">굵은 글씨</b> = 마감</span></div>';
     h += '<div class="sch-g">' + '일월화수목금토'.split('').map(function (w, i) { return '<div class="sch-w' + (i === 0 || i === 6 ? ' we' : '') + '">' + w + '</div>'; }).join('');
     for (var i = 0; i < wk * 7; i++) {
       var dt = new Date(start.getFullYear(), start.getMonth(), start.getDate() + i), k = ymd(dt), out = dt.getMonth() !== m - 1, o = days[k] || {}, e = o.e || [[], [], []];
       var we = dt.getDay() === 0 || dt.getDay() === 6 || o.h, all = [];
-      e.forEach(function (arr, r) { arr.forEach(function (t) { all.push([r, t]); }); });
+      e.forEach(function (arr, r) { if (r === 1) return; arr.forEach(function (t) { all.push([r, t]); }); });
       h += '<div class="sch-d' + (out ? ' out' : '') + (k === today ? ' today' : '') + (!out && k === SCH.sel ? ' sel' : '') + '"' + (out ? '' : ' onclick="schSel(\'' + k + '\')"') + '>' +
         '<div class="sch-n' + (we ? ' we' : '') + '"><em>' + dt.getDate() + '</em>' + (o.h && !out ? '<small>' + esc(o.h) + '</small>' : '') + '</div>' +
-        (out ? '' : all.slice(0, 3).map(function (a) { return '<div class="sch-e r' + a[0] + '">' + esc(a[1]) + '</div>'; }).join('') + (all.length > 3 ? '<div class="sch-more">+' + (all.length - 3) + '</div>' : '')) + '</div>';
+        (out ? '' : all.slice(0, 3).map(function (a) { return '<div class="sch-e" style="' + schSty(a[1], a[0], D) + '">' + esc(a[1]) + '</div>'; }).join('') + (all.length > 3 ? '<div class="sch-more">+' + (all.length - 3) + '</div>' : '')) + '</div>';
     }
     h += '</div>';
     if (SCH.loading[SCH.ym] && !D) h += '<div class="sch-msg">일정 불러오는 중… (처음엔 시트를 만드느라 조금 걸려요)</div>';
@@ -5111,7 +5122,7 @@ a.rg-lk svg{width:16px;height:16px;flex:none}
     else if (SCH.sel.slice(0, 7) === SCH.ym) {
       var s = days[SCH.sel] || {}, se = s.e || [[], [], []], sd = new Date(+SCH.sel.slice(0, 4), +SCH.sel.slice(5, 7) - 1, +SCH.sel.slice(8)), any = false;
       h += '<div class="sch-det"><div class="t">' + (sd.getMonth() + 1) + '월 ' + sd.getDate() + '일 (' + '일월화수목금토'.charAt(sd.getDay()) + ')' + (s.h ? ' · ' + esc(s.h) : '') + '</div>';
-      se.forEach(function (arr, r) { arr.forEach(function (t) { any = true; h += '<div class="it"><span class="sch-e r' + r + '">' + LB[r] + '</span><div>' + esc(t) + '</div></div>'; }); });
+      se.forEach(function (arr, r) { arr.forEach(function (t) { any = true; h += '<div class="it"><span class="sch-e" style="' + schSty(t, r, D) + '">' + LB[r] + '</span><div style="' + (schDL(t, r) ? 'font-weight:800' : '') + '">' + esc(t) + '</div></div>'; }); });
       if (!any) h += '<div class="none">일정이 없어요</div>';
       h += '</div>';
     }
@@ -5279,7 +5290,7 @@ a.rg-lk svg{width:16px;height:16px;flex:none}
         if (/^(리터칭\s*)?일정$/.test(l)) return;
         title = l.replace(/[<>《》]/g, '').replace(/\(.*?\)/g, ' ').replace(/\s*일정\s*$/, '').replace(/\s+/g, ' ').trim(); sec = ''; return;
       }
-      var t = lab(l), row = /셀렉본?\s*전달|원본\s*전달|자료\s*전달/.test(l) ? 1 : 0;
+      var t = lab(l), row = /셀렉본?\s*전달|원본\s*전달|자료\s*전달/.test(l) ? 1 : (/최종|납기|마감/.test(t) ? 2 : 0);
       out.push([fullDate(+m[1], +m[2]), row, [title, sec, t].filter(String).join(' ')]);
     });
     return out;
