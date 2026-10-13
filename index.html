@@ -5378,6 +5378,46 @@ a.rg-lk svg{width:16px;height:16px;flex:none}
   if (window.SCH && document.getElementById('sch-box')) schRender();
 })();
 </script>
+
+<style>
+/* 2026-10-13 (현아): 일정 등록은 달력 상단 시트 아이콘 옆 + 버튼으로 열고 닫기 */
+#sch-add{display:none}
+#sch-add.open{display:block}
+.sch-det .sch-addd{display:none!important}
+#sch-box .sch-plus.on{background:var(--txt);color:#fff}
+</style>
+<script>
+(function () {
+  var PL = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>';
+  window.schPlus = function () {
+    if (window.saRender && !document.getElementById('sch-add')) saRender();
+    var b = document.getElementById('sch-add'); if (!b) return;
+    var on = b.classList.toggle('open');
+    var p = document.querySelector('#sch-box .sch-plus'); if (p) p.classList.toggle('on', on);
+    if (on) {
+      var d = document.getElementById('sa-d'); if (d && window.SCH) d.value = SCH.sel;
+      b.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      setTimeout(function () { var t = document.getElementById('sa-q') || document.getElementById('sa-t'); if (t) t.focus(); }, 300);
+    }
+  };
+  var _r = window.schRender;
+  window.schRender = function () {
+    _r.apply(this, arguments);
+    var h = document.querySelector('#sch-box .sch-h');
+    if (h && !h.querySelector('.sch-plus')) {
+      var sp = h.querySelector('.sp');
+      var btn = document.createElement('button'); btn.type = 'button'; btn.className = 'sch-ib sch-plus'; btn.title = '일정 등록'; btn.innerHTML = PL; btn.onclick = schPlus;
+      var a = document.getElementById('sch-add'); if (a && a.classList.contains('open')) btn.classList.add('on');
+      if (sp && sp.nextSibling) h.insertBefore(btn, sp.nextSibling); else h.appendChild(btn);
+    }
+    var d = document.getElementById('sa-d'), a2 = document.getElementById('sch-add');
+    if (d && a2 && a2.classList.contains('open') && window.SCH) d.value = SCH.sel;
+  };
+  var _m = window.saMode;
+  if (_m) window.saMode = function (m) { _m(m); var d = document.getElementById('sa-d'); if (d && window.SCH) d.value = SCH.sel; };
+  if (window.SCH && document.getElementById('sch-box')) schRender();
+})();
+</script>
 </body>
 
 </html>
