@@ -7,7 +7,7 @@
 <meta name="theme-color" content="#f2f4f6">
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=3">
 <link rel="apple-touch-icon" href="apple-touch-icon.png?v=3">
-<meta name="pm-build" content="20261018083949">
+<meta name="pm-build" content="20261018084102">
 <link rel="manifest" href="manifest.webmanifest?v=3">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -6670,6 +6670,18 @@ document.addEventListener('click', function (e) {
     return g;
   }
   // 2026-10-18 (현아): 연도별 매출·매입·순이익 비교 — 다른 연도는 뒤에서 차례로 불러옴
+  // 2026-10-18 (현아): 소속사별·작업자별 도넛 (상위 6 + 기타)
+  function donut(items, title) {
+    items = items.filter(function (x) { return x[1] > 0; }).sort(function (a, b) { return b[1] - a[1]; });
+    var tot = items.reduce(function (a, x) { return a + x[1]; }, 0); if (!tot) return '';
+    var top = items.slice(0, 6); if (items.length > 6) top.push(['기타', items.slice(6).reduce(function (a, x) { return a + x[1]; }, 0)]);
+    var PAL = ['#3182f6', '#5a9cf8', '#84b6fa', '#aecffc', '#4e5968', '#8b95a1', '#d1d6db'];
+    var R = 15.915, a0 = 0, g = '<svg class="pf2-dn" viewBox="0 0 42 42" role="img" aria-label="' + title + '"><circle cx="21" cy="21" r="' + R + '" fill="none" stroke="#f2f4f6" stroke-width="6"/>';
+    top.forEach(function (x, i) { var p = x[1] / tot * 100; g += '<circle cx="21" cy="21" r="' + R + '" fill="none" stroke="' + PAL[i] + '" stroke-width="6" stroke-dasharray="' + Math.max(p - 0.6, 0.1).toFixed(2) + ' ' + (100 - Math.max(p - 0.6, 0.1)).toFixed(2) + '" stroke-dashoffset="' + (25 - a0).toFixed(2) + '"/>'; a0 += p; });
+    g += '<text x="21" y="20" text-anchor="middle" font-size="3.2" fill="#8b95a1">' + title + '</text><text x="21" y="25" text-anchor="middle" font-size="4.6" font-weight="800" fill="#191f28">' + Wk(tot) + '</text></svg>';
+    var lg = top.map(function (x, i) { return '<div class="i"><i style="background:' + PAL[i] + '"></i><span class="k">' + esc(x[0]) + '</span><b>' + (Math.round(x[1] / tot * 1000) / 10) + '%</b></div>'; }).join('');
+    return '<div class="pf2-dnw">' + g + '<div class="pf2-dnl">' + lg + '</div></div>';
+  }
   function yTot(d) { var s = sum(d.sales), b = sum(d.buys), c = sum(d.bank.filter(isCost), costAmt); return { s: s, b: b, c: c, n: s - b - c }; }
   function loadYears(ys) {
     if (P.yl) return; P.yl = 1;
@@ -6741,12 +6753,14 @@ document.addEventListener('click', function (e) {
       S.forEach(function (x) { var k = x.tab || '미분류'; (g[k] = g[k] || { s: 0, b: 0, n: 0 }).s += x.amt; g[k].n++; });
       B.forEach(function (x) { var k = clientOfBuy(x, r.sales); (g[k] = g[k] || { s: 0, b: 0, n: 0 }).b += x.amt; });
       var ks = Object.keys(g).sort(function (a, b) { return (g[b].s - g[b].b) - (g[a].s - g[a].b); }), mx = Math.max.apply(null, ks.map(function (k) { return g[k].s; }).concat([1]));
+      h += donut(ks.map(function (k) { return [k, g[k].s]; }), '매출 비중');
       h += ks.map(function (k) { var o = g[k], p = o.s - o.b; return '<div class="pf2-row"><span class="n">' + esc(k) + '</span><span class="v' + (p < 0 ? ' neg' : '') + '">' + W(p) + '</span><span class="m"><span>매출 ' + W(o.s) + ' (' + o.n + '건)</span><span>매입 ' + W(o.b) + '</span>' + (o.s ? '<span>이익률 ' + Math.round(p / o.s * 100) + '%</span>' : '') + '</span><span class="bar"><i style="width:' + (o.s / mx * 100) + '%;background:' + C.sale + '"></i></span></div>'; }).join('') || '<div class="pf2-empty">내역이 없어요</div>';
       h += '<div class="pf2-note">소속사별 이익 = 매출 − 그 소속사 작업의 매입 (부대비용은 전체에서만 뺌). 매입의 소속사는 같은 아티스트의 매출로 맞췄어요.</div>';
     } else {
       var w = {};
       B.forEach(function (x) { var k = x.who || x.tab; if (typeof pmHidden === 'function' && pmHidden(k)) return; (w[k] = w[k] || { b: 0, n: 0, net: 0 }).b += x.amt; w[k].n++; w[k].net += (x.tot || x.amt); });
       var ws = Object.keys(w).sort(function (a, b) { return w[b].b - w[a].b; }), mw = Math.max.apply(null, ws.map(function (k) { return w[k].b; }).concat([1]));
+      h += donut(ws.map(function (k) { return [k, w[k].b]; }), '매입 비중');
       h += ws.map(function (k) { var o = w[k]; return '<div class="pf2-row"><span class="n">' + esc(k) + '</span><span class="v">' + W(o.b) + '</span><span class="m"><span>' + o.n + '건</span><span>실지급 ' + W(o.net) + '</span><span>매입의 ' + Math.round(o.b / Math.max(bAmt, 1) * 100) + '%</span></span><span class="bar"><i style="width:' + (o.b / mw * 100) + '%;background:' + C.buy + '"></i></span></div>'; }).join('') || '<div class="pf2-empty">내역이 없어요</div>';
     }
     h += '</div>';
@@ -6939,6 +6953,15 @@ header .hr .ib[aria-label="로그아웃"]{display:none!important}
 .mml-sum>div:nth-child(3) b{color:#8b95a1!important}
 .mml-sum.is-tax>div:nth-child(4) b{color:#3182f6!important}
 .mml-sum.is-pay>div:nth-child(4) b{color:#f04452!important}
+</style>
+<style>
+#tab-pf .pf2-dnw{display:flex;align-items:center;gap:18px;margin:4px 0 14px}
+#tab-pf .pf2-dn{width:132px;height:132px;flex:none}
+#tab-pf .pf2-dnl{flex:1;min-width:0;display:flex;flex-direction:column;gap:6px}
+#tab-pf .pf2-dnl .i{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--txt2)}
+#tab-pf .pf2-dnl .i i{width:8px;height:8px;border-radius:2px;flex:none}
+#tab-pf .pf2-dnl .k{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#tab-pf .pf2-dnl b{font-weight:700;color:var(--txt);font-variant-numeric:tabular-nums}
 </style>
 </body>
 
