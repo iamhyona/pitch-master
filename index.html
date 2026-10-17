@@ -7,7 +7,7 @@
 <meta name="theme-color" content="#f2f4f6">
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=3">
 <link rel="apple-touch-icon" href="apple-touch-icon.png?v=3">
-<meta name="pm-build" content="20261018012528">
+<meta name="pm-build" content="20261018035903">
 <link rel="manifest" href="manifest.webmanifest?v=3">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -6817,6 +6817,10 @@ document.addEventListener('click', function (e) {
 /* 2026-10-18 (현아): 상단 PITCH·관리 옆 오늘 날짜·현재 시각 */
 #hd-now{display:inline-flex;flex-direction:column;justify-content:center;margin-left:0;line-height:1.25;font-size:10px;font-weight:600;color:var(--txt3);white-space:nowrap;font-variant-numeric:tabular-nums}
 #hd-now b{font-size:11px;font-weight:700;color:var(--txt2)}
+#hd-now span{font-weight:500}
+header .hr #role-tag{display:inline-flex;align-items:center;cursor:pointer;margin-left:2px;-webkit-tap-highlight-color:transparent}
+header .hr #role-tag>span{height:36px;box-sizing:border-box;padding:0 14px!important;font-size:12px!important;border-radius:999px!important}
+header .hr .ib[aria-label="로그아웃"]{display:none!important}
 @media(max-width:359px){#hd-now{display:none}}
 </style>
 <script>
@@ -6824,11 +6828,14 @@ document.addEventListener('click', function (e) {
   var W = ['일', '월', '화', '수', '목', '금', '토'];
   function p(n) { return (n < 10 ? '0' : '') + n; }
   function tick() {
-    var tag = document.getElementById('role-tag'); if (!tag) return;
+    var br = document.querySelector('header .hl .brand'), tag = document.getElementById('role-tag'), hr = document.querySelector('header .hr'); if (!br) return;
+    // 2026-10-18 (현아): 관리/핏치 표시는 오른쪽 끝으로 — 누르면 로그아웃 확인
+    if (tag && hr && tag.parentNode !== hr) { hr.appendChild(tag); tag.title = '로그아웃'; tag.onclick = function () { if (confirm('로그아웃 하시겠습니까?')) doLogout(); }; }
     var el = document.getElementById('hd-now');
-    if (!el) { el = document.createElement('span'); el.id = 'hd-now'; tag.parentNode.insertBefore(el, tag.nextSibling); }
+    if (!el) { el = document.createElement('span'); el.id = 'hd-now'; }
+    if (el.previousSibling !== br) br.parentNode.insertBefore(el, br.nextSibling);
     var d = new Date();
-    el.innerHTML = '<span>' + String(d.getFullYear()).slice(2) + '.' + p(d.getMonth() + 1) + '.' + p(d.getDate()) + ' ' + W[d.getDay()] + '</span><b>' + p(d.getHours()) + ':' + p(d.getMinutes()) + '</b>';
+    el.innerHTML = '<b>' + d.getFullYear() + '.' + p(d.getMonth() + 1) + '.' + p(d.getDate()) + '(' + W[d.getDay()] + ')</b><span>' + p(d.getHours()) + ':' + p(d.getMinutes()) + '</span>';
   }
   tick(); setInterval(tick, 10000);
   document.addEventListener('visibilitychange', function () { if (!document.hidden) tick(); });
