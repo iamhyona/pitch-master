@@ -7,7 +7,7 @@
 <meta name="theme-color" content="#f2f4f6">
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=3">
 <link rel="apple-touch-icon" href="apple-touch-icon.png?v=3">
-<meta name="pm-build" content="20261018012201">
+<meta name="pm-build" content="20261018012528">
 <link rel="manifest" href="manifest.webmanifest?v=3">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -6039,7 +6039,7 @@ window.schSty = function (t, r, D) {
            : kv('지급내역 작성일자', get('작성일자')) + kv('지급일자', get('지급일자')));
     // 2026-10-17 (현아): 리터칭 담당자 · 거래처 담당자만 보이고, 나머지 정보는 눌러야 펼쳐짐 (중요한 건 작업 세부내역)
     h += '<div class="dv-grid">' + kWho + kMgr + '</div>' +
-      '<details class="dv-more"' + (window.DV_MORE ? ' open' : '') + ' ontoggle="window.DV_MORE=this.open"><summary>거래처 · 아티스트 · 날짜 정보</summary><div class="dv-grid">' + rest + '</div></details>';
+      '<details class="dv-more"' + (window.DV_MORE ? ' open' : '') + ' ontoggle="window.DV_MORE=this.open"><summary><span>세부정보</span></summary><div class="dv-grid">' + rest + '</div></details>';
     var link = (w && w.link) || (inv ? get('작업링크') : '');
     var woUrl = wi ? ((w && w.url) || ('https://docs.google.com/spreadsheets/d/' + wi.id + '/edit')) : '', fdUrl = link && /^https?:/.test(link) ? link : '';
     var ob = function (u, t) { return '<button type="button"' + (u ? ' onclick="window.open(\'' + esc(u).replace(/'/g, '%27') + '\',\'_blank\')"' : ' disabled') + '>' + t + '</button>'; };
@@ -6231,7 +6231,7 @@ document.addEventListener('click', function (e) {
     var workers = d.tabs.map(function (t) { return t.name; }).join(', ');
     var top = '<div class="wv-hd"><h3>' + esc([artist, I['프로젝트명'] || String(it.title || '').split(' · ')[0]].filter(Boolean).join(' ')) + '</h3><b>' + all + '컷</b></div>' +
       '<div class="wv-info">' + kv('리터칭 담당자', workers) + kv('거래처 담당자', I['담당자']) + '</div>' +
-      '<details class="wv-more"' + (window.WV_MORE ? ' open' : '') + ' ontoggle="window.WV_MORE=this.open"><summary>거래처 · 아티스트 · 날짜 정보</summary><div class="wv-info">' +
+      '<details class="wv-more"' + (window.WV_MORE ? ' open' : '') + ' ontoggle="window.WV_MORE=this.open"><summary><span>세부정보</span></summary><div class="wv-info">' +
       kv('거래처', shortC(I['거래처'])) + kv('아티스트', I['아티스트명']) + kv('프로젝트명', I['프로젝트명']) + kv('프로젝트 의뢰일자', I['요청일'] || '') + '</div></details>';
     var old = b.querySelector('.wv-top'); if (old) old.remove();
     var w = document.createElement('div'); w.className = 'wv-top'; w.innerHTML = top; b.insertBefore(w, b.firstChild);
@@ -6872,6 +6872,15 @@ document.addEventListener('click', function (e) {
   window.txWk = function (el, k) { WK[k] = !WK[k]; el.classList.toggle('on', !!WK[k]); };
 })();
 </script>
+<style>
+/* 2026-10-18 (현아): 접기 버튼 — 오른쪽 '세부정보' 버튼, 펼치면 글자 없이 화살표 버튼만 */
+.dv-more>summary,#mo-wo .wv-more>summary{display:flex!important;justify-content:flex-end;padding:6px 0 2px!important;margin:0;gap:0}
+.dv-more>summary:after,#mo-wo .wv-more>summary:after{display:none!important}
+.dv-more>summary>span,#mo-wo .wv-more>summary>span{display:inline-flex;align-items:center;gap:5px;height:28px;padding:0 10px 0 12px;border-radius:999px;background:#f2f4f6;font-size:12px;font-weight:600;color:#4e5968;line-height:1}
+.dv-more>summary>span:after,#mo-wo .wv-more>summary>span:after{content:'';width:10px;height:10px;background:no-repeat center/10px 10px url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%234e5968' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");transition:transform .2s}
+.dv-more[open]>summary>span,#mo-wo .wv-more[open]>summary>span{font-size:0;gap:0;width:28px;padding:0;justify-content:center}
+.dv-more[open]>summary>span:after,#mo-wo .wv-more[open]>summary>span:after{transform:rotate(180deg)}
+</style>
 </body>
 
 </html>
