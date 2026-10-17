@@ -6296,6 +6296,41 @@ document.addEventListener('click', function (e) {
   var _ed = woEd; woEd = function () { var r = _ed.apply(this, arguments); draw(); return r; };
 })();
 </script>
+<style>
+/* 2026-10-17 (현아): 작업내역 목록 — 구분 · 컷수 열 분리 */
+#mo-wo .wv-th{display:grid!important;grid-template-columns:1fr 64px 56px;gap:0}
+#mo-wo .wv-th span{padding:0 4px}
+#mo-wo .wv-th span:nth-child(2){text-align:center;border-left:1px solid #e5e8eb}
+#mo-wo .wv-th span:nth-child(3){text-align:right;border-left:1px solid #e5e8eb}
+#mo-wo .wd-sec .wd-li.wv-sp{display:grid!important;grid-template-columns:1fr 64px 56px;align-items:center;gap:0!important;padding:0 6px!important}
+#mo-wo .wd-li.wv-sp>.wd-f{padding:7px 4px 7px 0;min-width:0}
+#mo-wo .wd-li.wv-sp>.wv-c,#mo-wo .wd-li.wv-sp>.wv-n{align-self:stretch;display:flex;flex-direction:column;justify-content:center;gap:2px;padding:7px 4px;border-left:1px solid #f2f4f6;font-size:13px}
+#mo-wo .wd-li.wv-sp>.wv-c{text-align:center;color:var(--txt2)}
+#mo-wo .wd-li.wv-sp>.wv-n{text-align:right;font-weight:700;color:var(--txt)}
+#mo-wo .wd-li.wv-sp>.wd-its{display:none!important}
+</style>
+<script>
+(function () {
+  function split() {
+    var b = document.getElementById('wo-d-body'); if (!b) return;
+    b.querySelectorAll('.wv-th').forEach(function (th) { if (th.children.length < 3) th.innerHTML = '<span>작업 세부내역</span><span>구분</span><span>컷수</span>'; });
+    b.querySelectorAll('.wd-sec .wd-li').forEach(function (li) {
+      var its = li.querySelector('.wd-its'); if (!its) return;
+      var src = its.innerHTML; if (li.getAttribute('data-wvs') === src) return;
+      li.querySelectorAll('.wv-c,.wv-n').forEach(function (x) { x.remove(); });
+      var c = [], n = [];
+      src.split(' · ').forEach(function (p) { var m = p.match(/^([\s\S]*?)\s*<b>([\s\S]*?)<\/b>\s*$/); if (m) { c.push(m[1].trim() || '-'); n.push(m[2]); } });
+      if (!c.length) { c = ['-']; n = ['-']; }
+      var a = document.createElement('span'); a.className = 'wv-c'; a.innerHTML = c.map(function (x) { return '<i style="font-style:normal">' + x + '</i>'; }).join('');
+      var z = document.createElement('span'); z.className = 'wv-n'; z.innerHTML = n.map(function (x) { return '<i style="font-style:normal">' + x + '</i>'; }).join('');
+      li.appendChild(a); li.appendChild(z); li.classList.add('wv-sp'); li.setAttribute('data-wvs', src);
+    });
+  }
+  var mo = new MutationObserver(function () { split(); });
+  function hook() { var b = document.getElementById('wo-d-body'); if (b) mo.observe(b, { childList: true, subtree: true }); }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', hook); else hook();
+})();
+</script>
 </body>
 
 </html>
