@@ -7,7 +7,7 @@
 <meta name="theme-color" content="#f2f4f6">
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=3">
 <link rel="apple-touch-icon" href="apple-touch-icon.png?v=3">
-<meta name="pm-build" content="20261018083616">
+<meta name="pm-build" content="20261018083753">
 <link rel="manifest" href="manifest.webmanifest?v=3">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -6710,7 +6710,7 @@ document.addEventListener('click', function (e) {
       return '<div class="pf2-row"><span class="n">' + y + '년</span><span class="v' + (t.n < 0 ? ' neg' : '') + '">' + W(t.n) + '</span><span class="m"><span>매출 <b style="color:' + C.sale + '">' + W(t.s) + '</b></span><span>매입 <b style="color:#8b95a1">' + W(t.b) + '</b></span><span>부대비용 <b style="color:' + C.cost + '">' + W(t.c) + '</b></span></span></div>';
     }).join('');
     return '<div class="pf2-sec"><div class="pf2-h">연도별 비교<small>연 전체 · 공급가액</small></div>' + g +
-      '<div class="pf2-leg" style="margin:6px 0 4px"><span style="--c:' + C.sale + '">매출</span><span style="--c:' + C.buy + '">매입</span><span style="--c:' + C.net + '">순이익</span></div>' + rows + '</div>';
+      '<div class="pf2-leg" style="margin:6px 0 17px"><span style="--c:' + C.sale + '">매출</span><span style="--c:' + C.buy + '">매입</span><span style="--c:' + C.net + '">순이익</span></div>' + rows + '</div>';
   }
   function draw() {
     var top = document.getElementById('pf2-top'), box = document.getElementById('pf2-b'); if (!top || !box) return;
