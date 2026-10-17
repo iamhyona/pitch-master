@@ -5251,8 +5251,8 @@ window.schSty = function (t, r, D) {
 /* 2026-10-13 (현아): 일정 — 오늘은 검정 동그라미만 (회색 박스 X) */
 .sch-d.today.sel{background:transparent}
 /* 2026-10-13 (현아): 문구 — 연도 시트·폴더 바로가기 */
-#pf-mm-s{margin-left:auto!important}
-#pf-mm-s~.pf-ic{margin-left:8px!important}
+#pf-mm-l,#pf-mm-s{margin-left:auto!important}
+#pf-mm-l~.pf-ic{margin-left:8px!important}
 </style>
 <script>
 // 2026-10-13 (현아): 문구 메뉴 — 해당 연도 매출/매입 시트 · 폴더 바로가기 아이콘
@@ -6108,7 +6108,7 @@ document.addEventListener('click', function (e) {
     var s = document.getElementById('pf-mm-s'); if (!s || document.getElementById('pf-mm-l')) return;
     var b = document.createElement('button'); b.className = 'pf-ic'; b.id = 'pf-mm-l'; b.type = 'button'; b.title = '청구·지급 대금 확인'; b.innerHTML = SV_L;
     b.onclick = function () { mmlOpen(); };
-    s.parentNode.insertBefore(b, s.nextSibling);
+    s.parentNode.insertBefore(b, s);
   }
   setInterval(addIc, 1000); addIc();
   window.mmlOpen = function () { M.kind = (typeof PF !== 'undefined' && PF.mode === 'tax') ? 'tax' : 'pay'; M.y = ''; openMo('mo-mml'); load(); };
