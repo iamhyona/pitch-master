@@ -7,7 +7,7 @@
 <meta name="theme-color" content="#f2f4f6">
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=3">
 <link rel="apple-touch-icon" href="apple-touch-icon.png?v=3">
-<meta name="pm-build" content="20261018011949">
+<meta name="pm-build" content="20261018012201">
 <link rel="manifest" href="manifest.webmanifest?v=3">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -6832,6 +6832,44 @@ document.addEventListener('click', function (e) {
   }
   tick(); setInterval(tick, 10000);
   document.addEventListener('visibilitychange', function () { if (!document.hidden) tick(); });
+})();
+</script>
+<style>
+/* 2026-10-18 (현아): 신고 — 작업자 누르면 그 사람 작업 상세내역 펼침 (상세·메모 버튼 없앰) */
+.tx-dt .dc-row.tx-w{cursor:pointer;-webkit-tap-highlight-color:transparent}
+.tx-dt .dc-row.tx-w .t b{display:inline-flex;align-items:center;gap:4px}
+.tx-wchv{width:14px;height:14px;color:var(--txt3);transition:transform .2s;flex:none}
+.tx-dt .dc-row.tx-w.on .tx-wchv{transform:rotate(180deg)}
+.tx-wd{display:none;margin:8px 0 2px;padding:2px 0 0;border-top:1px solid #e5e8eb}
+.tx-dt .dc-row.tx-w.on .tx-wd{display:block}
+.tx-wd .i{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:1px 10px;padding:7px 0;border-bottom:1px solid #f2f4f6;font-size:12px}
+.tx-wd .i:last-child{border-bottom:0}
+.tx-wd .i .n{color:var(--txt);font-weight:600;min-width:0;word-break:keep-all}
+.tx-wd .i .a{font-weight:700;color:var(--txt);text-align:right;white-space:nowrap}
+.tx-wd .i .m{grid-column:1/3;color:var(--txt3);font-size:11px}
+.tx-wd .e{font-size:12px;color:var(--txt3);padding:8px 0}
+</style>
+<script>
+(function () {
+  var WK = {};
+  var chv = '<svg class="tx-wchv" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>';
+  txInner = function (id, ym) {
+    var d = TX_DET[id];
+    if (!d) return '<div class="wo-empty" style="padding:8px 0">불러오는 중...</div>';
+    if (d.err) return '<div class="wo-empty" style="padding:8px 0">⚠ ' + esc(d.err) + '</div>';
+    var W = d.workers || { rows: [] }, D = d.detail || { rows: [] };
+    var rows = W.rows.filter(function (r) { return r[1] && r[1] !== '합계' && r[0] !== ''; });
+    var det = D.rows.filter(function (r) { return r[1] && r[0] !== ''; });
+    if (!rows.length) return '<div class="tx-sec" style="margin:2px 2px 0">작업자별 합계</div><div class="wo-empty" style="padding:8px 0">내역이 없어요</div>';
+    return '<div class="tx-sec" style="margin:2px 2px 0">작업자별 합계 <span style="font-weight:500;color:var(--txt3);font-size:11px">· 이름을 누르면 작업 내역</span></div><div class="dc-rows">' + rows.map(function (r, i) {
+      var k = id + '|' + r[1], mine = det.filter(function (x) { return String(x[1]).trim() === String(r[1]).trim(); });
+      var list = mine.length ? mine.map(function (x) {
+        return '<div class="i"><span class="n">' + esc(String(x[4] || '-').replace(/^\s*\[PITCH\]\s*/, '')) + '</span><span class="a">' + esc(x[5]) + '</span><span class="m">' + esc(x[3]) + ' · 원천 ' + esc(x[8]) + ' · 실지급 ' + esc(x[9]) + '</span></div>';
+      }).join('') : '<div class="e">작업 상세내역이 없어요</div>';
+      return '<div class="dc-row tx-w' + (WK[k] ? ' on' : '') + '" onclick="txWk(this,\'' + esc(k).replace(/'/g, '') + '\')"><div class="t"><b>' + esc(r[1]) + ' <span style="font-size:12px;color:var(--txt3);font-weight:500">' + esc(r[3]) + '건</span>' + chv + '</b><span>' + esc(r[8]) + '</span></div><div class="s">' + esc(r[2]) + ' · 지급 ' + esc(r[4]) + ' · 원천 ' + esc(r[7]) + '</div><div class="tx-wd">' + list + '</div></div>';
+    }).join('') + '</div>';
+  };
+  window.txWk = function (el, k) { WK[k] = !WK[k]; el.classList.toggle('on', !!WK[k]); };
 })();
 </script>
 </body>
