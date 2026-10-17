@@ -6028,15 +6028,17 @@ window.schSty = function (t, r, D) {
     var h = '<div class="dv">' +
       '<div class="dv-hd"><div><h3>' + esc([I['아티스트명'] ? String(I['아티스트명']).replace(/^.*\((.*)\)$/, '$1') : it.artist, I['프로젝트명'] || String(it.title || '').split(' · ')[0]].filter(Boolean).join(' ')) + '</h3></div>' +
       '<div class="amt"><b>' + W(fin) + '원</b></div></div>';
-    h += '<div class="dv-sec">프로젝트</div><div class="dv-grid">' +
-      kv(inv ? '리터칭 담당' : '리터칭 담당자', inv ? ((String(it.title || '').match(/<([^>]*)>/) || [])[1] || (w ? (w.tabs || []).map(function (t) { return t.name; }).join(', ') : '')) : (get('작업자') || it.worker)) +
-      kv('거래처', (function (c) { var t = String(c || '').replace(/\s*\(.*\)\s*$/, '').replace(/\s*ENTERTAINMENT\s*/i, ' ').trim(); return t || c; })(I['거래처'] || (inv ? get('수신처') : '') || it.clientKey)) +
+    var kWho = kv(inv ? '리터칭 담당' : '리터칭 담당자', inv ? ((String(it.title || '').match(/<([^>]*)>/) || [])[1] || (w ? (w.tabs || []).map(function (t) { return t.name; }).join(', ') : '')) : (get('작업자') || it.worker));
+    var kMgr = kv('거래처 담당자', I['담당자'] || (inv ? get('담당자') : '') || (String(it.title || '').split(' · ')[1] || ''));
+    var rest = kv('거래처', (function (c) { var t = String(c || '').replace(/\s*\(.*\)\s*$/, '').replace(/\s*ENTERTAINMENT\s*/i, ' ').trim(); return t || c; })(I['거래처'] || (inv ? get('수신처') : '') || it.clientKey)) +
       kv('아티스트', I['아티스트명'] || (inv ? get('아티스트명') : '') || it.artist) +
       kv('프로젝트명', I['프로젝트명'] || String(it.title || '').split(' · ')[0]) +
-      kv('거래처 담당자', I['담당자'] || (inv ? get('담당자') : '') || (String(it.title || '').split(' · ')[1] || '')) +
       kv('프로젝트 의뢰일자', req) +
       (inv ? kv('청구서 작성일', get('작성일')) + kv('검수완료일', get('검수완료일'))
-           : kv('지급내역 작성일자', get('작성일자')) + kv('지급일자', get('지급일자'))) + '</div>';
+           : kv('지급내역 작성일자', get('작성일자')) + kv('지급일자', get('지급일자')));
+    // 2026-10-17 (현아): 리터칭 담당자 · 거래처 담당자만 보이고, 나머지 정보는 눌러야 펼쳐짐 (중요한 건 작업 세부내역)
+    h += '<div class="dv-grid">' + kWho + kMgr + '</div>' +
+      '<details class="dv-more"' + (window.DV_MORE ? ' open' : '') + ' ontoggle="window.DV_MORE=this.open"><summary>거래처 · 아티스트 · 날짜 정보</summary><div class="dv-grid">' + rest + '</div></details>';
     var link = (w && w.link) || (inv ? get('작업링크') : '');
     h += '<div class="dv-links">' + (wi ? '<a href="' + esc((w && w.url) || ('https://docs.google.com/spreadsheets/d/' + wi.id + '/edit')) + '" target="_blank">작업내역서 ↗</a>' : '<span>작업내역서 못 찾음</span>') +
       (link && /^https?:/.test(link) ? '<a href="' + esc(link) + '" target="_blank">작업 업로드 폴더 ↗</a>' : '<span>' + (w ? '작업 폴더 링크 없음' : (wi ? '폴더 확인 중…' : '작업 폴더 없음')) + '</span>') +
@@ -6168,6 +6170,14 @@ document.addEventListener('click', function (e) {
 .dv-tot .r{padding:6px 2px!important;font-size:13px!important}
 .dv-tot .r.t{font-size:15px!important;padding-top:10px!important}
 .dv-ft button{height:34px!important;font-size:12px!important}
+</style>
+<style>
+.dv-more{margin-top:-6px}
+.dv-more summary{list-style:none;cursor:pointer;display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:var(--txt3);padding:4px 2px}
+.dv-more summary::-webkit-details-marker{display:none}
+.dv-more summary:after{content:'';width:6px;height:6px;border-right:1.5px solid currentColor;border-bottom:1.5px solid currentColor;transform:rotate(45deg);margin-top:-3px}
+.dv-more[open] summary:after{transform:rotate(-135deg);margin-top:3px}
+.dv-more .dv-grid{margin-top:2px}
 </style>
 </body>
 
