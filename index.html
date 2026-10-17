@@ -7,7 +7,7 @@
 <meta name="theme-color" content="#f2f4f6">
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=3">
 <link rel="apple-touch-icon" href="apple-touch-icon.png?v=3">
-<meta name="pm-build" content="20261017220448">
+<meta name="pm-build" content="20261017220606">
 <link rel="manifest" href="manifest.webmanifest?v=3">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -6436,6 +6436,34 @@ document.addEventListener('click', function (e) {
 #mo-wo .wv-th,#mo-wo .wd-sec .wd-li.wv-sp,#mo-wo .wv-sr{grid-template-columns:1fr 48px 46px!important}
 #mo-wo .wd-li.wv-sp>.wv-n,#mo-wo .wv-th span:nth-child(3),#mo-wo .wv-sr b{padding-left:0!important;padding-right:2px!important}
 </style>
+<style>
+/* 2026-10-17 (현아): 매입·매출 — 검색필터 아래(구분선 위) 소속사 드롭다운 */
+.dc-box.has-ag .tc-h{border-bottom:0!important;padding-bottom:6px!important}
+.dc-agr{padding:0 18px 12px;border-bottom:1px solid var(--line);background:#fff}
+.dc-agr .dc-sel{width:100%;height:34px;background-color:var(--chip)!important;border-radius:999px!important;border:0!important;background-position:right 13px center;padding:0 30px 0 14px}
+</style>
+<script>
+(function () {
+  var _p = dcPass;
+  dcPass = function (S, x) { if (S.ag && x.clientKey !== S.ag) return false; return _p(S, x); };
+  var _r = dcRender;
+  dcRender = function (type) {
+    var S = DC[type], box = document.getElementById('dc-' + type);
+    if (box && S && S.items) {
+      var hd = box.querySelector('.tc-h'), row = box.querySelector('.dc-agr');
+      if (hd && !row) { row = document.createElement('div'); row.className = 'dc-agr'; hd.parentNode.insertBefore(row, hd.nextSibling); box.classList.add('has-ag'); }
+      if (row) {
+        var ks = {}; S.items.forEach(function (x) { if (x.clientKey) ks[x.clientKey] = 1; });
+        var list = Object.keys(ks).sort(function (a, b) { return typeof pmCmpClient === 'function' ? pmCmpClient(a, b) : a.localeCompare(b); });
+        if (S.ag && list.indexOf(S.ag) < 0) list.unshift(S.ag);
+        row.innerHTML = '<select class="dc-sel' + (S.ag ? '' : ' ph') + '" onchange="dcSet(\'' + type + '\',\'ag\',this.value)"><option value="">소속사 전체</option>' +
+          list.map(function (k) { return '<option value="' + esc(k) + '"' + (S.ag === k ? ' selected' : '') + '>' + esc(k) + '</option>'; }).join('') + '</select>';
+      }
+    }
+    return _r.apply(this, arguments);
+  };
+})();
+</script>
 </body>
 
 </html>
