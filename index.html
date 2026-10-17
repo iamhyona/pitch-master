@@ -7,7 +7,7 @@
 <meta name="theme-color" content="#f2f4f6">
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=3">
 <link rel="apple-touch-icon" href="apple-touch-icon.png?v=3">
-<meta name="pm-build" content="20261017231058">
+<meta name="pm-build" content="20261017232857">
 <link rel="manifest" href="manifest.webmanifest?v=3">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -6595,13 +6595,25 @@ document.addEventListener('click', function (e) {
   function load(force) {
     var key = P.y || '_';
     if (!force && P.data[key]) { draw(); return; }
+    var CK = 'pm_pf2_' + key;
+    if (!P.data[key]) { try { var c = JSON.parse(localStorage.getItem(CK) || 'null'); if (c && c.ok) { if (!P.y) P.y = c.y; P.data[c.y] = c; P.data[key] = c; } } catch (e) {} }
     P.loading = true; P.err = ''; draw();
-    woPost('pm_wo_profit', { y: P.y }, function (r) {
-      P.loading = false;
-      if (!r || !r.ok) { P.err = (r && r.error) || '불러오지 못했어요'; draw(); return; }
-      if (!P.y) P.y = r.y; P.data[r.y] = r; P.data[key] = r;
-      draw();
-    });
+    var tries = 0;
+    (function req() {
+      woPost('pm_wo_profit', { y: P.y, fresh: force ? 1 : 0 }, function (r) {
+        if (!r || !r.ok) {
+          if (++tries < 3) { setTimeout(req, 1500 * tries); return; }
+          P.loading = false;
+          if (!P.data[P.y || '_']) P.err = (r && r.error) || ('불러오지 못했어요 (' + String(JSON.stringify(r) || '응답 없음').slice(0, 80) + ')');
+          else toast('새로 불러오지 못해 저장된 내용을 보여드려요');
+          draw(); return;
+        }
+        P.loading = false;
+        if (!P.y) P.y = r.y; P.data[r.y] = r; P.data[key] = r;
+        try { localStorage.setItem('pm_pf2_' + r.y, JSON.stringify(r)); if (key === '_') localStorage.setItem('pm_pf2__', JSON.stringify(r)); } catch (e) {}
+        draw();
+      });
+    })();
   }
   window.pf2Load = load;
   window.pf2Set = function (k, v) { P[k] = v; if (k === 'y') { load(); } else draw(); };
