@@ -5863,20 +5863,23 @@ window.schSty = function (t, r, D) {
 #sp-pane .sp-tip{font-size:12px;color:var(--txt3);margin:8px 2px 0;line-height:1.5}
 #sp-pane .sp-go{display:block;width:100%;border:0;border-radius:12px;padding:12px;font:inherit;font-size:14px;font-weight:700;cursor:pointer;margin-top:14px;background:var(--txt);color:#fff}
 #sp-pane .sp-go:disabled{opacity:.4}
-#mo-sch-add.sp-p #sch-add{display:none!important}
+#mo-sch-add #sch-add .sa-seg{display:none!important}
+#mo-sch-add #sch-add .sa-h{display:none!important}
+#mo-sch-add.sp-p #sch-add{margin-top:22px!important;padding-top:18px!important;border-top:1px solid #f2f4f6!important;border-radius:0!important}
+#mo-sch-add.sp-p #sch-add:before{content:'프로젝트 외 일정';display:block;font-size:13px;font-weight:600;color:var(--txt2);margin:0 2px 8px}
 #mo-sch-add:not(.sp-p) #sp-pane{display:none}
 </style>
 <script>
 (function () {
   var mo = document.getElementById('mo-sch-add'), mb = document.getElementById('sch-add-mb'); if (!mo || !mb) return;
-  mb.insertAdjacentHTML('afterbegin', '<div class="sp-seg"><button type="button" data-m="p" class="on">프로젝트 마감</button><button type="button" data-m="s">직접 등록</button></div>' +
+  mb.insertAdjacentHTML('afterbegin', '<div class="sp-seg"><button type="button" data-m="p" class="on">상세 작성</button><button type="button" data-m="s">빠른 작성</button></div>' +
     '<div id="sp-pane"><div class="sp-l">프로젝트 (작업내역서)</div><select id="sp-p"><option value="">불러오는 중…</option></select>' +
     '<div class="sp-dl">' + [1, 2, 3].map(function (n) { return '<label><small>마감 ' + n + '순위</small><input type="date" id="sp-d' + n + '"></label>'; }).join('') + '</div>' +
     '<div class="sp-tip">작업내역서 마감 칸에 저장되고, 일정에 \'(마감)\'으로 바로 올라가요.</div>' +
     '<button type="button" class="sp-go" id="sp-go">마감일 저장</button></div>');
   mo.classList.add('sp-p');
   mb.querySelectorAll('.sp-seg button').forEach(function (b) {
-    b.onclick = function () { mb.querySelectorAll('.sp-seg button').forEach(function (x) { x.classList.toggle('on', x === b); }); mo.classList.toggle('sp-p', b.getAttribute('data-m') === 'p'); if (b.getAttribute('data-m') === 'p') fill(); };
+    b.onclick = function () { var p = b.getAttribute('data-m') === 'p'; mb.querySelectorAll('.sp-seg button').forEach(function (x) { x.classList.toggle('on', x === b); }); mo.classList.toggle('sp-p', p); if (window.saMode) saMode(p ? 'd' : 'q'); if (p) fill(); };
   });
   function lab(x) { var d = x.date6 || ''; return (x.artist || x.clientKey || '') + ' ' + String(x.title || '').replace(/ · /, ' · ') + (d ? ' (' + d.slice(0, 2) + '.' + d.slice(2, 4) + '.' + d.slice(4) + ')' : ''); }
   function fill() {
@@ -5911,7 +5914,13 @@ window.schSty = function (t, r, D) {
     });
   };
   // 창 열 때마다 프로젝트 목록 새로 채우기 (기본: 프로젝트 마감)
-  new MutationObserver(function () { if (mo.classList.contains('open') && mo.classList.contains('sp-p')) fill(); }).observe(mo, { attributes: true, attributeFilter: ['class'] });
+  var wasOpen = false;
+  new MutationObserver(function () {
+    var o = mo.classList.contains('open');
+    if (o && !wasOpen && window.saMode) saMode(mo.classList.contains('sp-p') ? 'd' : 'q');
+    wasOpen = o;
+    if (o && mo.classList.contains('sp-p')) fill();
+  }).observe(mo, { attributes: true, attributeFilter: ['class'] });
 })();
 </script>
 <div class="mo" id="mo-pfsave"><div class="md" style="max-width:420px"><div class="md-h"><span class="md-t" id="pfsave-t">기록에 저장할까요?</span><button class="xb" onclick="closeMo('mo-pfsave')">✕</button></div>
