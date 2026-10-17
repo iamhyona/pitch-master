@@ -4255,7 +4255,7 @@ function woDlSave() {
   };
   // 글자에서 정보 뽑기
   function parseInfo(t) {
-    t = String(t || '').replace(/\r/g, '').replace(/[：]/g, ':').replace(/[‐‑–—]/g, '-');
+    t = String(t || '').replace(/\r/g, '').replace(/[：]/g, ':').replace(/[‐‑–—]/g, '-').replace(/\+\s*82[\s.\-]*\(?0?\)?\s*(?=\d)/g, '0');
     var o = {}, one = t.replace(/\n+/g, '\n');
     var LAB = '상\\s*호|법인명|단체명|대\\s*표\\s*자|대표이사|대표명|대표|성\\s*명|이\\s*름|예금주|사업장\\s*소재지|소\\s*재\\s*지|본점\\s*소재지|주\\s*소|은\\s*행|은행명|계좌번호|계\\s*좌|등록번호|사업자\\s*번호|사업자등록번호|주민등록번호|주민번호|생년월일|연락처|휴대폰|전화|핸드폰|이메일|메일|e-?mail|개업\\s*연월일|사업의\\s*종류|업\\s*태|종\\s*목|과세유형|발급|담당자|부서|아티스트';
     function pick(re) { var m = one.match(re); return m ? m[1].replace(new RegExp('\\s*(' + LAB + ')\\s*[:：].*$'), '').replace(/^[\s:·\-]+|[\s,·]+$/g, '').trim() : ''; }
@@ -4280,7 +4280,14 @@ function woDlSave() {
     o.addr = lab('사업장\\s*소재지|본점\\s*소재지|소\\s*재\\s*지|주\\s*소');
     o.manager = lab('담당자');
     o.artists = lab('아티스트|소속\\s*아티스트');
+    o.dept = lab('담당\\s*부서|소속\\s*(?:팀|부서)|부\\s*서|팀\\s*명');
     ['ceo', 'name', 'manager', 'corp', 'addr', 'artists'].forEach(function (k) { if (o[k]) o[k] = o[k].replace(/[\w.+-]+@[\w-]+(\.[\w-]+)+/g, '').replace(/0\d{1,2}[\s.\-)]?\d{3,4}[\s.\-]?\d{4}/g, '').replace(/\d{3}-\d{2}-\d{5}|\d{6}-[1-8]\d{6}/g, '').replace(/\s{2,}/g, ' ').replace(/[\s,·/]+$/, '').trim(); });
+    if (o.dept) o.dept = o.dept.replace(/[\w.+-]+@[\w-]+(\.[\w-]+)+/g, '').replace(/0\d{1,2}[\s.\-)]?\d{3,4}[\s.\-]?\d{4}/g, '').replace(/[\s,·/|]+$/, '').trim().slice(0, 30);
+    // 2026-10-17: 라벨 없는 줄글 (예: 홍길동 팀장 / 마케팅팀 / 010…)
+    var TTL = '이사|상무|전무|본부장|실장|팀장|부장|차장|과장|대리|주임|사원|매니저|선임|책임|수석|PD|프로|팀원';
+    if (!o.manager) { var mm = one.match(new RegExp('(?:^|[\\s/|,·(])([가-힣]{2,4})\\s*(?:' + TTL + ')(?:님)?(?=$|[\\s/|,·)\\n])', 'm')); if (mm && !/팀|부$|본부|회사|주식/.test(mm[1])) o.manager = mm[1]; }
+    if (!o.dept) { var dm = one.match(/(?:^|[\s\/|,·(])([가-힣A-Za-z0-9&]{2,}(?:팀|본부|사업부|부서|센터|파트|그룹|실))(?=$|[\s\/|,·)\n])/m); if (dm && dm[1] !== o.manager && !/^(?:팀|실)$/.test(dm[1])) o.dept = dm[1]; }
+    if (o.tel && window.pmTel) o.tel = pmTel(o.tel);
     if (o.manager) o.manager = o.manager.split(/\s+/)[0];
     if (o.ceo && o.ceo.length > 20) o.ceo = o.ceo.slice(0, 20);
     if (o.name) o.name = o.name.replace(/\s*\(.*$/, '').replace(/\s+/g, '').slice(0, 10);
@@ -4305,7 +4312,7 @@ function woDlSave() {
       var n = fill(m, o); if (o.biz || o.reg) { $('lt-tax').value = o.biz ? '사업자' : '원천세'; n++; } return n;
     },
     agn: function (o) {
-      return fill({ 'agn-ko': 'ko', 'agn-en': 'en', 'agn-ceo': 'ceo', 'agn-biz': 'biz', 'agn-addr': 'addr', 'agn-taxmail': 'taxMail', 'agn-mgr': 'manager', 'agn-email': 'email', 'agn-tel': 'tel', 'agn-artists': 'artists' }, o);
+      return fill({ 'agn-ko': 'ko', 'agn-en': 'en', 'agn-ceo': 'ceo', 'agn-biz': 'biz', 'agn-addr': 'addr', 'agn-taxmail': 'taxMail', 'agn-mgr': 'manager', 'agn-dept': 'dept', 'agn-email': 'email', 'agn-tel': 'tel', 'agn-artists': 'artists' }, o);
     }
   };
   function applyParsed(k, text) {
@@ -4374,19 +4381,19 @@ function woDlSave() {
   function fld(id, label, tag, ph, extra) { return '<div class="fg"><label class="fl">' + label + (tag ? '<span class="pf-tg ' + (tag === 'auto' ? 'b' : 'r') + '">' + { hand: '*수기 작성', first: '*최초 선택', auto: '*자동 작성', req: '*필수 기재' }[tag] + '</span>' : '') + '</label><input class="fi sm" id="' + id + '"' + (ph ? ' placeholder="' + ph + '"' : '') + (extra || '') + '></div>'; }
   // 2026-10-13: 담당자 여러 명 — 추가·삭제
   function ctBlock(first) {
-    var x = first ? ['agn-mgr', 'agn-tel', 'agn-email'] : ['', '', ''];
+    var x = first ? ['agn-mgr', 'agn-tel', 'agn-email', 'agn-dept'] : ['', '', '', ''];
     var inp = function (id, cls, ph, extra) { return '<input class="fi sm ' + cls + '"' + (id ? ' id="' + id + '"' : '') + ' placeholder="' + ph + '"' + (extra || '') + '>'; };
     return '<div class="agn-ct">' +
       '<div class="agn-ct-h"><span>담당자</span><button type="button" class="re-x" title="담당자 빼기" onclick="rgAgnCtDel(this)">' + IC.x + '</button></div>' +
-      '<div class="row2"><div class="fg">' + inp(x[0], 'ct-n', '예: 홍길동') + '</div><div class="fg">' + inp(x[1], 'ct-t', '010-0000-0000', ' inputmode="tel"') + '</div></div>' +
-      '<div class="fg">' + inp(x[2], 'ct-m', 'example@company.com', ' inputmode="email"') + '</div></div>';
+      '<div class="row2"><div class="fg">' + inp(x[0], 'ct-n', '이름 (예: 홍길동)') + '</div><div class="fg">' + inp(x[3], 'ct-d', '부서 (예: 마케팅팀)') + '</div></div>' +
+      '<div class="row2"><div class="fg">' + inp(x[1], 'ct-t', '010-0000-0000', ' inputmode="tel"') + '</div><div class="fg">' + inp(x[2], 'ct-m', 'example@company.com', ' inputmode="email"') + '</div></div></div>';
   }
   window.rgAgnCtAdd = function () { $('agn-cts').insertAdjacentHTML('beforeend', ctBlock(false)); var l = $('agn-cts').lastElementChild.querySelector('.ct-n'); if (l) l.focus(); };
   window.rgAgnCtDel = function (b) {
     var box = b.closest('.agn-ct'), all = document.querySelectorAll('#agn-cts .agn-ct');
     if (all.length <= 1) { box.querySelectorAll('input').forEach(function (i) { i.value = ''; }); return; }
     var wasFirst = box === all[0]; box.remove();
-    if (wasFirst) { var f = document.querySelector('#agn-cts .agn-ct'); if (f) { f.querySelector('.ct-n').id = 'agn-mgr'; f.querySelector('.ct-t').id = 'agn-tel'; f.querySelector('.ct-m').id = 'agn-email'; } }
+    if (wasFirst) { var f = document.querySelector('#agn-cts .agn-ct'); if (f) { f.querySelector('.ct-n').id = 'agn-mgr'; f.querySelector('.ct-t').id = 'agn-tel'; f.querySelector('.ct-m').id = 'agn-email'; f.querySelector('.ct-d').id = 'agn-dept'; } }
   };
   window.rgAgNew = function () {
     $('agn-body').innerHTML = impHtml('agn') +
@@ -4401,11 +4408,12 @@ function woDlSave() {
     var ko = gv('agn-ko'), en = gv('agn-en');
     if (!ko && !en) { toast('국문명이나 영문명을 적어주세요'); return; }
     var memo = [gv('agn-addr'), gv('agn-taxmail') ? '세금계산서 ' + gv('agn-taxmail') : ''].filter(String).join(' / ');
-    var cts = [].map.call(document.querySelectorAll('#agn-cts .agn-ct'), function (b) { var v = function (c) { return (b.querySelector('.' + c).value || '').trim(); }; return { name: v('ct-n'), tel: v('ct-t'), email: v('ct-m') }; }).filter(function (c) { return c.name; });
+    var cts = [].map.call(document.querySelectorAll('#agn-cts .agn-ct'), function (b) { var v = function (c) { return (b.querySelector('.' + c).value || '').trim(); }; return { name: v('ct-n'), tel: pmTel(v('ct-t')), email: v('ct-m'), dept: v('ct-d') }; }).filter(function (c) { return c.name; });
     var first = cts[0] || {}, disp = en && ko ? en + '(' + ko + ')' : en || ko;
-    var d = { ko: ko, en: en, ceo: gv('agn-ceo'), biz: gv('agn-biz'), artists: gv('agn-artists'), memo: memo, manager: first.name || '', email: first.email || '', tel: first.tel || '' };
+    var d = { ko: ko, en: en, ceo: gv('agn-ceo'), biz: gv('agn-biz'), artists: gv('agn-artists'), memo: memo, manager: first.name || '', email: first.email || '', tel: first.tel || '', dept: first.dept || '' };
     pendAdd('ag', 'pm_add_client', d, '거래처 추가 · ' + disp + (first.name ? ' (담당자 ' + first.name + ')' : ''));
-    cts.slice(1).forEach(function (c) { pendAdd('ag', 'pm_add_contact', { client: disp, name: c.name, email: c.email, tel: c.tel }, '담당자 추가 · ' + c.name + ' (' + disp + ')'); });
+    if (first.name && first.dept) pendAdd('ag', 'pm_add_contact', { client: disp, name: first.name, email: first.email, tel: first.tel, dept: first.dept }, '담당자 부서 · ' + first.name + ' (' + first.dept + ')');
+    cts.slice(1).forEach(function (c) { pendAdd('ag', 'pm_add_contact', { client: disp, name: c.name, email: c.email, tel: c.tel, dept: c.dept }, '담당자 추가 · ' + c.name + ' (' + disp + ')'); });
     closeMo('mo-agn'); toast('반영 대기에 담았어요 — 반영을 눌러 저장하세요');
   };
 
@@ -4933,8 +4941,8 @@ a.rg-lk svg{width:16px;height:16px;flex:none}
     var id = c.id && String(c.id).indexOf('cl:') !== 0 ? c.id : '';
     return '<div class="agn-ct" data-id="' + ea(id) + '">' +
       '<div class="agn-ct-h"><span>담당자</span><button type="button" class="re-x" title="담당자 빼기" onclick="ageCtDel(this)">' + X + '</button></div>' +
-      '<div class="row2"><div class="fg"><input class="fi sm ct-n" placeholder="예: 홍길동" value="' + ea(c.manager) + '"></div><div class="fg"><input class="fi sm ct-t" placeholder="010-0000-0000" inputmode="tel" value="' + ea(c.tel) + '"></div></div>' +
-      '<div class="fg"><input class="fi sm ct-m" placeholder="example@company.com" inputmode="email" value="' + ea(c.email) + '"></div></div>';
+      '<div class="row2"><div class="fg"><input class="fi sm ct-n" placeholder="이름 (예: 홍길동)" value="' + ea(c.manager) + '"></div><div class="fg"><input class="fi sm ct-d" placeholder="부서 (예: 마케팅팀)" value="' + ea(c.dept) + '"></div></div>' +
+      '<div class="row2"><div class="fg"><input class="fi sm ct-t" placeholder="010-0000-0000" inputmode="tel" value="' + ea(c.tel) + '"></div><div class="fg"><input class="fi sm ct-m" placeholder="example@company.com" inputmode="email" value="' + ea(c.email) + '"></div></div></div>';
   }
   var ORIG = [], ON = false;
   window.ageCtAdd = function () { $('age-cts').insertAdjacentHTML('beforeend', blk()); var l = $('age-cts').lastElementChild.querySelector('.ct-n'); if (l) l.focus(); };
@@ -4955,7 +4963,7 @@ a.rg-lk svg{width:16px;height:16px;flex:none}
     _ed.apply(this, arguments);
     var a = (DB.agencies || []).filter(function (x) { return x.id === id; })[0]; if (!a || !setup()) return;
     var g = buildAgMap()[a.name], cts = (g && g.contacts || []).filter(function (c) { return c.manager || c.email || c.tel; });
-    ORIG = cts.map(function (c) { return { id: c.id && String(c.id).indexOf('cl:') !== 0 ? c.id : '', manager: c.manager || '', tel: c.tel || '', email: c.email || '' }; });
+    ORIG = cts.map(function (c) { return { id: c.id && String(c.id).indexOf('cl:') !== 0 ? c.id : '', manager: c.manager || '', tel: c.tel || '', email: c.email || '', dept: c.dept || '' }; });
     $('age-cts').innerHTML = cts.length ? cts.map(blk).join('') : blk();
     ON = true;
   };
@@ -4972,14 +4980,14 @@ a.rg-lk svg{width:16px;height:16px;flex:none}
     if (!c || !P) return;
     var now = [].map.call(document.querySelectorAll('#age-cts .agn-ct'), function (b) {
       var v = function (k) { return (b.querySelector('.' + k).value || '').trim(); };
-      return { id: b.getAttribute('data-id') || '', manager: v('ct-n'), tel: v('ct-t'), email: v('ct-m') };
+      return { id: b.getAttribute('data-id') || '', manager: v('ct-n'), tel: pmTel(v('ct-t')), email: v('ct-m'), dept: v('ct-d') };
     });
     var add = function (action, d, label) { P.push({ menu: 'ag', action: action, data: d, label: label, t: Date.now() }); };
     now.forEach(function (x) {
       var o = x.id ? ORIG.filter(function (y) { return y.id === x.id; })[0] : null;
       if (!x.manager) { if (o) add('pm_off_contact', { id: o.id }, '담당자 숨김 · ' + o.manager); return; }
-      if (!o) add('pm_add_contact', { id: '', client: c.disp, name: x.manager, email: x.email, tel: x.tel }, '담당자 추가 · ' + x.manager + ' (' + c.disp + ')');
-      else if (o.manager !== x.manager || o.tel !== x.tel || o.email !== x.email) add('pm_update_contact', { id: o.id, client: c.disp, name: x.manager, email: x.email, tel: x.tel }, '담당자 수정 · ' + x.manager);
+      if (!o) add('pm_add_contact', { id: '', client: c.disp, name: x.manager, email: x.email, tel: x.tel, dept: x.dept }, '담당자 추가 · ' + x.manager + ' (' + c.disp + ')');
+      else if (o.manager !== x.manager || o.tel !== x.tel || o.email !== x.email || o.dept !== x.dept) add('pm_update_contact', { id: o.id, client: c.disp, name: x.manager, email: x.email, tel: x.tel, dept: x.dept }, '담당자 수정 · ' + x.manager);
     });
     ORIG.forEach(function (o) { if (o.id && !now.some(function (x) { return x.id === o.id; })) add('pm_off_contact', { id: o.id }, '담당자 숨김 · ' + o.manager); });
     if (P.length > n0) {
@@ -5427,6 +5435,136 @@ window.schSty = function (t, r, D) {
   var _m = window.saMode;
   if (_m) window.saMode = function (m) { _m(m); var d = document.getElementById('sa-d'); if (d && window.SCH) d.value = SCH.sel; };
   if (window.SCH && document.getElementById('sch-box')) schRender();
+})();
+</script>
+<style>
+/* 2026-10-17 (현아): 담당자 직접 입력 — 이름·부서·연락처·메일 + 줄글 붙여넣기 */
+.ctn-paste{margin-bottom:8px}
+.ctn-paste summary{list-style:none;cursor:pointer;font-size:12px;font-weight:600;color:var(--txt2);padding:2px 0 6px}
+.ctn-paste summary::-webkit-details-marker{display:none}
+.ctn-paste summary:before{content:'+ ';color:var(--txt3)}
+.ctn-paste[open] summary:before{content:'– '}
+.ctn-paste textarea{width:100%;box-sizing:border-box;min-height:84px;border:0;border-radius:12px;background:#fff;padding:10px 12px;font-family:inherit;font-size:13px;resize:vertical}
+.ctn-paste button{margin-top:6px;width:100%;height:34px;border:0;border-radius:999px;background:var(--txt);color:#fff;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer}
+#mo-ctn .won-nv{margin-top:0}
+</style>
+<div class="mo" id="mo-ctn"><div class="md" style="max-width:420px"><div class="md-h"><span class="md-t">새 담당자</span><button class="xb" onclick="closeMo('mo-ctn')">✕</button></div>
+  <div class="md-b" id="ctn-body"></div></div></div>
+<script>
+// 2026-10-17 (현아 요청)
+// · 연락처는 010-1234-1234 / 01012341234 / 010.1234.1234 어떻게 적어도 010-0000-0000 꼴로 맞춤
+// · 담당자 '직접 입력'도 외주처처럼 이름·부서·연락처·메일을 적고 바로 거래처마스터에 등록
+// · 줄글을 붙여넣으면 항목을 알아서 나눠 채움 (거래처 담당자 · 신규 작업자)
+(function () {
+  function $(id) { return document.getElementById(id); }
+  function ea(s) { return esc(String(s == null ? '' : s)).replace(/"/g, '&quot;'); }
+  window.pmTel = function (v) {
+    var s = String(v == null ? '' : v).trim(); if (!s) return s;
+    var d = s.replace(/^\+\s*82/, '0').replace(/\D/g, '').replace(/^00/, '0');
+    if (/^82(?:1[016789]|2|[3-6]\d|70)/.test(d) && d.length >= 10 && d.length <= 11) d = '0' + d.slice(2);
+    if (/^02/.test(d)) { if (d.length === 9) return d.replace(/^(02)(\d{3})(\d{4})$/, '$1-$2-$3'); if (d.length === 10) return d.replace(/^(02)(\d{4})(\d{4})$/, '$1-$2-$3'); return s; }
+    if (/^0[1-9]/.test(d)) { if (d.length === 11) return d.replace(/^(\d{3})(\d{4})(\d{4})$/, '$1-$2-$3'); if (d.length === 10) return d.replace(/^(\d{3})(\d{3})(\d{4})$/, '$1-$2-$3'); return s; }
+    if (/^1[5-9]\d{6}$/.test(d)) return d.slice(0, 4) + '-' + d.slice(4);
+    return s;
+  };
+  function isTel(el) { return el && el.tagName === 'INPUT' && (el.getAttribute('inputmode') === 'tel' || el.type === 'tel' || /(^|-)tel$/.test(el.id || '') || el.classList.contains('ct-t')); }
+  function fmtEl(el) { if (isTel(el)) { var v = pmTel(el.value); if (v !== el.value) el.value = v; } }
+  document.addEventListener('focusout', function (e) { fmtEl(e.target); }, true);
+  document.addEventListener('change', function (e) { fmtEl(e.target); }, true);
+  document.addEventListener('paste', function (e) { var t = e.target; if (isTel(t)) setTimeout(function () { fmtEl(t); }, 0); }, true);
+  // 시트로 보내기 직전에도 한 번 더
+  var _ps = window.postSheet;
+  window.postSheet = postSheet = function (a, d, cb) { if (d && d.tel) d.tel = pmTel(d.tel); return _ps.apply(this, arguments); };
+
+  // ── 담당자 입력 칸 (이름 · 부서 · 연락처 · 메일) ──
+  function pasteBox(fn) {
+    return '<details class="ctn-paste"><summary>줄글 붙여넣어 자동 채우기</summary><textarea id="' + fn + '-t" placeholder="메일 서명·카톡 내용을 그대로 붙여넣으세요\n예: 홍길동 팀장 / 마케팅팀 / 010.1234.5678 / hong@company.com"></textarea><button type="button" onclick="' + fn + '()">읽어서 칸 채우기</button></details>';
+  }
+  function ctForm(pre, client, save, cancel) {
+    var lab = function (t, r) { return '<label class="fl">' + t + (r ? '<span class="pf-tg r">*필수 기재</span>' : '') + '</label>'; };
+    return '<div class="won-nv">' + pasteBox('ctnParse_' + pre) +
+      '<div class="row2"><div class="fg">' + lab('이름', 1) + '<input class="fi sm" id="' + pre + '-name" placeholder="예: 홍길동"></div>' +
+      '<div class="fg">' + lab('부서', 0) + '<input class="fi sm" id="' + pre + '-dept" placeholder="예: 마케팅팀"></div></div>' +
+      '<div class="fg">' + lab('연락처', 0) + '<input class="fi sm" id="' + pre + '-tel" inputmode="tel" placeholder="010-0000-0000"></div>' +
+      '<div class="fg">' + lab('메일주소', 0) + '<input class="fi sm" id="' + pre + '-mail" inputmode="email" placeholder="example@company.com"></div>' +
+      '<div class="won-sub">이름만 적어도 등록돼요. PITCH_DB 거래처마스터 담당자 탭(' + esc(client) + ')에 저장돼요.</div>' +
+      '<div class="won-btns"><button type="button" onclick="' + cancel + '">취소</button><button type="button" class="p" id="' + pre + '-go" onclick="' + save + '">등록</button></div></div>';
+  }
+  function fillCt(pre) {
+    var o = rgParse($('ctnParse_' + pre + '-t').value), n = 0;
+    if (!o.manager && o.name) o.manager = o.name;
+    [['name', 'manager'], ['dept', 'dept'], ['tel', 'tel'], ['mail', 'email']].forEach(function (a) { var el = $(pre + '-' + a[0]), v = o[a[1]]; if (el && v) { el.value = a[0] === 'tel' ? pmTel(v) : v; el.classList.add('rg-fill'); n++; } });
+    toast(n ? n + '칸을 채웠어요 — 확인해주세요' : '읽은 정보가 없어요');
+  }
+  window.ctnParse_wkn = function () { fillCt('wkn'); };
+  window.ctnParse_ivn = function () { fillCt('ivn'); };
+  function readCt(pre) { var g = function (k) { return ($(pre + '-' + k).value || '').trim(); }; return { name: g('name'), dept: g('dept'), tel: pmTel(g('tel')), email: g('mail') }; }
+  function saveCt(pre, client, done) {
+    var x = readCt(pre); if (!x.name) { toast('이름을 적어주세요'); return; }
+    if (!client) { toast('거래처를 먼저 골라주세요'); return; }
+    var d = { client: client, name: x.name, dept: x.dept, tel: x.tel, email: x.email };
+    var btn = $(pre + '-go'); if (btn) { btn.disabled = true; btn.textContent = '저장 중...'; }
+    postSheet('pm_add_contact', d, function () {});
+    if (PM.contacts && !PM.contacts.some(function (k) { return k.client === client && k.name === x.name; })) PM.contacts.push({ id: '', client: client, name: x.name, dept: x.dept, tel: x.tel, email: x.email, memo: '' });
+    done(x);
+  }
+
+  // ── 새 작업내역서: 담당자 '직접 입력' ──
+  var _wk = window.wonK;
+  window.wonK = function (sel) {
+    _wk.apply(this, arguments);
+    var box = $('won-kn'), k = $('won-k');
+    if (!box) { k.insertAdjacentHTML('afterend', '<div id="won-kn"></div>'); box = $('won-kn'); }
+    if (sel.value === '__d') {
+      k.style.display = 'none'; k.value = '';
+      box.innerHTML = ctForm('wkn', $('won-c').value, 'wknSave()', 'wknCancel()');
+      setTimeout(function () { var n = $('wkn-name'); if (n) n.focus(); }, 50);
+    } else box.innerHTML = '';
+  };
+  window.wknCancel = function () { var s = $('won-ks'); s.value = ''; wonK(s); };
+  window.wknSave = function () {
+    var client = $('won-c').value;
+    saveCt('wkn', client, function (x) {
+      var s = $('won-ks'), dl = s.querySelector('option[value="__d"]');
+      if (![].some.call(s.options, function (o) { return o.value === x.name; })) { var op = document.createElement('option'); op.textContent = x.name; op.value = x.name; s.insertBefore(op, dl); }
+      var kl = $('won-kl'); if (kl) kl.insertAdjacentHTML('beforeend', '<option value="' + ea(x.name) + '">');
+      s.value = x.name; s.classList.remove('ph'); $('won-kn').innerHTML = ''; $('won-k').style.display = 'none'; $('won-k').value = x.name;
+    });
+  };
+
+  // ── 견적서: 담당자 '직접 입력' ──
+  window.onInvManagerChange = function () {
+    if (gv('inv-manager') !== '__direct__') return;
+    var c = pmClient(gv('inv-client'));
+    if (!c) { toast('거래처를 먼저 골라주세요'); $('inv-manager').value = ''; return; }
+    $('ctn-body').innerHTML = ctForm('ivn', c.disp, 'ivnSave()', 'ivnCancel()');
+    openMo('mo-ctn'); setTimeout(function () { var n = $('ivn-name'); if (n) n.focus(); }, 100);
+  };
+  window.ivnCancel = function () { closeMo('mo-ctn'); var s = $('inv-manager'); if (s && s.value === '__direct__') s.value = ''; };
+  window.ivnSave = function () {
+    var c = pmClient(gv('inv-client'));
+    saveCt('ivn', c && c.disp, function (x) {
+      var s = $('inv-manager');
+      if (![].some.call(s.options, function (o) { return o.value === x.name; })) { var op = document.createElement('option'); op.value = x.name; op.textContent = x.name + (x.dept ? ' (' + x.dept + ')' : ''); s.insertBefore(op, s.lastChild); }
+      s.value = x.name; closeMo('mo-ctn');
+    });
+  };
+
+  // ── 새 작업내역서: 신규 작업자(외주처)도 줄글 붙여넣기 ──
+  var _wn = window.wonNewOpen;
+  window.wonNewOpen = function (e) {
+    _wn.apply(this, arguments);
+    var b = document.querySelector('#won-nv .won-nv'); if (b && !$('wnvParse-t')) b.insertAdjacentHTML('afterbegin', pasteBox('wnvParse'));
+  };
+  window.wnvParse = function () {
+    var o = rgParse($('wnvParse-t').value), n = 0;
+    var bank = o.bank ? String(o.bank).replace(/뱅크$/, '').replace(/^기업$/, 'IBK') : '';
+    var nm = o.name || o.manager || (!o.biz ? o.ceo : '') || '';
+    [['wnv-name', nm], ['wnv-reg', o.reg], ['wnv-acct', o.acct], ['wnv-tel', o.tel ? pmTel(o.tel) : ''], ['wnv-mail', o.email]].forEach(function (a) { var el = $(a[0]); if (el && a[1]) { el.value = a[1]; el.classList.add('rg-fill'); n++; } });
+    var bs = $('wnv-bank');
+    if (bs && bank) { if (![].some.call(bs.options, function (op) { return op.value === bank; })) bs.insertAdjacentHTML('beforeend', '<option>' + esc(bank) + '</option>'); bs.value = bank; bs.classList.remove('ph'); bs.classList.add('rg-fill'); n++; }
+    toast(n ? n + '칸을 채웠어요 — 확인해주세요' : '읽은 정보가 없어요');
+  };
 })();
 </script>
 </body>
