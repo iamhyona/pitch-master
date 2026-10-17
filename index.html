@@ -4072,8 +4072,9 @@ function woDlSave() {
     woPost('pm_wo_create', p, function (res) {
       btn.disabled = false; btn.textContent = '만들기';
       if (!res.ok) { err.textContent = res.error || '만들지 못했어요'; return; }
-      closeMo('mo-wo-new'); toast('02_작업내역서/' + (res.folder || '') + ' 에 만들었어요' + (res.linkName ? ' · 작업 폴더 ' + (res.folderNew ? '새로 만들어 ' : '') + '연결' : '') + (res.linkError ? ' · 폴더 연결 실패: ' + res.linkError : ''));
-      var after = function () { WO.loaded = false; woLoad(true); if (res.id) woOpen(res.id); };
+      toast('02_작업내역서/' + (res.folder || '') + ' 에 만들었어요' + (res.linkName ? ' · 작업 폴더 ' + (res.folderNew ? '새로 만들어 ' : '') + '연결' : '') + (res.linkError ? ' · 폴더 연결 실패: ' + res.linkError : ''));
+      if (window.wonDone) wonDone(res); else closeMo('mo-wo-new');
+      var after = function () { WO.loaded = false; woLoad(true); if (res.id && !window.wonDone) woOpen(res.id); };
       // 2026-10-17: 마감일은 만들기 직후 따로 저장 → 실패하면 최대 3번 다시 시도, 그래도 안 되면 기억해 뒀다가 상세 열 때 다시 저장
       if (dl.length && res.id) {
         try { var st = JSON.parse(localStorage.getItem('pm_wo_dl_pend') || '{}'); st[res.id] = dl; localStorage.setItem('pm_wo_dl_pend', JSON.stringify(st)); } catch (e) {}
@@ -5519,6 +5520,7 @@ window.schSty = function (t, r, D) {
     var btn = $(pre + '-go'); if (btn) { btn.disabled = true; btn.textContent = '저장 중...'; }
     postSheet('pm_add_contact', d, function () {});
     if (PM.contacts && !PM.contacts.some(function (k) { return k.client === client && k.name === x.name; })) PM.contacts.push({ id: '', client: client, name: x.name, dept: x.dept, tel: x.tel, email: x.email, memo: '' });
+    if (window.pmCtSort) pmCtSort();
     done(x);
   }
 
@@ -5618,7 +5620,7 @@ window.schSty = function (t, r, D) {
     if (sel.value === '__new') {
       var nm = newName(), same = F.list.filter(function (f) { return f.name === nm; })[0];
       if (same) { sel.value = same.id; n.innerHTML = '같은 이름 폴더가 이미 있어서 그 폴더로 연결해요'; return; }
-      n.innerHTML = '만들어질 폴더: <b>' + esc(nm) + '</b>' + (F.agency ? '<br>위치: 업로드 / ' + esc(F.agency) : '');
+      n.innerHTML = '만들어질 폴더: <b>' + esc(nm) + '</b>';
     } else if (sel.value === '__url') n.textContent = '구글드라이브 폴더 링크를 붙여넣으세요';
     else if (sel.value) n.textContent = '이 폴더를 작업내역서 링크 칸에 연결해요';
     else n.textContent = '링크 칸은 비워 두고 만들어요';
@@ -5638,8 +5640,9 @@ window.schSty = function (t, r, D) {
   }
   function inject() {
     var body = $('wo-n-body'), p = $('won-p'); if (!body || !p || $('won-f')) return;
-    var fg = p.closest('.fg');
-    fg.insertAdjacentHTML('afterend', '<div class="fg"><label class="fl">작업 폴더</label><select class="fi sm" id="won-f" onchange="wonF(this)"><option value="__new">+ 새 폴더 만들기</option></select>' +
+    // 담당자·요청일 아래, 마감일 위
+    var dl = $('won-dl1'), dfg = dl && dl.closest('.won-dl') && dl.closest('.won-dl').closest('.fg'), fg = p.closest('.fg');
+    (dfg || fg).insertAdjacentHTML(dfg ? 'beforebegin' : 'afterend', '<div class="fg"><label class="fl">작업 폴더</label><select class="fi sm" id="won-f" onchange="wonF(this)"><option value="__new">+ 새 폴더 만들기</option></select>' +
       '<input class="fi sm" id="won-fu" placeholder="https://drive.google.com/drive/folders/..." style="display:none;margin-top:6px"><div id="won-fn"></div></div>');
     F.client = ''; load();
   }
@@ -5649,6 +5652,49 @@ window.schSty = function (t, r, D) {
     mo.addEventListener('change', function (e) { if (e.target.id === 'won-c') load(); else if (e.target.id !== 'won-f') wonF(); });
     mo.addEventListener('input', function (e) { if (e.target.id === 'won-p' || e.target.id === 'won-k') wonF(); });
   }
+})();
+</script>
+<script>
+// 2026-10-17 (현아 요청): 담당자 목록은 언제나 가나다순 (거래처 → 담당자명) — 추가·수정 후에도
+(function () {
+  function cmp(a, b) { return String(a.client || '').localeCompare(String(b.client || ''), 'ko') || String(a.name || '').localeCompare(String(b.name || ''), 'ko'); }
+  window.pmCtSort = function () { if (PM && PM.contacts) PM.contacts.sort(cmp); };
+  var _ap = pmApply;
+  pmApply = function (d) { if (d && d.contacts) d.contacts = d.contacts.slice().sort(cmp); return _ap.apply(this, arguments); };
+  try { if (PM.contacts && PM.contacts.length) { pmCtSort(); if (typeof renderAll === 'function') renderAll(); } } catch (e) {}
+})();
+</script>
+<style>
+/* 2026-10-17 (현아): 새 작업내역서 완료 — 주소 복사 */
+.wond{display:flex;flex-direction:column;gap:10px;padding:4px 0 6px}
+.wond-ok{font-size:15px;font-weight:700;color:var(--txt)}
+.wond-nm{font-size:12px;color:var(--txt3);word-break:break-all;line-height:1.5;margin-top:-4px}
+.wond button{height:48px;border:0;border-radius:14px;background:var(--chip);color:var(--txt);font-family:inherit;font-size:15px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:space-between;padding:0 16px}
+.wond button small{font-size:12px;font-weight:500;color:var(--txt3)}
+.wond button.p{background:var(--txt);color:#fff;justify-content:center}
+.wond button:disabled{color:var(--faint)}
+</style>
+<script>
+// 2026-10-17 (현아 요청): 새 작업내역서를 만들면 — 작업내역서 · 작업 폴더 주소를 각각 / 한 번에 복사 (작업자 전달용)
+(function () {
+  function copy(t, b) {
+    var ok = function () { var o = b.innerHTML; b.innerHTML = '복사했어요 ✓'; setTimeout(function () { b.innerHTML = o; }, 1500); };
+    var fb = function () { var a = document.createElement('textarea'); a.value = t; a.setAttribute('readonly', ''); a.style.position = 'fixed'; a.style.opacity = '0'; document.body.appendChild(a); a.select(); a.setSelectionRange(0, t.length); try { document.execCommand('copy'); ok(); } catch (e) { prompt('복사해서 쓰세요', t); } a.remove(); };
+    try { navigator.clipboard.writeText(t).then(ok, fb); } catch (e) { fb(); }
+  }
+  window.wonDone = function (res) {
+    var L = { sheet: res.url || '', folder: res.linkUrl || '' };
+    var body = document.getElementById('wo-n-body'); if (!body) { closeMo('mo-wo-new'); return; }
+    body.innerHTML = '<div class="wond"><div class="wond-ok">작업내역서를 만들었어요</div><div class="wond-nm">' + esc(res.name || '') + (res.linkName ? '<br>작업 폴더: ' + esc(res.linkName) : '') + '</div>' +
+      '<button type="button" id="wd-s">작업내역서 주소 복사<small>시트</small></button>' +
+      '<button type="button" id="wd-f"' + (L.folder ? '' : ' disabled') + '>작업 폴더 주소 복사<small>' + (L.folder ? '드라이브' : '연결된 폴더 없음') + '</small></button>' +
+      '<button type="button" id="wd-b">둘 다 복사<small>작업자 전달용</small></button>' +
+      '<button type="button" class="p" id="wd-o">작업내역서 열기</button></div>';
+    document.getElementById('wd-s').onclick = function () { copy(L.sheet, this); };
+    document.getElementById('wd-f').onclick = function () { if (L.folder) copy(L.folder, this); };
+    document.getElementById('wd-b').onclick = function () { copy('작업내역서: ' + L.sheet + (L.folder ? '\n작업 폴더: ' + L.folder : ''), this); };
+    document.getElementById('wd-o').onclick = function () { closeMo('mo-wo-new'); if (res.id) woOpen(res.id); };
+  };
 })();
 </script>
 </body>
