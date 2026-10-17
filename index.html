@@ -4060,7 +4060,8 @@ function woDlSave() {
   };
   window.woCreate = function () {
     var g = function (id) { return (document.getElementById(id).value || '').trim(); }, err = document.getElementById('won-err');
-    var p = { client: g('won-c'), artist: g('won-a'), date: g('won-d'), project: g('won-p'), contact: g('won-k'),
+    var gf = function (id) { var e = document.getElementById(id); return e ? (e.value || '').trim() : ''; };
+    var p = { client: g('won-c'), artist: g('won-a'), date: g('won-d'), project: g('won-p'), contact: g('won-k'), folderId: gf('won-f') === '__url' ? '' : gf('won-f'), folderUrl: gf('won-f') === '__url' ? gf('won-fu') : '',
               workers: Array.prototype.map.call(document.querySelectorAll('#wo-n-body #won-ws input:checked'), function (x) { return x.value; }) };
     var dl = [g('won-dl1'), g('won-dl2'), g('won-dl3')].filter(String);
     if (!p.client || !p.artist) { err.textContent = '거래처와 아티스트를 골라주세요'; return; }
@@ -4071,7 +4072,7 @@ function woDlSave() {
     woPost('pm_wo_create', p, function (res) {
       btn.disabled = false; btn.textContent = '만들기';
       if (!res.ok) { err.textContent = res.error || '만들지 못했어요'; return; }
-      closeMo('mo-wo-new'); toast('02_작업내역서/' + (res.folder || '') + ' 에 만들었어요');
+      closeMo('mo-wo-new'); toast('02_작업내역서/' + (res.folder || '') + ' 에 만들었어요' + (res.linkName ? ' · 작업 폴더 ' + (res.folderNew ? '새로 만들어 ' : '') + '연결' : '') + (res.linkError ? ' · 폴더 연결 실패: ' + res.linkError : ''));
       var after = function () { WO.loaded = false; woLoad(true); if (res.id) woOpen(res.id); };
       // 2026-10-17: 마감일은 만들기 직후 따로 저장 → 실패하면 최대 3번 다시 시도, 그래도 안 되면 기억해 뒀다가 상세 열 때 다시 저장
       if (dl.length && res.id) {
@@ -5577,6 +5578,77 @@ window.schSty = function (t, r, D) {
     if (bs && bank) { if (![].some.call(bs.options, function (op) { return op.value === bank; })) bs.insertAdjacentHTML('beforeend', '<option>' + esc(bank) + '</option>'); bs.value = bank; bs.classList.remove('ph'); bs.classList.add('rg-fill'); n++; }
     toast(n ? n + '칸을 채웠어요 — 확인해주세요' : '읽은 정보가 없어요');
   };
+})();
+</script>
+<style>
+/* 2026-10-17 (현아): 새 작업내역서 — 작업 폴더 칸 · 위 여백을 옆 여백과 같게 */
+#mo-wo-new .md-h{position:sticky;top:0;z-index:3;background:#fff;padding:18px 20px 10px}
+#mo-wo-new .md-b{padding-top:6px}
+#won-fn{margin:6px 2px 0;font-size:12px;color:var(--txt3);word-break:break-all;line-height:1.45}
+#won-fn b{color:var(--txt2);font-weight:600}
+</style>
+<script>
+// 2026-10-17 (현아 요청): 새 작업내역서 — 작업 폴더(리터칭 업로드) 연결
+//  · 거래처를 고르면 업로드 폴더의 그 소속사 폴더 안 작업 폴더를 드롭다운으로
+//  · 없으면 '새 폴더 만들기' → [PITCH]거래처_아티스트_프로젝트명_담당자<작업자> 이름으로 만들고 작업내역서 링크 칸에 연결
+(function () {
+  var F = { client: '', list: [], label: '' };
+  function $(id) { return document.getElementById(id); }
+  function v(id) { var e = $(id); return e ? (e.value || '').trim() : ''; }
+  function shortA(a) { var m = String(a || '').match(/\(([^)]*)\)\s*$/); return m ? m[1] : String(a || ''); }
+  function label() {
+    if (F.label) return F.label;
+    var c = v('won-c'), o = (WO.opts && WO.opts.clients || []).filter(function (x) { return x.disp === c; })[0];
+    return String((o && o.key) || c.replace(/\(.*$/, '').replace(/ENTERTAINMENT/i, '')).replace(/\s+/g, '');
+  }
+  function workers() { return [].map.call(document.querySelectorAll('#wo-n-body #won-ws input:checked'), function (x) { return x.value; }).filter(function (w) { return w !== '강영순'; }); }
+  function newName() { return '[PITCH]' + [label(), shortA(v('won-a')), v('won-p'), v('won-k')].filter(String).join('_') + '<' + workers().join('') + '>'; }
+  function opts() {
+    var sel = $('won-f'); if (!sel) return; var cur = sel.value || '__new';
+    sel.innerHTML = '<option value="__new">+ 새 폴더 만들기</option>' +
+      F.list.map(function (f) { return '<option value="' + esc(f.id) + '">' + esc(f.name) + '</option>'; }).join('') +
+      '<option value="__url">링크 직접 붙여넣기</option><option value="">연결 안 함</option>';
+    sel.value = [].some.call(sel.options, function (o) { return o.value === cur; }) ? cur : '__new';
+    wonF(sel);
+  }
+  window.wonF = function (sel) {
+    sel = sel || $('won-f'); if (!sel) return;
+    var u = $('won-fu'), n = $('won-fn');
+    u.style.display = sel.value === '__url' ? '' : 'none';
+    if (sel.value === '__new') {
+      var nm = newName(), same = F.list.filter(function (f) { return f.name === nm; })[0];
+      if (same) { sel.value = same.id; n.innerHTML = '같은 이름 폴더가 이미 있어서 그 폴더로 연결해요'; return; }
+      n.innerHTML = '만들어질 폴더: <b>' + esc(nm) + '</b>' + (F.agency ? '<br>위치: 업로드 / ' + esc(F.agency) : '');
+    } else if (sel.value === '__url') n.textContent = '구글드라이브 폴더 링크를 붙여넣으세요';
+    else if (sel.value) n.textContent = '이 폴더를 작업내역서 링크 칸에 연결해요';
+    else n.textContent = '링크 칸은 비워 두고 만들어요';
+  };
+  function load() {
+    var c = v('won-c'); if (!c || c === F.client) { opts(); return; }
+    F.client = c; F.list = []; F.label = ''; F.agency = ''; opts();
+    var n = $('won-fn'); if (n) n.textContent = '작업 폴더 목록 불러오는 중...';
+    woPost('pm_wo_fold', { client: c }, function (r) {
+      if (F.client !== c) return;
+      if (r && r.ok) {
+        F.list = r.folders || []; F.agency = r.agency || '';
+        var m = F.list.map(function (f) { return (f.name.match(/^\[PITCH\]([^_]+)_/) || [])[1]; }).filter(String)[0]; if (m) F.label = m;
+      }
+      opts();
+    });
+  }
+  function inject() {
+    var body = $('wo-n-body'), p = $('won-p'); if (!body || !p || $('won-f')) return;
+    var fg = p.closest('.fg');
+    fg.insertAdjacentHTML('afterend', '<div class="fg"><label class="fl">작업 폴더</label><select class="fi sm" id="won-f" onchange="wonF(this)"><option value="__new">+ 새 폴더 만들기</option></select>' +
+      '<input class="fi sm" id="won-fu" placeholder="https://drive.google.com/drive/folders/..." style="display:none;margin-top:6px"><div id="won-fn"></div></div>');
+    F.client = ''; load();
+  }
+  var mo = $('mo-wo-new');
+  if (mo) {
+    new MutationObserver(function () { inject(); }).observe(mo, { childList: true, subtree: true });
+    mo.addEventListener('change', function (e) { if (e.target.id === 'won-c') load(); else if (e.target.id !== 'won-f') wonF(); });
+    mo.addEventListener('input', function (e) { if (e.target.id === 'won-p' || e.target.id === 'won-k') wonF(); });
+  }
 })();
 </script>
 </body>
