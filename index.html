@@ -7,7 +7,7 @@
 <meta name="theme-color" content="#f2f4f6">
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=3">
 <link rel="apple-touch-icon" href="apple-touch-icon.png?v=3">
-<meta name="pm-build" content="20261018084102">
+<meta name="pm-build" content="20261018084430">
 <link rel="manifest" href="manifest.webmanifest?v=3">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -6768,14 +6768,22 @@ document.addEventListener('click', function (e) {
     var grp = {}; K.forEach(function (b) { var k = isCost(b) ? (b.bucket === 'check' ? '확인 필요' : b.sub || '기타') : '제외된 출금'; (grp[k] = grp[k] || []).push(b); });
     var order = Object.keys(grp).sort(function (a, b) { if (a === '확인 필요') return -1; if (b === '확인 필요') return 1; if (a === '제외된 출금') return 1; if (b === '제외된 출금') return -1; return sum(grp[b], costAmt) - sum(grp[a], costAmt); });
     h += '<div class="pf2-sec"><div class="pf2-h">법인 통장 출금 분류<small>' + (r.bankFrom ? r.bankFrom + '부터 기록' : '핏치 가계부 기록 없음') + '</small></div>';
+    if (K.length) h += '<div class="pf2-seg"><button class="' + (P.bv !== 'date' ? 'on' : '') + '" onclick="pf2Set(\'bv\',\'cat\')">분류별</button><button class="' + (P.bv === 'date' ? 'on' : '') + '" onclick="pf2Set(\'bv\',\'date\')">날짜별</button></div>';
     if (!K.length) h += '<div class="pf2-empty">이 기간의 법인 통장 출금 기록이 없어요</div>';
+    // 2026-10-18 (현아): 분류별 / 날짜별 보기
+    if (P.bv === 'date') {
+      grp = {}; K.slice().sort(function (x, y) { return (y.d + (y.tm || '')).localeCompare(x.d + (x.tm || '')); }).forEach(function (b) { (grp[b.d] = grp[b.d] || []).push(b); });
+      order = Object.keys(grp).sort().reverse();
+    }
+    var WD = ['일', '월', '화', '수', '목', '금', '토'];
     order.forEach(function (k) {
-      var it = grp[k], tt = sum(it, costAmt);
-      h += '<div class="pf2-grp"><span>' + esc(k) + ' · ' + it.length + '건</span><span>' + (k === '제외된 출금' ? '' : W(tt) + '원') + '</span></div>';
+      var it = grp[k], tt = sum(it.filter(isCost), costAmt), dv = P.bv === 'date';
+      var lab = dv ? (k.slice(5).replace('-', '.') + ' (' + WD[new Date(k + 'T00:00:00').getDay()] + ')') : k;
+      h += '<div class="pf2-grp' + (k === '확인 필요' ? ' chk' : (k === '제외된 출금' ? ' off' : '')) + '"><span>' + esc(lab) + ' <em>' + it.length + '건</em></span><span>' + (k === '제외된 출금' ? '' : (dv ? '부대비용 ' : '') + W(tt) + '원') + '</span></div>';
       h += it.map(function (b) {
         var cls = b.bucket === 'check' ? ' chk' : (isCost(b) ? '' : ' off');
         var sel = !adm() ? '<span style="font-size:11px;color:var(--txt3)">' + esc((BK.filter(function (o) { return o[0] === b.bucket; })[0] || ['', ''])[1]) + '</span>' : '<select data-k="' + esc(b.key).replace(/"/g, '&quot;') + '" onchange="pf2Bucket(this.dataset.k,this.value)">' + BK.map(function (o) { return '<option value="' + o[0] + '"' + (o[0] === b.bucket ? ' selected' : '') + '>' + o[1] + '</option>'; }).join('') + '</select>';
-        return '<div class="pf2-it' + cls + '"><span class="t">' + esc(b.txt) + '</span><span class="a">' + (b.kind === '취소' ? '−' : '') + W(b.amt) + '</span><span class="s">' + esc(b.d.slice(5).replace('-', '.')) + ' · ' + esc(b.sub || '') + (b.ov ? ' · 직접 바꿈' : '') + '</span><span class="k">' + sel + '</span></div>';
+        return '<div class="pf2-it' + cls + '"><span class="t">' + esc(b.txt) + '</span><span class="a">' + (b.kind === '취소' ? '−' : '') + W(b.amt) + '</span><span class="s">' + (P.bv === 'date' ? esc(b.tm || '') + (b.tm ? ' · ' : '') : esc(b.d.slice(5).replace('-', '.')) + ' · ') + esc(b.sub || '') + (b.ov ? ' · 직접 바꿈' : '') + '</span><span class="k">' + sel + '</span></div>';
       }).join('');
     });
     h += '<div class="pf2-note">· 매출·매입은 기록 메뉴의 매출/매입 내역(공급가액)입니다.<br>· 부대비용은 핏치 가계부(법인 통장) 출금 중 매입 지급·세금 납부·대표 계좌 이동을 뺀 금액입니다. 매입 지급은 금액·날짜·이름으로 자동으로 맞췄어요.<br>· 분류가 틀린 건 오른쪽에서 바꾸면 저장돼요. 빨간 줄은 사람에게 보낸 돈이라 확인이 필요한 건이에요.</div></div>';
@@ -6962,6 +6970,18 @@ header .hr .ib[aria-label="로그아웃"]{display:none!important}
 #tab-pf .pf2-dnl .i i{width:8px;height:8px;border-radius:2px;flex:none}
 #tab-pf .pf2-dnl .k{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 #tab-pf .pf2-dnl b{font-weight:700;color:var(--txt);font-variant-numeric:tabular-nums}
+</style>
+<style>
+/* 2026-10-18 (현아): 법인 통장 — 분류 머리줄과 세부 항목 구분 */
+#tab-pf .pf2-grp{background:#f2f4f6;border-radius:10px;padding:9px 12px!important;margin:14px 0 2px;font-size:13px!important;font-weight:700;color:var(--txt)!important}
+#tab-pf .pf2-grp em{font-style:normal;font-weight:500;color:var(--txt3);font-size:12px;margin-left:4px}
+#tab-pf .pf2-grp.chk{background:rgba(240,68,82,.08);color:#f04452!important}
+#tab-pf .pf2-grp.off{color:var(--txt3)!important}
+#tab-pf .pf2-it{padding:9px 4px 9px 12px!important}
+#tab-pf .pf2-it .t{font-size:13px}
+#tab-pf .pf2-it .a{font-size:13px;font-weight:600}
+#tab-pf .pf2-it:last-child,#tab-pf .pf2-it+.pf2-grp{border-bottom:0}
+#tab-pf .pf2-sec>.pf2-seg{margin:2px 0 0}
 </style>
 </body>
 
