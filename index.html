@@ -7,7 +7,7 @@
 <meta name="theme-color" content="#f2f4f6">
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=3">
 <link rel="apple-touch-icon" href="apple-touch-icon.png?v=3">
-<meta name="pm-build" content="20261017220308">
+<meta name="pm-build" content="20261017220448">
 <link rel="manifest" href="manifest.webmanifest?v=3">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -6431,6 +6431,11 @@ document.addEventListener('click', function (e) {
   document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'visible') setTimeout(go, 300); });
 })();
 </script>
+<style>
+/* 2026-10-17 (현아): 컷수 열 좁게 (최대 세 자리) — 구분과 컷수 간격 줄임 */
+#mo-wo .wv-th,#mo-wo .wd-sec .wd-li.wv-sp,#mo-wo .wv-sr{grid-template-columns:1fr 48px 46px!important}
+#mo-wo .wd-li.wv-sp>.wv-n,#mo-wo .wv-th span:nth-child(3),#mo-wo .wv-sr b{padding-left:0!important;padding-right:2px!important}
+</style>
 </body>
 
 </html>
