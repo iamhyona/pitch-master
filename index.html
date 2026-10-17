@@ -7,7 +7,7 @@
 <meta name="theme-color" content="#f2f4f6">
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=3">
 <link rel="apple-touch-icon" href="apple-touch-icon.png?v=3">
-<meta name="pm-build" content="20261018000351">
+<meta name="pm-build" content="20261018000632">
 <link rel="manifest" href="manifest.webmanifest?v=3">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -6591,11 +6591,13 @@ document.addEventListener('click', function (e) {
     p.innerHTML = '<div class="tc"><div class="pf2-top" id="pf2-top"></div><div class="pf2-b" id="pf2-b"></div></div>';
     ci.appendChild(p);
   }
-  function role() { var g = typeof SESSION !== 'undefined' && SESSION && SESSION.role === 'admin'; var b = document.getElementById('tab-btn-pf'); if (b) b.style.display = g ? '' : 'none'; return g; }
+  function role() { var g = typeof SESSION !== 'undefined' && SESSION && (SESSION.role === 'admin' || SESSION.role === 'guest'); var b = document.getElementById('tab-btn-pf'); if (b) b.style.display = g ? '' : 'none'; return g; } // 2026-10-18: 핏치 모드도 보기
+  function adm() { return typeof SESSION !== 'undefined' && SESSION && SESSION.role === 'admin'; }
+  function rk() { return (typeof SESSION !== 'undefined' && SESSION && SESSION.role) || 'x'; }
   function load(force) {
     var key = P.y || '_';
     if (!force && P.data[key]) { draw(); return; }
-    var CK = 'pm_pf2_' + key;
+    var CK = 'pm_pf2_' + rk() + '_' + key;
     if (!P.data[key]) { try { var c = JSON.parse(localStorage.getItem(CK) || 'null'); if (c && c.ok) { if (!P.y) P.y = c.y; P.data[c.y] = c; P.data[key] = c; } } catch (e) {} }
     P.loading = true; P.err = ''; draw();
     var tries = 0;
@@ -6610,7 +6612,7 @@ document.addEventListener('click', function (e) {
         }
         P.loading = false;
         if (!P.y) P.y = r.y; P.data[r.y] = r; P.data[key] = r;
-        try { localStorage.setItem('pm_pf2_' + r.y, JSON.stringify(r)); if (key === '_') localStorage.setItem('pm_pf2__', JSON.stringify(r)); } catch (e) {}
+        try { localStorage.setItem('pm_pf2_' + rk() + '_' + r.y, JSON.stringify(r)); if (key === '_') localStorage.setItem('pm_pf2_' + rk() + '__', JSON.stringify(r)); } catch (e) {}
         draw();
       });
     })();
@@ -6712,7 +6714,7 @@ document.addEventListener('click', function (e) {
       h += '<div class="pf2-grp"><span>' + esc(k) + ' · ' + it.length + '건</span><span>' + (k === '제외된 출금' ? '' : W(tt) + '원') + '</span></div>';
       h += it.map(function (b) {
         var cls = b.bucket === 'check' ? ' chk' : (isCost(b) ? '' : ' off');
-        var sel = '<select data-k="' + esc(b.key).replace(/"/g, '&quot;') + '" onchange="pf2Bucket(this.dataset.k,this.value)">' + BK.map(function (o) { return '<option value="' + o[0] + '"' + (o[0] === b.bucket ? ' selected' : '') + '>' + o[1] + '</option>'; }).join('') + '</select>';
+        var sel = !adm() ? '<span style="font-size:11px;color:var(--txt3)">' + esc((BK.filter(function (o) { return o[0] === b.bucket; })[0] || ['', ''])[1]) + '</span>' : '<select data-k="' + esc(b.key).replace(/"/g, '&quot;') + '" onchange="pf2Bucket(this.dataset.k,this.value)">' + BK.map(function (o) { return '<option value="' + o[0] + '"' + (o[0] === b.bucket ? ' selected' : '') + '>' + o[1] + '</option>'; }).join('') + '</select>';
         return '<div class="pf2-it' + cls + '"><span class="t">' + esc(b.txt) + '</span><span class="a">' + (b.kind === '취소' ? '−' : '') + W(b.amt) + '</span><span class="s">' + esc(b.d.slice(5).replace('-', '.')) + ' · ' + esc(b.sub || '') + (b.ov ? ' · 직접 바꿈' : '') + '</span><span class="k">' + sel + '</span></div>';
       }).join('');
     });
