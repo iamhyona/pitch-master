@@ -391,6 +391,14 @@ select.fi option{background:var(--sur2)}
           </div>
         </div>
 
+        <!-- 2026-10-17: 빠른 작성 -->
+        <div class="inv-box" id="inv-quick-box">
+          <div class="inv-sec">빠른 작성</div>
+          <textarea class="fi" id="inv-quick" rows="2" autocomplete="off" spellcheck="false" placeholder="예) 스타쉽, 에이엔, 박수현, 신규앨범, 개인 30컷, 단체 5컷, 합성 3컷, 긴급추가"></textarea>
+          <div class="iq-hint" id="inv-quick-hint">소속사 · 아티스트 · 담당자 · (프로젝트명) · 개인/2인/단체/합성 N컷 · 긴급추가를 쉼표나 줄바꿈으로 적으면 소속사 단가로 채워요</div>
+          <button type="button" class="btn btn-p iq-go" onclick="invQuickApply()">칸 채우기</button>
+        </div>
+
         <!-- 수신처 정보 -->
         <div class="inv-box">
           <div class="inv-sec">수신처 정보</div>
@@ -5695,6 +5703,193 @@ window.schSty = function (t, r, D) {
     document.getElementById('wd-b').onclick = function () { copy('작업내역서: ' + L.sheet + (L.folder ? '\n작업 폴더: ' + L.folder : ''), this); };
     document.getElementById('wd-o').onclick = function () { closeMo('mo-wo-new'); if (res.id) woOpen(res.id); };
   };
+})();
+</script>
+<style>
+#inv-quick{width:100%;box-sizing:border-box;resize:vertical;min-height:64px;line-height:1.5}
+.iq-hint{font-size:12px;color:var(--txt3);margin:8px 2px 0;line-height:1.55;word-break:keep-all}
+.iq-hint b{color:var(--txt2);font-weight:600}
+.iq-hint .x{color:#f04452}
+.iq-go{width:100%;margin-top:10px}
+</style>
+<script>
+// 2026-10-17 (현아 요청): 견적서 빠른 작성 — 줄글로 소속사·아티스트·담당자·컷수를 적으면 소속사 단가로 항목 채우기
+(function () {
+  function $(id) { return document.getElementById(id); }
+  function N(s) { return String(s || '').replace(/\s+/g, '').toLowerCase(); }
+  function nm(x) { return [x.disp, x.ko, x.en, x.key, String(x.disp || '').replace(/\(.*$/, ''), (String(x.disp || '').match(/\(([^)]*)\)/) || [])[1]].filter(Boolean).map(N); }
+  function hit(list, t) { var n = N(t); if (!n) return null; return list.filter(function (x) { return nm(x).indexOf(n) >= 0; })[0] || list.filter(function (x) { return n.length >= 2 && nm(x).some(function (k) { return k.indexOf(n) === 0; }); })[0] || null; }
+  var CUT = /(개인|단체|합성|유닛|\d+\s*인)\s*[:：]?\s*(\d+)\s*(컷|장)?/;
+  function parse(text) {
+    var o = { items: [], urgent: false, prem: false, left: [] };
+    String(text || '').split(/[,，\n\/·]+/).map(function (x) { return x.trim(); }).filter(Boolean).forEach(function (t) {
+      var m = t.match(CUT);
+      if (m) { o.items.push({ kind: m[1].replace(/\s+/g, ''), qty: +m[2], urgent: /긴급/.test(t), prem: /고급/.test(t) }); return; }
+      if (/^긴급/.test(t)) { o.urgent = true; return; }
+      if (/^고급/.test(t)) { o.prem = true; return; }
+      if (!o.client) { var c = hit(PM.clients || [], t); if (c) { o.client = c; return; } }
+      if (!o.artist) { var a = hit((PM.artists || []).filter(function (x) { return !o.client || x.client === o.client.disp; }), t) || (!o.client && hit(PM.artists || [], t)); if (a) { o.artist = a; return; } }
+      if (!o.manager) { var k = (PM.contacts || []).filter(function (x) { return N(x.name) === N(t) && (!o.client || x.client === o.client.disp); })[0]; if (k) { o.manager = k; return; } }
+      o.left.push(t);
+    });
+    if (!o.client && o.artist) o.client = (PM.clients || []).filter(function (c) { return c.disp === o.artist.client; })[0] || null;
+    if (!o.client && o.manager) o.client = (PM.clients || []).filter(function (c) { return c.disp === o.manager.client; })[0] || null;
+    if (o.client && !o.manager && o.left.length) { var i = o.left.findIndex(function (t) { return (PM.contacts || []).some(function (x) { return x.client === o.client.disp && N(x.name) === N(t); }); }); if (i >= 0) { o.manager = (PM.contacts || []).filter(function (x) { return x.client === o.client.disp && N(x.name) === N(o.left[i]); })[0]; o.left.splice(i, 1); } }
+    if (o.left.length) o.project = o.left.shift();
+    return o;
+  }
+  function cats(tab) { return (RATES_RAW[tab] || []).map(function (r) { return r[0]; }); }
+  function findCat(kind, list) {
+    var n = (kind.match(/^(\d+)인$/) || [])[1];
+    var test = kind === '개인' ? function (c) { return /개인|^1인/.test(c); } : kind === '단체' ? function (c) { return /단체/.test(c); } : kind === '합성' ? function (c) { return /합성/.test(c); } : kind === '유닛' ? function (c) { return /유닛/.test(c); } :
+      n ? function (c) { return c === n + '인' || new RegExp('^' + n + '\\s*인').test(c) || (n === '1' && /개인/.test(c)); } : function () { return false; };
+    return list.filter(test)[0] || '';
+  }
+  function hint() {
+    var o = parse($('inv-quick').value), h = $('inv-quick-hint'); if (!h) return;
+    if (!$('inv-quick').value.trim()) { h.innerHTML = '소속사 · 아티스트 · 담당자 · (프로젝트명) · 개인/2인/단체/합성 N컷 · 긴급추가를 쉼표나 줄바꿈으로 적으면 소속사 단가로 채워요'; return; }
+    var tab = o.client ? (o.client.rateTab || '') : gv('inv-agency'), cl = cats(tab), bits = [];
+    bits.push(o.client ? '<b>' + esc(o.client.disp) + '</b>' : '<span class="x">소속사 ?</span>');
+    if (o.artist) bits.push('<b>' + esc(o.artist.disp) + '</b>');
+    if (o.manager) bits.push('<b>' + esc(o.manager.name) + '</b>');
+    if (o.project) bits.push('프로젝트 <b>' + esc(o.project) + '</b>');
+    o.items.forEach(function (it) { var c = findCat(it.kind, cl); bits.push(c ? '<b>' + esc(c) + ' ' + it.qty + '컷</b>' : '<span class="x">' + esc(it.kind) + ' ' + it.qty + '컷 (단가 없음)</span>'); });
+    if (o.urgent) bits.push('<b>긴급 +25%</b>');
+    h.innerHTML = bits.join(' · ') + (tab ? ' <span style="color:var(--faint)">(' + esc(tab) + ' 단가)</span>' : '');
+  }
+  window.invQuickApply = function () {
+    var o = parse($('inv-quick').value);
+    if (!o.client && !o.items.length) { toast('알아볼 수 있는 내용이 없어요'); return; }
+    if (o.client) { $('inv-client').value = o.client.disp; onInvClientDirectCheck(); }
+    if (o.artist) { var a = $('inv-artist'); if (![].some.call(a.options, function (x) { return x.value === o.artist.disp; })) a.insertAdjacentHTML('afterbegin', '<option>' + esc(o.artist.disp) + '</option>'); a.value = o.artist.disp; }
+    if (o.manager) { var m = $('inv-manager'); if (![].some.call(m.options, function (x) { return x.value === o.manager.name; })) m.insertAdjacentHTML('afterbegin', '<option>' + esc(o.manager.name) + '</option>'); m.value = o.manager.name; }
+    if (o.project) $('inv-project').value = o.project;
+    if (o.items.length) {
+      INV_ITEMS.slice().forEach(function (it) { removeInvItem(it.id); });
+      var cl = cats(gv('inv-agency')), miss = [];
+      o.items.forEach(function (it) {
+        addInvItem(); var id = INV_ITEMS[INV_ITEMS.length - 1].id, sel = $('inv-type-' + id), c = findCat(it.kind, cl);
+        if (it.urgent || o.urgent) $('inv-urgent-' + id).checked = true;
+        if (it.prem || o.prem) $('inv-premium-' + id).checked = true;
+        if (c) { sel.value = c; onInvTypeChange(id); } else { miss.push(it.kind); $('inv-desc-' + id).value = it.kind; }
+        sel.classList.toggle('ph', !sel.value);
+        $('inv-qty-' + id).value = it.qty;
+      });
+      if (typeof invSync === 'function') invSync();
+      calcInvTotal();
+      if (miss.length) toast(miss.join(', ') + ' 단가를 찾지 못했어요 — 단가를 직접 적어주세요');
+    }
+    document.querySelectorAll('#tab-invoice select').forEach(function (e) { e.classList.toggle('ph', !e.value); });
+    toast('견적서 칸을 채웠어요 — 확인해주세요');
+  };
+  document.addEventListener('input', function (e) { if (e.target && e.target.id === 'inv-quick') hint(); });
+})();
+</script>
+<div class="mo" id="mo-sch-add"><div class="md"><div class="md-h"><span class="md-t">일정 등록</span><button class="xb" onclick="closeMo('mo-sch-add')">✕</button></div><div class="md-b" id="sch-add-mb"></div></div></div>
+<style>
+/* 2026-10-17 (현아): 일정 등록도 다른 메뉴처럼 새 창(모달)으로 */
+#mo-sch-add .md-h{position:sticky;top:0;z-index:3;background:#fff;padding:18px 20px 10px}
+#mo-sch-add .md-b{padding-top:6px}
+#mo-sch-add #sch-add{display:block!important;padding:0;margin:0;background:transparent;border-radius:0}
+#mo-sch-add #sch-add .sa-h b{display:none}
+#mo-sch-add #sch-add .sa-h{margin-bottom:12px}
+</style>
+<script>
+(function () {
+  function box() {
+    var b = document.getElementById('sch-add');
+    if (!b && window.saRender) { saRender(); b = document.getElementById('sch-add'); }
+    var mb = document.getElementById('sch-add-mb');
+    if (b && mb && b.parentNode !== mb) mb.appendChild(b);
+    return b;
+  }
+  window.schPlus = function () {
+    var b = box(); if (!b) return;
+    b.classList.add('open');
+    var d = document.getElementById('sa-d'); if (d && window.SCH) d.value = SCH.sel;
+    openMo('mo-sch-add');
+    setTimeout(function () { var t = document.getElementById('sa-q') || document.getElementById('sa-t'); if (t) t.focus(); }, 250);
+  };
+  window.schAddOn = function (k) { schPlus(); if (window.saMode) saMode('d'); var d = document.getElementById('sa-d'); if (d) d.value = k; };
+  // 등록이 끝나 패널이 닫히면 창도 닫기
+  var mo = document.getElementById('mo-sch-add');
+  new MutationObserver(function () {
+    var b = document.getElementById('sch-add');
+    if (b && b.parentNode && b.parentNode.id === 'sch-add-mb' && !b.classList.contains('open') && mo.classList.contains('open')) closeMo('mo-sch-add');
+  }).observe(document.getElementById('sch-add-mb'), { attributes: true, subtree: true, attributeFilter: ['class'] });
+  new MutationObserver(function () {
+    var p = document.querySelector('#sch-box .sch-plus'); if (p) p.classList.toggle('on', mo.classList.contains('open'));
+    if (!mo.classList.contains('open')) { var b = document.getElementById('sch-add'); if (b) b.classList.remove('open'); }
+  }).observe(mo, { attributes: true, attributeFilter: ['class'] });
+  // 등록 성공하면 창 닫기
+  var _t = window.toast;
+  window.toast = toast = function (m) { var r = _t.apply(this, arguments); if (/^일정 \d+건 등록/.test(String(m)) && mo.classList.contains('open')) closeMo('mo-sch-add'); return r; };
+  // 일정 탭에 남아 있던 패널은 창 안으로 옮김
+  var _r = window.schRender;
+  if (_r) window.schRender = function () { _r.apply(this, arguments); var b = document.getElementById('sch-add'); var mb = document.getElementById('sch-add-mb'); if (b && mb && b.parentNode !== mb) mb.appendChild(b); var p = document.querySelector('#sch-box .sch-plus'); if (p) { p.onclick = schPlus; p.classList.toggle('on', mo.classList.contains('open')); } };
+})();
+</script>
+<style>
+/* 2026-10-17 (현아): 일정 등록 — 기본은 작업내역서 프로젝트 고르고 마감일 입력 */
+.sp-seg{display:flex;background:var(--chip);border-radius:12px;padding:3px;gap:2px;margin-bottom:14px}
+.sp-seg button{flex:1;border:0;background:transparent;border-radius:9px;padding:8px 10px;font:inherit;font-size:14px;font-weight:600;color:var(--txt3);cursor:pointer}
+.sp-seg button.on{background:#fff;color:var(--txt);box-shadow:0 1px 3px rgba(0,0,0,.08)}
+#sp-pane select,#sp-pane input{width:100%;box-sizing:border-box;border:0;background:var(--chip);border-radius:12px;padding:11px 12px;font:inherit;font-size:14px;color:var(--txt);outline:none;min-width:0}
+#sp-pane .sp-l{font-size:13px;font-weight:600;color:var(--txt2);margin:0 2px 6px}
+#sp-pane .sp-dl{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin-top:14px}
+#sp-pane .sp-dl small{display:block;font-size:11px;color:var(--txt3);margin:0 2px 3px}
+#sp-pane .sp-tip{font-size:12px;color:var(--txt3);margin:8px 2px 0;line-height:1.5}
+#sp-pane .sp-go{display:block;width:100%;border:0;border-radius:12px;padding:12px;font:inherit;font-size:14px;font-weight:700;cursor:pointer;margin-top:14px;background:var(--txt);color:#fff}
+#sp-pane .sp-go:disabled{opacity:.4}
+#mo-sch-add.sp-p #sch-add{display:none!important}
+#mo-sch-add:not(.sp-p) #sp-pane{display:none}
+</style>
+<script>
+(function () {
+  var mo = document.getElementById('mo-sch-add'), mb = document.getElementById('sch-add-mb'); if (!mo || !mb) return;
+  mb.insertAdjacentHTML('afterbegin', '<div class="sp-seg"><button type="button" data-m="p" class="on">프로젝트 마감</button><button type="button" data-m="s">직접 등록</button></div>' +
+    '<div id="sp-pane"><div class="sp-l">프로젝트 (작업내역서)</div><select id="sp-p"><option value="">불러오는 중…</option></select>' +
+    '<div class="sp-dl">' + [1, 2, 3].map(function (n) { return '<label><small>마감 ' + n + '순위</small><input type="date" id="sp-d' + n + '"></label>'; }).join('') + '</div>' +
+    '<div class="sp-tip">작업내역서 마감 칸에 저장되고, 일정에 \'(마감)\'으로 바로 올라가요.</div>' +
+    '<button type="button" class="sp-go" id="sp-go">마감일 저장</button></div>');
+  mo.classList.add('sp-p');
+  mb.querySelectorAll('.sp-seg button').forEach(function (b) {
+    b.onclick = function () { mb.querySelectorAll('.sp-seg button').forEach(function (x) { x.classList.toggle('on', x === b); }); mo.classList.toggle('sp-p', b.getAttribute('data-m') === 'p'); if (b.getAttribute('data-m') === 'p') fill(); };
+  });
+  function lab(x) { var d = x.date6 || ''; return (x.artist || x.clientKey || '') + ' ' + String(x.title || '').replace(/ · /, ' · ') + (d ? ' (' + d.slice(0, 2) + '.' + d.slice(2, 4) + '.' + d.slice(4) + ')' : ''); }
+  function fill() {
+    var sel = document.getElementById('sp-p'), items = (window.WO && WO.items) || [];
+    if (!items.length) { if (window.woLoad && !(WO && WO.loading)) { woLoad(false); setTimeout(fill, 1500); } sel.innerHTML = '<option value="">작업내역서 불러오는 중…</option>'; return; }
+    var cur = sel.value;
+    var list = items.slice().sort(function (a, b) { return String(b.date6 || '').localeCompare(String(a.date6 || '')) || (b.t || 0) - (a.t || 0); });
+    sel.innerHTML = '<option value="">프로젝트 선택</option>' + list.map(function (x) { return '<option value="' + esc(x.id) + '">' + esc(lab(x)) + '</option>'; }).join('');
+    if (cur) sel.value = cur;
+    pick();
+  }
+  function pick() {
+    var id = document.getElementById('sp-p').value, x = ((window.WO && WO.items) || []).filter(function (i) { return i.id === id; })[0], dl = (x && x.dl) || [];
+    [1, 2, 3].forEach(function (n) { document.getElementById('sp-d' + n).value = dl[n - 1] || ''; });
+  }
+  document.getElementById('sp-p').addEventListener('change', pick);
+  document.getElementById('sp-go').onclick = function () {
+    var id = document.getElementById('sp-p').value; if (!id) { toast('프로젝트를 골라주세요'); return; }
+    var dl = [1, 2, 3].map(function (n) { return document.getElementById('sp-d' + n).value || ''; });
+    if (!dl.some(String)) { toast('마감일을 하나 이상 골라주세요'); return; }
+    var b = this; b.disabled = true; b.textContent = '저장 중…';
+    woPost('pm_wo_dl', { id: id, dl: dl }, function (r) {
+      b.disabled = false; b.textContent = '마감일 저장';
+      if (!r || !r.ok) { toast('저장 실패: ' + ((r && r.error) || '연결 확인')); return; }
+      (WO.items || []).forEach(function (x) { if (x.id === id) x.dl = r.dl || dl.filter(String); });
+      if (window.WO && WO.cur && WO.cur.id === id) WO.cur.dl = r.dl;
+      toast('마감일 저장 · 일정에 반영했어요');
+      closeMo('mo-sch-add');
+      if (window.SCH) SCH.data = {};
+      if (window.schLoad) schLoad(true);
+      if (typeof woRenderList === 'function') try { woRenderList(); } catch (e) {}
+    });
+  };
+  // 창 열 때마다 프로젝트 목록 새로 채우기 (기본: 프로젝트 마감)
+  new MutationObserver(function () { if (mo.classList.contains('open') && mo.classList.contains('sp-p')) fill(); }).observe(mo, { attributes: true, attributeFilter: ['class'] });
 })();
 </script>
 </body>
