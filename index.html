@@ -6182,6 +6182,70 @@ document.addEventListener('click', function (e) {
 </style>
 <style>.dv-tot{width:min(48%,250px)!important;min-width:190px;margin-left:auto!important}</style>
 <style>.dv-btns{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;margin-top:18px}.dv-btns button{height:40px;border:0;border-radius:12px;background:var(--chip);color:var(--txt);font:inherit;font-size:13px;font-weight:600;cursor:pointer;padding:0 4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.dv-btns button:disabled{color:var(--faint);cursor:default}</style>
+<style>
+/* 2026-10-17 (현아): 작업내역서 보기도 매입·매출처럼 인보이스형 정리 (단가 없이) */
+#mo-wo .wv-hd{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:0 2px 10px;border-bottom:2px solid var(--txt)}
+#mo-wo .wv-hd h3{margin:0;font-size:16px;font-weight:700;color:var(--txt);line-height:1.35;word-break:keep-all}
+#mo-wo .wv-hd b{font-size:17px;font-weight:800;color:#3182f6;white-space:nowrap;flex:none}
+#mo-wo .wv-info{display:grid;grid-template-columns:1fr 1fr;gap:0 22px;margin-top:6px}
+#mo-wo .wv-info .r{display:flex;justify-content:space-between;gap:10px;padding:5px 2px;font-size:13px;border-bottom:1px solid #f2f4f6;min-width:0}
+#mo-wo .wv-info .r span{color:var(--txt3);font-size:12px;flex:none}
+#mo-wo .wv-info .r b{font-weight:600;color:var(--txt);text-align:right;word-break:break-all}
+#mo-wo .wv-info .r b.e{color:var(--faint);font-weight:500}
+@media(max-width:560px){#mo-wo .wv-info{grid-template-columns:1fr}}
+#mo-wo .wv-more summary{list-style:none;cursor:pointer;display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:var(--txt3);padding:6px 2px 2px}
+#mo-wo .wv-more summary::-webkit-details-marker{display:none}
+#mo-wo .wv-more summary:after{content:'';width:6px;height:6px;border-right:1.5px solid currentColor;border-bottom:1.5px solid currentColor;transform:rotate(45deg);margin-top:-3px}
+#mo-wo .wv-more[open] summary:after{transform:rotate(-135deg);margin-top:3px}
+#mo-wo .wd-sum{display:none!important}
+#mo-wo .wo-dlw{margin-top:4px}
+#mo-wo .wo-dlw .wo-dlr b{font-size:13px}
+#mo-wo .wd-tabs{margin-top:4px}
+#mo-wo .wd-tot{margin:6px 0 0!important}
+#mo-wo .wd-tot b{font-size:14px!important}
+#mo-wo .wd-tot span{font-size:12px!important}
+#mo-wo .wv-th{display:flex;justify-content:space-between;padding:6px 6px;font-size:11px;font-weight:600;color:var(--txt3);background:#f7f8fa;border-bottom:1px solid var(--txt);margin-top:6px}
+#mo-wo .wd-sec{background:none!important;border-radius:0!important;padding:0!important;gap:0!important}
+#mo-wo .wd-sec .wd-li{background:none!important;border-radius:0!important;border-bottom:1px solid #f2f4f6!important;padding:6px 6px!important;min-height:0!important;font-size:13px!important}
+#mo-wo .wd-sec .wd-li .wd-f{font-size:13px!important;font-weight:500!important}
+#mo-wo .wd-sec .wd-li .wd-its{font-size:13px!important}
+#mo-wo .wv-btns{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;margin-top:18px}
+#mo-wo .wv-btns button{height:40px;border:0;border-radius:12px;background:var(--chip);color:var(--txt);font:inherit;font-size:13px;font-weight:600;cursor:pointer}
+#mo-wo .wv-btns button:disabled{color:var(--faint);cursor:default}
+</style>
+<script>
+(function () {
+  var _wd = woDetail;
+  function kv(k, v) { var e = !String(v || '').trim(); return '<div class="r"><span>' + esc(k) + '</span><b' + (e ? ' class="e"' : '') + '>' + (e ? '-' : esc(v)) + '</b></div>'; }
+  function shortC(c) { var t = String(c || '').replace(/\s*\(.*\)\s*$/, '').replace(/\s*ENTERTAINMENT\s*/i, ' ').trim(); return t || c; }
+  woDetail = function () {
+    _wd.apply(this, arguments);
+    var d = WO.cur, b = document.getElementById('wo-d-body'); if (!d || !d.tabs || !b) return;
+    var I = d.info || {}, it = (WO.items || []).filter(function (x) { return x.id === d.id; })[0] || {};
+    var art = String(I['아티스트명'] || '').match(/\(([^)]*)\)\s*$/), artist = (art && art[1]) || it.artist || I['아티스트명'] || '';
+    var all = 0; d.tabs.forEach(function (t) { all += woTot(t).all; });
+    document.getElementById('wo-d-title').textContent = '작업내역서';
+    var workers = d.tabs.map(function (t) { return t.name; }).join(', ');
+    var top = '<div class="wv-hd"><h3>' + esc([artist, I['프로젝트명'] || String(it.title || '').split(' · ')[0]].filter(Boolean).join(' ')) + '</h3><b>' + all + '컷</b></div>' +
+      '<div class="wv-info">' + kv('리터칭 담당자', workers) + kv('거래처 담당자', I['담당자']) + '</div>' +
+      '<details class="wv-more"' + (window.WV_MORE ? ' open' : '') + ' ontoggle="window.WV_MORE=this.open"><summary>거래처 · 아티스트 · 날짜 정보</summary><div class="wv-info">' +
+      kv('거래처', shortC(I['거래처'])) + kv('아티스트', I['아티스트명']) + kv('프로젝트명', I['프로젝트명']) + kv('프로젝트 의뢰일자', I['요청일'] || '') + '</div></details>';
+    var old = b.querySelector('.wv-top'); if (old) old.remove();
+    var w = document.createElement('div'); w.className = 'wv-top'; w.innerHTML = top; b.insertBefore(w, b.firstChild);
+    // 마감일 상자는 정보 아래로
+    var dlw = b.querySelector('.wo-dlw'); if (dlw) w.parentNode.insertBefore(dlw, w.nextSibling);
+    // 목록 머리줄
+    b.querySelectorAll('.wd-sec').forEach(function (sec) { if (!sec.previousElementSibling || !sec.previousElementSibling.classList.contains('wv-th')) sec.insertAdjacentHTML('beforebegin', '<div class="wv-th"><span>작업 세부내역</span><span>구분 · 컷수</span></div>'); });
+    // 하단 바로가기
+    var ob = function (u, t) { return '<button type="button"' + (u ? ' onclick="window.open(\'' + esc(u).replace(/'/g, '%27') + '\',\'_blank\')"' : ' disabled') + '>' + t + '</button>'; };
+    var bt = b.querySelector('.wv-btns'); if (bt) bt.remove();
+    var bar = b.querySelector('.wd-bar');
+    var btns = document.createElement('div'); btns.className = 'wv-btns'; btns.innerHTML = ob(d.link, '작업폴더') + ob(d.url, '작업내역서 시트');
+    if (bar) b.insertBefore(btns, bar); else b.appendChild(btns);
+  };
+  if (typeof woEd === 'function') { var _ed = woEd; woEd = function () { var r = _ed.apply(this, arguments); try { var a = 0; WO.cur.tabs.forEach(function (t) { a += woTot(t).all; }); var hb = document.querySelector('#mo-wo .wv-hd b'); if (hb) hb.textContent = a + '컷'; } catch (e) {} return r; }; }
+})();
+</script>
 </body>
 
 </html>
