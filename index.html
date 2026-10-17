@@ -7,7 +7,7 @@
 <meta name="theme-color" content="#f2f4f6">
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=3">
 <link rel="apple-touch-icon" href="apple-touch-icon.png?v=3">
-<meta name="pm-build" content="20261018083513">
+<meta name="pm-build" content="20261018083616">
 <link rel="manifest" href="manifest.webmanifest?v=3">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -2936,7 +2936,7 @@ function txLoad(fresh) {
     TX.err = ''; TX.items = d.items || []; TX.memos = d.memos || {}; TX.folder = d.folder; TX.loaded = true; txRender();
   });
 }
-function txYm(ym) { return ym.slice(0, 4) + '년 ' + ym.slice(5) + '월'; }
+function txYm(ym) { return ym.slice(0, 4) + '.' + ym.slice(5, 7); } // 2026-10-18 (현아): YYYY.MM
 function txRender() {
   var lb = document.querySelector('#dc-tx .wo-list'); if (!lb) return;
   var dl = document.querySelector('#dc-tx .dc-drive'); if (dl && TX.folder) dl.href = WO_DRIVE + TX.folder;
@@ -6928,6 +6928,11 @@ header .hr .ib[aria-label="로그아웃"]{display:none!important}
 #tab-pf .pf2-card>.pf2-sec+.pf2-note,#tab-pf .pf2-card .pf2-note{margin-top:12px}
 #tab-pf .pf2-card>.pf2-leg:last-child{margin-bottom:0}
 #tab-pf .pf2-b>.pf2-empty{background:#fff;border-radius:20px}
+</style>
+<style>
+/* 2026-10-18 (현아): 신고 — 원천징수 흐리게, 실지급액 빨강 */
+#dc-tx .tx-card .g div:nth-child(2) em{color:#8b95a1!important}
+#dc-tx .tx-card .g div:nth-child(3) em{color:#f04452!important}
 </style>
 </body>
 
