@@ -7,7 +7,7 @@
 <meta name="theme-color" content="#f2f4f6">
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=3">
 <link rel="apple-touch-icon" href="apple-touch-icon.png?v=3">
-<meta name="pm-build" content="20261018083753">
+<meta name="pm-build" content="20261018083949">
 <link rel="manifest" href="manifest.webmanifest?v=3">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -6140,7 +6140,7 @@ document.addEventListener('click', function (e) {
     var all = [];
     (r.tabs || []).forEach(function (t) { t.rows.forEach(function (x) { all.push({ tab: t.name, d: x.d || '', job: x.job || '', who: x.who || t.name, mgr: x.mgr || '', tt: x.tt || '', amt: N(x.amt), tax: N(x.tax), tot: N(x.tot) }); }); });
     var sum = function (l, k) { return l.reduce(function (a, x) { return a + x[k]; }, 0); };
-    h += '<div class="mml-sum"><div><span>건수</span><b>' + all.length + '건</b></div><div><span>공급가액</span><b>' + W(sum(all, 'amt')) + '</b></div><div><span>' + (tax ? '부가세' : '원천세·부가세') + '</span><b>' + W(sum(all, 'tax')) + '</b></div><div><span>' + (tax ? '청구 합계' : '지급 합계') + '</span><b>' + W(sum(all, 'tot')) + '</b></div></div>';
+    h += '<div class="mml-sum ' + (tax ? 'is-tax' : 'is-pay') + '"><div><span>건수</span><b>' + all.length + '건</b></div><div><span>공급가액</span><b>' + W(sum(all, 'amt')) + '</b></div><div><span>' + (tax ? '부가세' : '원천세·부가세') + '</span><b>' + W(sum(all, 'tax')) + '</b></div><div><span>' + (tax ? '청구 합계' : '지급 합계') + '</span><b>' + W(sum(all, 'tot')) + '</b></div></div>';
     if (!all.length) { document.getElementById('mml-b').innerHTML = h + '<div class="mml-empty">' + M.y + '년 ' + (tax ? '청구' : '지급') + ' 기록이 없어요</div>'; return; }
     var G = {}, order = [];
     all.forEach(function (x) { var k = M.by === 'm' ? (x.d.slice(0, 7) || '날짜 없음') : x.tab; if (!G[k]) { G[k] = []; order.push(k); } G[k].push(x); });
@@ -6933,6 +6933,12 @@ header .hr .ib[aria-label="로그아웃"]{display:none!important}
 /* 2026-10-18 (현아): 신고 — 원천징수 흐리게, 실지급액 빨강 */
 #dc-tx .tx-card .g div:nth-child(2) em{color:#8b95a1!important}
 #dc-tx .tx-card .g div:nth-child(3) em{color:#f04452!important}
+</style>
+<style>
+/* 2026-10-18 (현아): 대금 확인 — 세금 흐리게, 청구 합계(매출) 파랑, 지급 합계(매입) 빨강 */
+.mml-sum>div:nth-child(3) b{color:#8b95a1!important}
+.mml-sum.is-tax>div:nth-child(4) b{color:#3182f6!important}
+.mml-sum.is-pay>div:nth-child(4) b{color:#f04452!important}
 </style>
 </body>
 
