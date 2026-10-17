@@ -7,7 +7,7 @@
 <meta name="theme-color" content="#f2f4f6">
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=3">
 <link rel="apple-touch-icon" href="apple-touch-icon.png?v=3">
-<meta name="pm-build" content="20261018011812">
+<meta name="pm-build" content="20261018011949">
 <link rel="manifest" href="manifest.webmanifest?v=3">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -6667,6 +6667,49 @@ document.addEventListener('click', function (e) {
     g += '</svg>';
     return g;
   }
+  // 2026-10-18 (현아): 연도별 매출·매입·순이익 비교 — 다른 연도는 뒤에서 차례로 불러옴
+  function yTot(d) { var s = sum(d.sales), b = sum(d.buys), c = sum(d.bank.filter(isCost), costAmt); return { s: s, b: b, c: c, n: s - b - c }; }
+  function loadYears(ys) {
+    if (P.yl) return; P.yl = 1;
+    (function next(i) {
+      if (i >= ys.length) { P.yl = 0; draw(); return; }
+      var y = ys[i]; if (P.data[y]) { next(i + 1); return; }
+      try { var c = JSON.parse(localStorage.getItem('pm_pf2_' + rk() + '_' + y) || 'null'); if (c && c.ok && c.y === y) { P.data[y] = c; draw(); next(i + 1); return; } } catch (e) {}
+      var t = 0;
+      (function req() {
+        woPost('pm_wo_profit', { y: y }, function (r) {
+          if (r && r.ok && r.y === y) { P.data[y] = r; try { localStorage.setItem('pm_pf2_' + rk() + '_' + y, JSON.stringify(r)); } catch (e) {} draw(); next(i + 1); }
+          else if (++t < 2) setTimeout(req, 1500); else next(i + 1);
+        });
+      })();
+    })(0);
+  }
+  function yearCmp(r) {
+    var ys = (r.years || []).slice().sort(); if (ys.length < 2) return '';
+    var miss = ys.filter(function (y) { return !P.data[y]; }); if (miss.length) setTimeout(function () { loadYears(miss); }, 50);
+    var T = ys.map(function (y) { return P.data[y] ? yTot(P.data[y]) : null; }), mx = 1;
+    T.forEach(function (t) { if (t) mx = Math.max(mx, t.s, t.b, t.n); });
+    var W0 = 340, H = 170, top = 18, base = 132, gw = W0 / ys.length, bw = Math.min(22, gw / 5), g = '<svg class="pf2-chart" viewBox="0 0 ' + W0 + ' ' + H + '" role="img" aria-label="연도별 매출·매입·순이익">';
+    g += '<line x1="0" x2="' + W0 + '" y1="' + base + '" y2="' + base + '" stroke="#e5e8eb"/>';
+    ys.forEach(function (y, i) {
+      var t = T[i], cx = gw * i + gw / 2, on = y === P.y;
+      if (t) [['s', C.sale], ['b', C.buy], ['n', C.net]].forEach(function (k, j) {
+        var v = Math.max(t[k[0]], 0), hh = v / mx * (base - top), x = cx + (j - 1.5) * (bw + 3);
+        g += '<rect x="' + x.toFixed(1) + '" y="' + (base - hh).toFixed(1) + '" width="' + bw.toFixed(1) + '" height="' + Math.max(hh, 0).toFixed(1) + '" rx="3" fill="' + k[1] + '"/>';
+        if (v && k[0] !== 'b') g += '<text x="' + (x + bw / 2).toFixed(1) + '" y="' + (base - hh - 4).toFixed(1) + '" text-anchor="middle" font-size="9" font-weight="600" fill="' + (k[0] === 's' ? C.sale : '#4e5968') + '">' + Wk(t[k[0]]) + '</text>';
+      });
+      else g += '<text x="' + cx + '" y="' + (base - 10) + '" text-anchor="middle" font-size="10" fill="#b0b8c1">불러오는 중…</text>';
+      g += '<text x="' + cx + '" y="' + (base + 18) + '" text-anchor="middle" font-size="12" font-weight="' + (on ? 800 : 600) + '" fill="' + (on ? '#191f28' : '#8b95a1') + '">' + y + '년</text>';
+      if (t) g += '<text x="' + cx + '" y="' + (base + 33) + '" text-anchor="middle" font-size="10" fill="' + (t.n < 0 ? '#f04452' : '#4e5968') + '">순이익률 ' + (t.s ? Math.round(t.n / t.s * 100) : 0) + '%</text>';
+    });
+    g += '</svg>';
+    var rows = ys.slice().reverse().map(function (y) {
+      var t = P.data[y] ? yTot(P.data[y]) : null; if (!t) return '';
+      return '<div class="pf2-row"><span class="n">' + y + '년</span><span class="v' + (t.n < 0 ? ' neg' : '') + '">' + W(t.n) + '</span><span class="m"><span>매출 <b style="color:' + C.sale + '">' + W(t.s) + '</b></span><span>매입 <b style="color:#8b95a1">' + W(t.b) + '</b></span><span>부대비용 <b style="color:' + C.cost + '">' + W(t.c) + '</b></span></span></div>';
+    }).join('');
+    return '<div class="pf2-sec"><div class="pf2-h">연도별 비교<small>연 전체 · 공급가액</small></div>' + g +
+      '<div class="pf2-leg" style="margin:6px 0 4px"><span style="--c:' + C.sale + '">매출</span><span style="--c:' + C.buy + '">매입</span><span style="--c:' + C.net + '">순이익</span></div>' + rows + '</div>';
+  }
   function draw() {
     var top = document.getElementById('pf2-top'), box = document.getElementById('pf2-b'); if (!top || !box) return;
     var r = P.data[P.y] || P.data['_'];
@@ -6681,13 +6724,14 @@ document.addEventListener('click', function (e) {
     var sAmt = sum(S), bAmt = sum(B), cAmt = sum(K.filter(isCost), costAmt), gross = sAmt - bAmt, net = gross - cAmt, rate = sAmt ? Math.round(net / sAmt * 1000) / 10 : 0;
     var per = (P.m ? P.y + '년 ' + (+P.m) + '월' : P.y + '년');
     var h = '<div class="pf2-hero"><span>' + per + ' 순이익 · 공급가액 기준</span><b class="' + (net < 0 ? 'neg' : '') + '">' + W(net) + '원</b><small>매출 대비 ' + rate + '% · 매출 ' + S.length + '건 · 지급 ' + B.length + '건</small></div>';
-    h += '<div class="pf2-kpi"><div><span>매출</span><b style="color:' + C.sale + '">' + W(sAmt) + '</b></div><div><span>매입 (외주 지급)</span><b>' + W(bAmt) + '</b></div><div><span>부대비용</span><b style="color:' + C.cost + '">' + W(cAmt) + '</b></div><div><span>매출총이익</span><b>' + W(gross) + '</b></div></div>';
+    h += '<div class="pf2-kpi"><div><span>매출</span><b style="color:' + C.sale + '">' + W(sAmt) + '</b></div><div><span>매입 (외주 지급)</span><b style="color:#8b95a1">' + W(bAmt) + '</b></div><div><span>부대비용</span><b style="color:' + C.cost + '">' + W(cAmt) + '</b></div><div><span>매출총이익</span><b>' + W(gross) + '</b></div></div>';
     var tot = Math.max(sAmt, bAmt + cAmt, 1), pB = bAmt / tot * 100, pC = Math.max(cAmt, 0) / tot * 100, pN = Math.max(net, 0) / tot * 100;
     h += '<div class="pf2-flow"><i style="width:' + pB + '%;background:' + C.buy + '"></i><i style="width:' + pC + '%;background:' + C.cost + '"></i><i style="width:' + pN + '%;background:' + C.sale + '"></i></div>';
     h += '<div class="pf2-leg"><span style="--c:' + C.buy + '">매입 ' + Math.round(pB) + '%</span><span style="--c:' + C.cost + '">부대비용 ' + Math.round(pC) + '%</span><span style="--c:' + C.sale + '">순이익 ' + Math.round(pN) + '%</span></div>';
     // 월별
     h += '<div class="pf2-sec"><div class="pf2-h">월별 흐름<small>막대를 누르면 그 달만 보기</small></div>' + chart(r) +
       '<div class="pf2-leg" style="margin:6px 0 0"><span style="--c:' + C.sale + '">매출</span><span style="--c:' + C.buy + '">매입</span><span style="--c:' + C.cost + '">부대비용</span><span style="--c:' + C.net + '">순이익</span></div></div>';
+    h += yearCmp(r);
     // 소속사별 / 작업자별
     h += '<div class="pf2-sec"><div class="pf2-seg"><button class="' + (P.by === 'client' ? 'on' : '') + '" onclick="pf2Set(\'by\',\'client\')">소속사별</button><button class="' + (P.by === 'worker' ? 'on' : '') + '" onclick="pf2Set(\'by\',\'worker\')">작업자별</button></div>';
     if (P.by === 'client') {
