@@ -6040,9 +6040,10 @@ window.schSty = function (t, r, D) {
     h += '<div class="dv-grid">' + kWho + kMgr + '</div>' +
       '<details class="dv-more"' + (window.DV_MORE ? ' open' : '') + ' ontoggle="window.DV_MORE=this.open"><summary>거래처 · 아티스트 · 날짜 정보</summary><div class="dv-grid">' + rest + '</div></details>';
     var link = (w && w.link) || (inv ? get('작업링크') : '');
-    h += '<div class="dv-links">' + (wi ? '<a href="' + esc((w && w.url) || ('https://docs.google.com/spreadsheets/d/' + wi.id + '/edit')) + '" target="_blank">작업내역서 ↗</a>' : '<span>작업내역서 못 찾음</span>') +
-      (link && /^https?:/.test(link) ? '<a href="' + esc(link) + '" target="_blank">작업 업로드 폴더 ↗</a>' : '<span>' + (w ? '작업 폴더 링크 없음' : (wi ? '폴더 확인 중…' : '작업 폴더 없음')) + '</span>') +
-      '<a href="' + esc(d.url) + '" target="_blank">' + (inv ? '청구서' : '지급내역서') + ' 시트 ↗</a></div>';
+    var woUrl = wi ? ((w && w.url) || ('https://docs.google.com/spreadsheets/d/' + wi.id + '/edit')) : '', fdUrl = link && /^https?:/.test(link) ? link : '';
+    var ob = function (u, t) { return '<button type="button"' + (u ? ' onclick="window.open(\'' + esc(u).replace(/'/g, '%27') + '\',\'_blank\')"' : ' disabled') + '>' + t + '</button>'; };
+    // 2026-10-17 (현아): 바로가기 단추는 맨 아래로 — 작업폴더 · 작업내역서 · 지급내역서(청구서) · 수정, 4개 같은 크기
+    var btns = '<div class="dv-btns">' + ob(fdUrl, '작업폴더') + ob(woUrl, '작업내역서') + ob(d.url, inv ? '청구서' : '지급내역서') + '<button type="button" onclick="dcEditView()">수정</button></div>';
     var rows = (d.rows || []).filter(function (r) { return r.v.some(function (x) { return String(x).trim(); }); });
     h += '<table class="dv-tbl"><thead><tr><th>작업 세부내역</th><th>컷수</th><th>' + (inv ? '단가' : '컷당') + '</th><th>소계</th></tr></thead><tbody>' +
       (rows.length ? rows.map(function (r) { var v = r.v; return '<tr><td>' + esc(v[1] || '-') + '</td><td class="n">' + esc(v[2] || '') + '</td><td class="n">' + W(v[3]) + '</td><td>' + W(v[4]) + '</td></tr>'; }).join('')
@@ -6051,7 +6052,7 @@ window.schSty = function (t, r, D) {
     h += '<div class="dv-tot"><div class="r"><span>합산 (공급가액)</span><b>' + W(sub) + '</b></div>' +
       '<div class="r"><span>' + (isVat ? '부가세 (10%)' : '원천세 (3.3%)') + '</span><b>' + (isVat ? '' : (N(tax) > 0 ? '-' : '')) + W(tax) + '</b></div>' +
       '<div class="r t"><span>' + (inv ? '최종 청구액' : '최종 지급액') + '</span><b>' + W(fin) + '</b></div></div>';
-    h += '<div class="dv-ft"><button type="button" onclick="dcEditView()">날짜·단가 수정</button></div></div>';
+    h += btns + '</div>';
     b.innerHTML = h;
   };
 })();
@@ -6180,6 +6181,7 @@ document.addEventListener('click', function (e) {
 .dv-more .dv-grid{margin-top:2px}
 </style>
 <style>.dv-tot{width:min(62%,300px)!important;margin-left:auto!important}</style>
+<style>.dv-btns{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;margin-top:4px}.dv-btns button{height:40px;border:0;border-radius:12px;background:var(--chip);color:var(--txt);font:inherit;font-size:13px;font-weight:600;cursor:pointer;padding:0 4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.dv-btns button:disabled{color:var(--faint);cursor:default}</style>
 </body>
 
 </html>
