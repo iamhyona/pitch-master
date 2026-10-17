@@ -7,7 +7,7 @@
 <meta name="theme-color" content="#f2f4f6">
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=3">
 <link rel="apple-touch-icon" href="apple-touch-icon.png?v=3">
-<meta name="pm-build" content="20261018084430">
+<meta name="pm-build" content="20261018084709">
 <link rel="manifest" href="manifest.webmanifest?v=3">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -3767,7 +3767,7 @@ function txRender() {
   var chv = '<svg class="tx-chv" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>';
   lb.innerHTML = TX.items.map(function (x) {
     var s = x.sum || {}, mm = (TX.memos[x.ym] || {}).memo || '', op = !!TX_OPEN[x.id];
-    return '<div class="tx-c' + (op ? ' open' : '') + (/^0명/.test(String(s['인원 · 건수'] || '').trim()) ? ' z' : '') + '" data-id="' + esc(x.id) + '"><button type="button" class="tx-card" onclick="txToggle(\'' + esc(x.id) + '\',\'' + x.ym + '\')"><div class="t"><b>' + txYm(x.ym) + '</b><span class="tx-r"><span>' + esc(s['인원 · 건수'] || '') + '</span>' + chv + '</span></div>' +
+    return '<div class="tx-c' + (op ? ' open' : '') + (/^0명/.test(String(s['인원 · 건수'] || '').trim()) ? ' z' : '') + '" data-id="' + esc(x.id) + '"><button type="button" class="tx-card" onclick="txToggle(\'' + esc(x.id) + '\',\'' + x.ym + '\')"><div class="t"><b>' + txYm(x.ym) + '</b><span class="tx-r"><span>' + esc(s['인원 · 건수'] || '') + '</span>' + txIc(x.id) + chv + '</span></div>' +
       '<div class="g"><div><small>지급총액</small><em>' + esc(s['지급총액'] || '-') + '</em></div><div><small>원천징수</small><em>' + esc(s['원천징수 합계'] || '-') + '</em></div><div><small>실지급액</small><em>' + esc(s['실지급액 합계'] || '-') + '</em></div></div>' +
       (mm ? '<div class="m">' + esc(mm) + '</div>' : '') + '</button><div class="tx-dt">' + txInner(x.id, x.ym) + '</div></div>';
   }).join('');
@@ -6982,6 +6982,22 @@ header .hr .ib[aria-label="로그아웃"]{display:none!important}
 #tab-pf .pf2-it .a{font-size:13px;font-weight:600}
 #tab-pf .pf2-it:last-child,#tab-pf .pf2-it+.pf2-grp{border-bottom:0}
 #tab-pf .pf2-sec>.pf2-seg{margin:2px 0 0}
+</style>
+<script>
+// 2026-10-18 (현아): 신고 — 달마다 시트 열기 · 엑셀 저장 아이콘
+function txIc(id) {
+  var u = 'https://docs.google.com/spreadsheets/d/' + encodeURIComponent(id);
+  var sv = function (d) { return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + d + '</svg>'; };
+  return '<span class="tx-ic" role="link" title="시트 열기" onclick="event.stopPropagation();window.open(\'' + u + '/edit\',\'_blank\')">' + sv('<rect x="3" y="3" width="18" height="18" rx="3"/><path d="M3 9h18M3 15h18M9 3v18"/>') + '</span>' +
+    '<span class="tx-ic" role="link" title="엑셀로 저장" onclick="event.stopPropagation();window.open(\'' + u + '/export?format=xlsx\',\'_blank\')">' + sv('<path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M5 21h14"/>') + '</span>';
+}
+</script>
+<style>
+#dc-tx .tx-card .t .tx-r{gap:6px}
+#dc-tx .tx-ic{width:30px;height:30px;border-radius:50%;background:#f2f4f6;display:inline-flex;align-items:center;justify-content:center;color:#4e5968;flex:none}
+#dc-tx .tx-ic svg{width:15px;height:15px}
+#dc-tx .tx-ic:active{background:#e5e8eb}
+#dc-tx .tx-card .t .tx-r>span:first-child{margin-right:2px}
 </style>
 </body>
 
