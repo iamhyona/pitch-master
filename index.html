@@ -6247,6 +6247,55 @@ document.addEventListener('click', function (e) {
   if (typeof woEd === 'function') { var _ed = woEd; woEd = function () { var r = _ed.apply(this, arguments); try { var a = 0; WO.cur.tabs.forEach(function (t) { a += woTot(t).all; }); var hb = document.querySelector('#mo-wo .wv-hd b'); if (hb) hb.textContent = a + '컷'; } catch (e) {} return r; }; }
 })();
 </script>
+<style>
+/* 2026-10-17 (현아): 작업내역서 상단 — 큰 분류별 합산 (개인 · 유닛N인 · 단체N인 · 합성 · 긴급) */
+#mo-wo .wv-cat{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 2px}
+#mo-wo .wv-cat span{display:inline-flex;align-items:baseline;gap:5px;padding:5px 10px;border-radius:999px;background:var(--chip);font-size:12px;color:var(--txt2)}
+#mo-wo .wv-cat span b{font-size:13px;font-weight:700;color:var(--txt)}
+#mo-wo .wv-cat span.u b{color:#f04452}
+</style>
+<script>
+(function () {
+  function memCount(I) {
+    var o = WO.opts; if (!o || !o.members) return 0; var a = String(I['아티스트명'] || '').trim(); if (!a) return 0;
+    return o.members.filter(function (m) { return String(m.artist).trim() === a; }).length;
+  }
+  function catSum(d) {
+    var I = d.info || {}, mc = memCount(I), head = d.head || [], m = { '개인': 0, '합성': 0, '긴급': 0 }, order = [];
+    var put = function (k, n) { if (!(k in m)) { m[k] = 0; order.push(k); } m[k] += n; };
+    d.tabs.forEach(function (t) {
+      t.rows.forEach(function (r) {
+        var f = String(r.e[0] || '') + ' ' + String(r.e[12] || ''), rowAll = 0;
+        for (var c = 1; c <= 11; c++) {
+          var n = woNum(r.e[c]); if (!n) continue; rowAll += n;
+          var lb = String(head[c + 1] || ''), k = (lb.match(/^(\d+)\s*인$/) || [])[1];
+          if (/합성/.test(lb)) { m['합성'] += n; continue; }
+          if (!k) { put(lb || '기타', n); continue; }
+          k = +k;
+          if (k === 1) m['개인'] += n;
+          else if (/단체/.test(f) || (!/유닛/.test(f) && mc && k >= mc)) put('단체' + k + '인', n);
+          else put('유닛' + k + '인', n);
+        }
+        if (/긴급/.test(f)) m['긴급'] += rowAll;
+      });
+    });
+    var sortN = function (a, b) { return (parseInt(a.replace(/\D/g, '')) || 0) - (parseInt(b.replace(/\D/g, '')) || 0); };
+    var un = order.filter(function (k) { return /^유닛/.test(k); }).sort(sortN), dn = order.filter(function (k) { return /^단체/.test(k); }).sort(sortN), etc = order.filter(function (k) { return !/^(유닛|단체)/.test(k); });
+    var keys = ['개인'].concat(un, dn, ['합성'], etc, ['긴급']);
+    return keys.filter(function (k) { return m[k]; }).map(function (k) { return '<span' + (k === '긴급' ? ' class="u"' : '') + '>' + esc(k) + '<b>' + m[k] + '</b></span>'; }).join('');
+  }
+  function draw() {
+    var d = WO.cur, w = document.querySelector('#mo-wo .wv-top'); if (!d || !d.tabs || !w) return;
+    var el = w.querySelector('.wv-cat'); if (!el) { el = document.createElement('div'); el.className = 'wv-cat'; var hd = w.querySelector('.wv-hd'); hd.parentNode.insertBefore(el, hd.nextSibling); }
+    var h = ''; try { h = catSum(d); } catch (e) {}
+    el.innerHTML = h; el.style.display = h ? '' : 'none';
+  }
+  window.wvCatDraw = draw;
+  var _wd = woDetail;
+  woDetail = function () { _wd.apply(this, arguments); draw(); if (!WO.opts && typeof woOptsLoad === 'function') woOptsLoad(function () { draw(); }); };
+  var _ed = woEd; woEd = function () { var r = _ed.apply(this, arguments); draw(); return r; };
+})();
+</script>
 </body>
 
 </html>
