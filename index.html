@@ -6065,6 +6065,92 @@ document.addEventListener('click', function (e) {
 });
 </script>
 <style>#mc-lt .lt-c{cursor:pointer}#mc-lt .lt-c .copyable{cursor:copy}</style>
+<div class="mo" id="mo-mml"><div class="md" style="max-width:640px"><div class="md-h"><span class="md-t" id="mml-t">대금 확인</span><button class="xb" onclick="closeMo('mo-mml')">✕</button></div><div class="md-b" id="mml-b"></div></div></div>
+<style>
+/* 2026-10-17 (현아): 기록 — 청구대금 · 지급대금 확인 */
+#mo-mml .md-h{position:sticky;top:0;z-index:3;background:#fff;padding:18px 20px 10px}
+#mo-mml .md-b{padding-top:6px}
+.mml-bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:12px}
+.mml-bar .rt-seg{margin:0!important}
+.mml-bar select{height:38px;border:0;border-radius:10px;background:var(--chip);padding:0 30px 0 12px;font:inherit;font-size:14px;font-weight:600;color:var(--txt)}
+.mml-sum{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;margin-bottom:12px}
+.mml-sum div{background:var(--chip);border-radius:12px;padding:10px 12px;min-width:0}
+.mml-sum span{display:block;font-size:11px;color:var(--txt3);margin-bottom:3px}
+.mml-sum b{font-size:15px;font-weight:800;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block}
+.mml-sum div:last-child b{color:#3182f6}
+@media(max-width:560px){.mml-sum{grid-template-columns:1fr 1fr}}
+.mml-g{border-bottom:1px solid #f2f4f6}
+.mml-g summary{list-style:none;display:flex;align-items:center;gap:8px;padding:12px 4px;cursor:pointer}
+.mml-g summary::-webkit-details-marker{display:none}
+.mml-g summary .nm{font-size:15px;font-weight:700;color:var(--txt);margin-right:auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mml-g summary .c{font-size:12px;color:var(--txt3);flex:none}
+.mml-g summary .v{font-size:15px;font-weight:700;color:var(--txt);flex:none;min-width:96px;text-align:right}
+.mml-g summary:after{content:'';width:7px;height:7px;border-right:2px solid var(--txt3);border-bottom:2px solid var(--txt3);transform:rotate(45deg);margin:-4px 4px 0 2px;flex:none;transition:transform .15s}
+.mml-g[open] summary:after{transform:rotate(-135deg);margin-top:4px}
+.mml-t{width:100%;border-collapse:collapse;font-size:13px;margin:0 0 10px}
+.mml-t th{font-size:11px;font-weight:600;color:var(--txt3);text-align:right;padding:6px 4px;border-bottom:1px solid #e5e8eb;white-space:nowrap}
+.mml-t th:nth-child(-n+2),.mml-t td:nth-child(-n+2){text-align:left}
+.mml-t td{padding:8px 4px;border-bottom:1px solid #f7f8fa;text-align:right;white-space:nowrap;color:var(--txt2)}
+.mml-t td:nth-child(2){white-space:normal;word-break:keep-all;color:var(--txt)}
+.mml-t td.d{color:var(--txt3);font-size:12px}
+.mml-t tr.s td{font-weight:700;color:var(--txt);border-bottom:0}
+.mml-empty{padding:30px 0;text-align:center;color:var(--faint);font-size:13px}
+</style>
+<script>
+// 2026-10-17 (현아 요청): 기록 메뉴 — 시트 아이콘 옆 '목록' 아이콘 → 청구대금(매출)·지급대금(매입) 확인
+//   연도별 · 작업자/거래처별 · 월별 묶음, 묶음마다 건수·공급가액·세금·최종액 합계
+(function () {
+  var SV_L = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>';
+  var M = { kind: 'pay', y: '', by: 'who', data: {} };
+  function N(v) { var n = Number(String(v == null ? '' : v).replace(/[^\d.-]/g, '')); return isNaN(n) ? 0 : n; }
+  function W(n) { return Math.round(n).toLocaleString('ko-KR'); }
+  function addIc() {
+    var s = document.getElementById('pf-mm-s'); if (!s || document.getElementById('pf-mm-l')) return;
+    var b = document.createElement('button'); b.className = 'pf-ic'; b.id = 'pf-mm-l'; b.type = 'button'; b.title = '청구·지급 대금 확인'; b.innerHTML = SV_L;
+    b.onclick = function () { mmlOpen(); };
+    s.parentNode.insertBefore(b, s.nextSibling);
+  }
+  setInterval(addIc, 1000); addIc();
+  window.mmlOpen = function () { M.kind = (typeof PF !== 'undefined' && PF.mode === 'tax') ? 'tax' : 'pay'; M.y = ''; openMo('mo-mml'); load(); };
+  window.mmlSet = function (k, v) { M[k] = v; if (k === 'kind' || k === 'y') load(); else draw(); };
+  function load() {
+    var key = M.kind + '|' + M.y; draw(true);
+    if (M.data[key]) { draw(); return; }
+    woPost('pm_mm_list', { kind: M.kind, y: M.y }, function (r) {
+      if (!r || !r.ok) { document.getElementById('mml-b').innerHTML = '<div class="mml-empty">⚠ ' + esc((r && r.error) || '불러오지 못했어요') + '</div>'; return; }
+      if (!M.y) M.y = r.y; M.data[M.kind + '|' + r.y] = r; M.data[key] = r; draw();
+    });
+  }
+  function draw(loading) {
+    var tax = M.kind === 'tax', r = M.data[M.kind + '|' + M.y];
+    document.getElementById('mml-t').textContent = tax ? '청구대금 확인 (매출)' : '지급대금 확인 (매입)';
+    var seg = function (k, opts) { return '<div class="rt-seg">' + opts.map(function (o) { return '<button type="button" class="' + (M[k] === o[0] ? 'on' : '') + '" onclick="mmlSet(\'' + k + '\',\'' + o[0] + '\')">' + o[1] + '</button>'; }).join('') + '</div>'; };
+    var years = (r && r.years) || (M.y ? [M.y] : []);
+    var h = '<div class="mml-bar">' + seg('kind', [['pay', '지급'], ['tax', '청구']]) +
+      '<select onchange="mmlSet(\'y\',this.value)">' + years.map(function (y) { return '<option value="' + y + '"' + (y === M.y ? ' selected' : '') + '>' + y + '년</option>'; }).join('') + '</select>' +
+      seg('by', [['who', tax ? '거래처별' : '작업자별'], ['m', '월별']]) +
+      (r && r.url ? '<a class="pf-ic" style="margin-left:auto;width:38px;height:38px" href="' + esc(r.url) + '" target="_blank" title="시트 열기">↗</a>' : '') + '</div>';
+    if (loading || !r) { document.getElementById('mml-b').innerHTML = h + '<div class="mml-empty">불러오는 중…</div>'; return; }
+    var all = [];
+    (r.tabs || []).forEach(function (t) { t.rows.forEach(function (x) { all.push({ tab: t.name, d: x.d || '', job: x.job || '', who: x.who || t.name, mgr: x.mgr || '', tt: x.tt || '', amt: N(x.amt), tax: N(x.tax), tot: N(x.tot) }); }); });
+    var sum = function (l, k) { return l.reduce(function (a, x) { return a + x[k]; }, 0); };
+    h += '<div class="mml-sum"><div><span>건수</span><b>' + all.length + '건</b></div><div><span>공급가액</span><b>' + W(sum(all, 'amt')) + '</b></div><div><span>' + (tax ? '부가세' : '원천세·부가세') + '</span><b>' + W(sum(all, 'tax')) + '</b></div><div><span>' + (tax ? '청구 합계' : '지급 합계') + '</span><b>' + W(sum(all, 'tot')) + '</b></div></div>';
+    if (!all.length) { document.getElementById('mml-b').innerHTML = h + '<div class="mml-empty">' + M.y + '년 ' + (tax ? '청구' : '지급') + ' 기록이 없어요</div>'; return; }
+    var G = {}, order = [];
+    all.forEach(function (x) { var k = M.by === 'm' ? (x.d.slice(0, 7) || '날짜 없음') : x.tab; if (!G[k]) { G[k] = []; order.push(k); } G[k].push(x); });
+    if (M.by === 'm') order.sort().reverse(); else order.sort(function (a, b) { return sum(G[b], 'tot') - sum(G[a], 'tot'); });
+    h += order.map(function (k) {
+      var l = G[k].slice().sort(function (a, b) { return b.d.localeCompare(a.d); });
+      var lab = M.by === 'm' && /^\d{4}-\d{2}$/.test(k) ? k.slice(0, 4) + '년 ' + Number(k.slice(5)) + '월' : k;
+      return '<details class="mml-g"><summary><span class="nm">' + esc(lab) + '</span><span class="c">' + l.length + '건</span><span class="v">' + W(sum(l, 'tot')) + '</span></summary>' +
+        '<table class="mml-t"><thead><tr><th>' + (tax ? '청구일' : '지급일') + '</th><th>내역</th>' + (M.by === 'm' ? '<th style="text-align:left">' + (tax ? '거래처' : '지급처') + '</th>' : '') + '<th>공급가액</th><th>' + (tax ? '부가세' : '세금') + '</th><th>최종</th></tr></thead><tbody>' +
+        l.map(function (x) { return '<tr><td class="d">' + esc(x.d.replace(/^\d{4}-/, '')) + '</td><td>' + esc(x.job) + (tax && x.mgr && M.by !== 'm' ? ' <span style="color:var(--faint)">· ' + esc(x.mgr) + '</span>' : '') + '</td>' + (M.by === 'm' ? '<td style="text-align:left">' + esc(x.tab) + '</td>' : '') + '<td>' + W(x.amt) + '</td><td>' + W(x.tax) + '</td><td>' + W(x.tot) + '</td></tr>'; }).join('') +
+        '<tr class="s"><td></td><td>합계</td>' + (M.by === 'm' ? '<td></td>' : '') + '<td>' + W(sum(l, 'amt')) + '</td><td>' + W(sum(l, 'tax')) + '</td><td>' + W(sum(l, 'tot')) + '</td></tr></tbody></table></details>';
+    }).join('');
+    document.getElementById('mml-b').innerHTML = h;
+  }
+})();
+</script>
 </body>
 
 </html>
