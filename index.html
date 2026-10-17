@@ -7,7 +7,7 @@
 <meta name="theme-color" content="#f2f4f6">
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=3">
 <link rel="apple-touch-icon" href="apple-touch-icon.png?v=3">
-<meta name="pm-build" content="20261017220910">
+<meta name="pm-build" content="20261017221844">
 <link rel="manifest" href="manifest.webmanifest?v=3">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -6355,8 +6355,7 @@ document.addEventListener('click', function (e) {
       if (m && m[1] !== cur() && !document.querySelector('.mo.open')) location.reload();
     }).catch(function () { busy = false; });
   }
-  window.addEventListener('load', function () { setTimeout(check, 1500); });
-  document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'visible') check(); });
+  /* 2026-10-17: 꺼둠 — CDN 옛 사본과 비교해 새로고침이 반복되던 원인 */
 })();
 </script>
 <style>
@@ -6417,18 +6416,21 @@ document.addEventListener('click', function (e) {
     return _cl.apply(this, arguments);
   };
 })();
-/* 새 버전 감지 시 캐시를 피해 새 주소로 다시 열기 */
+/* 새 버전 감지 — 더 새 버전일 때만, 같은 버전으로는 한 번만 다시 열기 (반복 새로고침 방지) */
 (function () {
   function cur() { var m = document.querySelector('meta[name="pm-build"]'); return m ? m.content : ''; }
+  var last = 0;
   function go() {
+    var now = Date.now(); if (now - last < 60000) return; last = now;
     if (document.querySelector('.mo.open')) return;
-    fetch(location.pathname + '?nc=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.text(); }).then(function (t) {
-      var m = t.match(/name="pm-build" content="(\d+)"/);
-      if (m && m[1] !== cur()) location.replace(location.pathname + '?v=' + m[1] + location.hash);
+    fetch(location.pathname + '?nc=' + now, { cache: 'no-store' }).then(function (r) { return r.text(); }).then(function (t) {
+      var m = t.match(/name="pm-build" content="(\d+)"/), c = cur(); if (!m || !c || !(+m[1] > +c)) return;
+      var k = 'pm_build_try'; try { if (sessionStorage.getItem(k) === m[1]) return; sessionStorage.setItem(k, m[1]); } catch (e) { return; }
+      location.replace(location.pathname + '?v=' + m[1] + location.hash);
     }).catch(function () {});
   }
-  window.addEventListener('load', function () { setTimeout(go, 2500); });
-  document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'visible') setTimeout(go, 300); });
+  window.addEventListener('load', function () { setTimeout(go, 3000); });
+  document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'visible') setTimeout(go, 500); });
 })();
 </script>
 <style>
@@ -6461,6 +6463,28 @@ document.addEventListener('click', function (e) {
       }
     }
     return _r.apply(this, arguments);
+  };
+})();
+</script>
+<script>
+/* 2026-10-17: 매입·매출 목록 — 마지막으로 받은 목록을 기기에 저장해 바로 보여주고, 서버 응답 실패 시 한 번 더 시도 */
+(function () {
+  var _l = dcLoad;
+  function key(t) { return 'pm_dl_cache_' + t + '_' + ((typeof SESSION !== 'undefined' && SESSION && SESSION.role) || 'x'); }
+  dcLoad = function (type, fresh) {
+    var S = DC[type];
+    if (S && !S.items.length) { try { var c = JSON.parse(localStorage.getItem(key(type)) || 'null'); if (c && c.items) { S.items = c.items; S.folders = c.folders || []; S.root = c.root; S.loaded = true; } } catch (e) {} }
+    if (!PM_K || S.loading) return _l.apply(this, arguments);
+    S.loading = true; dcRender(type);
+    var tries = 0;
+    (function req() {
+      woGet('&dl=' + type + (fresh ? '&fresh=1' : ''), function (d) {
+        if (!d || !d.ok) { if (++tries < 2) { setTimeout(req, 2500); return; } S.loading = false; S.err = (d && d.error) || '불러오지 못했어요'; if (S.items.length) toast('드라이브 연결이 느려요 · 저장된 목록을 보여드려요'); dcRender(type); return; }
+        S.loading = false; S.err = ''; S.items = d.items || []; S.folders = d.folders || []; S.root = d.root; S.loaded = true;
+        try { localStorage.setItem(key(type), JSON.stringify({ items: S.items, folders: S.folders, root: S.root })); } catch (e) {}
+        dcRender(type);
+      });
+    })();
   };
 })();
 </script>
