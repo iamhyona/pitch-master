@@ -7,7 +7,7 @@
 <meta name="theme-color" content="#f2f4f6">
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=3">
 <link rel="apple-touch-icon" href="apple-touch-icon.png?v=3">
-<meta name="pm-build" content="20261017221844">
+<meta name="pm-build" content="20261017222522">
 <link rel="manifest" href="manifest.webmanifest?v=3">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -6440,27 +6440,40 @@ document.addEventListener('click', function (e) {
 </style>
 <style>
 /* 2026-10-17 (현아): 매입·매출 — 검색필터 아래(구분선 위) 소속사 드롭다운 */
-.dc-box.has-ag .tc-h{border-bottom:0!important;padding-bottom:12px!important}
+.dc-box.has-ag .tc-h{border-bottom:0!important;padding-bottom:6px!important}
 .dc-agr{padding:0 18px 12px;border-bottom:1px solid var(--line);background:#fff}
 .dc-agr .dc-sel{width:100%;height:34px;background-color:var(--chip)!important;border-radius:999px!important;border:0!important;background-position:right 13px center;padding:0 30px 0 14px}
 </style>
 <script>
 (function () {
   var _p = dcPass;
-  dcPass = function (S, x) { if (S.ag && x.clientKey !== S.ag) return false; return _p(S, x); };
+  dcPass = function (S, x) { if (S.ag && x.clientKey !== S.ag) return false; if (S.wk && (x._ws || []).indexOf(S.wk) < 0) return false; return _p(S, x); };
+  function hid(w) { return typeof pmHidden === 'function' && pmHidden(w); }
+  function opts(type) {
+    var S = DC[type], row = document.querySelector('#dc-' + type + ' .dc-agr'); if (!row || !S || !S.items) return;
+    var html;
+    if (type === 'invoice') {
+      var ws = {}; S.items.forEach(function (x) { (x._ws || []).forEach(function (w) { if (w && !hid(w)) ws[w] = 1; }); });
+      var wl = Object.keys(ws).sort(function (a, b) { return a.localeCompare(b, 'ko'); }); if (S.wk && wl.indexOf(S.wk) < 0) wl.unshift(S.wk);
+      html = '<select class="dc-sel' + (S.wk ? '' : ' ph') + '" onchange="dcSet(\'' + type + '\',\'wk\',this.value)"><option value="">작업자 전체</option>' +
+        wl.map(function (k) { return '<option value="' + esc(k) + '"' + (S.wk === k ? ' selected' : '') + '>' + esc(k) + '</option>'; }).join('') + '</select>';
+    } else {
+      var ks = {}; S.items.forEach(function (x) { if (x.clientKey) ks[x.clientKey] = 1; });
+      var list = Object.keys(ks).sort(function (a, b) { return typeof pmCmpClient === 'function' ? pmCmpClient(a, b) : a.localeCompare(b); });
+      if (S.ag && list.indexOf(S.ag) < 0) list.unshift(S.ag);
+      html = '<select class="dc-sel' + (S.ag ? '' : ' ph') + '" onchange="dcSet(\'' + type + '\',\'ag\',this.value)"><option value="">소속사 전체</option>' +
+        list.map(function (k) { return '<option value="' + esc(k) + '"' + (S.ag === k ? ' selected' : '') + '>' + esc(k) + '</option>'; }).join('') + '</select>';
+    }
+    if (row.getAttribute('data-h') !== html) { row.innerHTML = html; row.setAttribute('data-h', html); }
+  }
+  var _dll = dcList; dcList = function (type) { var r = _dll.apply(this, arguments); try { opts(type); } catch (e) {} return r; };
   var _r = dcRender;
   dcRender = function (type) {
     var S = DC[type], box = document.getElementById('dc-' + type);
     if (box && S && S.items) {
       var hd = box.querySelector('.tc-h'), row = box.querySelector('.dc-agr');
       if (hd && !row) { row = document.createElement('div'); row.className = 'dc-agr'; hd.parentNode.insertBefore(row, hd.nextSibling); box.classList.add('has-ag'); }
-      if (row) {
-        var ks = {}; S.items.forEach(function (x) { if (x.clientKey) ks[x.clientKey] = 1; });
-        var list = Object.keys(ks).sort(function (a, b) { return typeof pmCmpClient === 'function' ? pmCmpClient(a, b) : a.localeCompare(b); });
-        if (S.ag && list.indexOf(S.ag) < 0) list.unshift(S.ag);
-        row.innerHTML = '<select class="dc-sel' + (S.ag ? '' : ' ph') + '" onchange="dcSet(\'' + type + '\',\'ag\',this.value)"><option value="">소속사 전체</option>' +
-          list.map(function (k) { return '<option value="' + esc(k) + '"' + (S.ag === k ? ' selected' : '') + '>' + esc(k) + '</option>'; }).join('') + '</select>';
-      }
+      if (row) opts(type);
     }
     return _r.apply(this, arguments);
   };
