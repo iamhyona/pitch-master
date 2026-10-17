@@ -6029,7 +6029,7 @@ window.schSty = function (t, r, D) {
       '<div class="amt"><span>' + (inv ? '청구 금액 (VAT 포함)' : '최종 지급액') + '</span><b>' + W(fin) + '원</b></div></div>';
     h += '<div class="dv-sec">프로젝트</div><div class="dv-grid">' +
       kv(inv ? '리터칭 담당' : '리터칭 담당자', inv ? ((String(it.title || '').match(/<([^>]*)>/) || [])[1] || (w ? (w.tabs || []).map(function (t) { return t.name; }).join(', ') : '')) : (get('작업자') || it.worker)) +
-      kv('거래처', I['거래처'] || (inv ? get('수신처') : '') || it.clientKey) +
+      kv('거래처', (function (c) { var t = String(c || '').replace(/\s*\(.*\)\s*$/, '').replace(/\s*ENTERTAINMENT\s*/i, ' ').trim(); return t || c; })(I['거래처'] || (inv ? get('수신처') : '') || it.clientKey)) +
       kv('아티스트', I['아티스트명'] || (inv ? get('아티스트명') : '') || it.artist) +
       kv('프로젝트명', I['프로젝트명'] || String(it.title || '').split(' · ')[0]) +
       kv('거래처 담당자', I['담당자'] || (inv ? get('담당자') : '') || (String(it.title || '').split(' · ')[1] || '')) +
