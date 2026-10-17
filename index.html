@@ -7,7 +7,7 @@
 <meta name="theme-color" content="#f2f4f6">
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=3">
 <link rel="apple-touch-icon" href="apple-touch-icon.png?v=3">
-<meta name="pm-build" content="20261018001403">
+<meta name="pm-build" content="20261018005914">
 <link rel="manifest" href="manifest.webmanifest?v=3">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -6148,7 +6148,7 @@ document.addEventListener('click', function (e) {
       var lab = M.by === 'm' && /^\d{4}-\d{2}$/.test(k) ? k.slice(0, 4) + '년 ' + Number(k.slice(5)) + '월' : k;
       return '<details class="mml-g"><summary><span class="nm">' + esc(lab) + '</span><span class="c">' + l.length + '건</span><span class="v">' + W(sum(l, 'tot')) + '</span></summary>' +
         '<table class="mml-t"><thead><tr><th>' + (tax ? '청구일' : '지급일') + '</th><th>내역</th>' + (M.by === 'm' ? '<th style="text-align:left">' + (tax ? '거래처' : '지급처') + '</th>' : '') + '<th>공급가액</th><th>' + (tax ? '부가세' : '세금') + '</th><th>최종</th></tr></thead><tbody>' +
-        l.map(function (x) { return '<tr><td class="d">' + esc(x.d.replace(/^\d{4}-/, '')) + '</td><td>' + esc(x.job) + (tax && x.mgr && M.by !== 'm' ? ' <span style="color:var(--faint)">· ' + esc(x.mgr) + '</span>' : '') + '</td>' + (M.by === 'm' ? '<td style="text-align:left">' + esc(x.tab) + '</td>' : '') + '<td>' + W(x.amt) + '</td><td>' + W(x.tax) + '</td><td>' + W(x.tot) + '</td></tr>'; }).join('') +
+        l.map(function (x) { return '<tr><td class="d">' + esc(x.d.replace(/^\d{2}(\d{2})-/, '$1-')) + '</td><td>' + esc(x.job) + (tax && x.mgr && M.by !== 'm' ? ' <span style="color:var(--faint)">· ' + esc(x.mgr) + '</span>' : '') + '</td>' + (M.by === 'm' ? '<td style="text-align:left">' + esc(x.tab) + '</td>' : '') + '<td>' + W(x.amt) + '</td><td>' + W(x.tax) + '</td><td>' + W(x.tot) + '</td></tr>'; }).join('') +
         '<tr class="s"><td></td><td>합계</td>' + (M.by === 'm' ? '<td></td>' : '') + '<td>' + W(sum(l, 'amt')) + '</td><td>' + W(sum(l, 'tax')) + '</td><td>' + W(sum(l, 'tot')) + '</td></tr></tbody></table></details>';
     }).join('');
     document.getElementById('mml-b').innerHTML = h;
