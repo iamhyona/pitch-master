@@ -7,7 +7,7 @@
 <meta name="theme-color" content="#f2f4f6">
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=3">
 <link rel="apple-touch-icon" href="apple-touch-icon.png?v=3">
-<meta name="pm-build" content="20261017214719">
+<meta name="pm-build" content="20261017214926">
 <link rel="manifest" href="manifest.webmanifest?v=3">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -6250,10 +6250,16 @@ document.addEventListener('click', function (e) {
 </script>
 <style>
 /* 2026-10-17 (현아): 작업내역서 상단 — 큰 분류별 합산 (개인 · 유닛N인 · 단체N인 · 합성 · 긴급) */
-#mo-wo .wv-cat{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 2px}
-#mo-wo .wv-cat span{display:inline-flex;align-items:baseline;gap:5px;padding:5px 10px;border-radius:999px;background:var(--chip);font-size:12px;color:var(--txt2)}
-#mo-wo .wv-cat span b{font-size:13px;font-weight:700;color:var(--txt)}
-#mo-wo .wv-cat span.u b{color:#f04452}
+#mo-wo .wv-cat{margin:14px 0 2px}
+#mo-wo .wv-cat .wv-sth{margin-top:0}
+#mo-wo .wv-cat .wv-sth span:nth-child(2){border-left:0}
+#mo-wo .wv-sr{display:grid;grid-template-columns:1fr 64px 56px;align-items:center;padding:0 6px;border-bottom:1px solid #f2f4f6;font-size:13px}
+#mo-wo .wv-sr span{grid-column:1/3;padding:7px 4px 7px 0;color:var(--txt)}
+#mo-wo .wv-sr span small{font-size:11px;color:var(--faint)}
+#mo-wo .wv-sr b{padding:7px 4px;text-align:right;font-weight:700;color:var(--txt);border-left:1px solid #f2f4f6}
+#mo-wo .wv-sr.u b{color:#f04452}
+#mo-wo .wv-sr.t{border-top:1px solid var(--txt);border-bottom:0}
+#mo-wo .wv-sr.t span,#mo-wo .wv-sr.t b{font-weight:700}
 </style>
 <script>
 (function () {
@@ -6283,11 +6289,15 @@ document.addEventListener('click', function (e) {
     var sortN = function (a, b) { return (parseInt(a.replace(/\D/g, '')) || 0) - (parseInt(b.replace(/\D/g, '')) || 0); };
     var un = order.filter(function (k) { return /^유닛/.test(k); }).sort(sortN), dn = order.filter(function (k) { return /^단체/.test(k); }).sort(sortN), etc = order.filter(function (k) { return !/^(유닛|단체)/.test(k); });
     var keys = ['개인'].concat(un, dn, ['합성'], etc, ['긴급']);
-    return keys.filter(function (k) { return m[k]; }).map(function (k) { return '<span' + (k === '긴급' ? ' class="u"' : '') + '>' + esc(k) + '<b>' + m[k] + '</b></span>'; }).join('');
+    var ks = keys.filter(function (k) { return m[k]; }); if (!ks.length) return '';
+    var tot = 0; ks.forEach(function (k) { if (k !== '긴급') tot += m[k]; });
+    return '<div class="wv-th wv-sth"><span>작업 요약</span><span></span><span>컷수</span></div>' +
+      ks.map(function (k) { return '<div class="wv-sr' + (k === '긴급' ? ' u' : '') + '"><span>' + esc(k) + (k === '긴급' ? ' <small>(중복 포함)</small>' : '') + '</span><b>' + m[k] + '컷</b></div>'; }).join('') +
+      '<div class="wv-sr t"><span>합계</span><b>' + tot + '컷</b></div>';
   }
   function draw() {
     var d = WO.cur, w = document.querySelector('#mo-wo .wv-top'); if (!d || !d.tabs || !w) return;
-    var el = w.querySelector('.wv-cat'); if (!el) { el = document.createElement('div'); el.className = 'wv-cat'; var hd = w.querySelector('.wv-hd'); hd.parentNode.insertBefore(el, hd.nextSibling); }
+    var el = w.querySelector('.wv-cat'); if (!el) { el = document.createElement('div'); el.className = 'wv-cat'; w.appendChild(el); }
     var h = ''; try { h = catSum(d); } catch (e) {}
     el.innerHTML = h; el.style.display = h ? '' : 'none';
   }
