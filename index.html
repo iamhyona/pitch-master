@@ -5971,8 +5971,8 @@ window.schSty = function (t, r, D) {
 .dv-hd .amt span{display:block;font-size:12px;color:var(--txt3);margin-bottom:2px}
 .dv-hd .amt b{font-size:22px;font-weight:800;color:#3182f6;white-space:nowrap}
 .dv-sec{font-size:12px;font-weight:700;color:var(--txt3);margin:4px 2px -6px;letter-spacing:.02em}
-.dv-grid{display:grid;grid-template-columns:1fr 1fr;gap:0 18px;background:var(--chip);border-radius:14px;padding:6px 16px}
-.dv-grid .r{display:flex;justify-content:space-between;gap:10px;padding:9px 0;border-bottom:1px solid #e5e8eb;font-size:14px;min-width:0}
+.dv-grid{display:grid;grid-template-columns:1fr 1fr;gap:0 18px;background:var(--chip);border-radius:14px;padding:4px 16px}
+.dv-grid .r{display:flex;justify-content:space-between;gap:10px;padding:6px 0;border-bottom:1px solid #e5e8eb;font-size:14px;min-width:0}
 .dv-grid .r:nth-last-child(-n+2){border-bottom:0}
 .dv-grid .r span{color:var(--txt3);flex:none;font-size:13px}
 .dv-grid .r b{font-weight:600;color:var(--txt);text-align:right;word-break:break-all}
@@ -5989,7 +5989,7 @@ window.schSty = function (t, r, D) {
 .dv-tbl{width:100%;border-collapse:collapse;font-size:14px}
 .dv-tbl th{font-size:12px;font-weight:600;color:var(--txt3);text-align:right;padding:8px 6px;border-bottom:1px solid var(--txt)}
 .dv-tbl th:first-child,.dv-tbl td:first-child{text-align:left}
-.dv-tbl td{padding:10px 6px;border-bottom:1px solid #f2f4f6;text-align:right;white-space:nowrap}
+.dv-tbl td{padding:6px 6px;border-bottom:1px solid #f2f4f6;text-align:right;white-space:nowrap}
 .dv-tbl td:first-child{white-space:normal;word-break:keep-all;color:var(--txt)}
 .dv-tbl td.n{color:var(--txt3)}
 .dv-tot{display:flex;flex-direction:column;align-items:stretch;margin-left:auto;width:min(100%,320px)}
@@ -6027,16 +6027,15 @@ window.schSty = function (t, r, D) {
     var h = '<div class="dv">' +
       '<div class="dv-hd"><div><small>' + (inv ? 'INVOICE · 청구' : 'PAYMENT · 지급') + '</small><h3>' + esc([I['아티스트명'] ? String(I['아티스트명']).replace(/^.*\((.*)\)$/, '$1') : it.artist, I['프로젝트명'] || String(it.title || '').split(' · ')[0]].filter(Boolean).join(' ')) + '</h3></div>' +
       '<div class="amt"><span>' + (inv ? '청구 금액 (VAT 포함)' : '최종 지급액') + '</span><b>' + W(fin) + '원</b></div></div>';
-    h += '<div class="dv-sec">일자</div><div class="dv-grid">' + kv('프로젝트 의뢰일자', req) +
-      (inv ? kv('청구서 작성일', get('작성일')) + kv('검수완료일', get('검수완료일'))
-           : kv('지급내역 작성일자', get('작성일자')) + kv('지급일자', get('지급일자'))) + '</div>';
     h += '<div class="dv-sec">프로젝트</div><div class="dv-grid">' +
       kv(inv ? '리터칭 담당' : '리터칭 담당자', inv ? ((String(it.title || '').match(/<([^>]*)>/) || [])[1] || (w ? (w.tabs || []).map(function (t) { return t.name; }).join(', ') : '')) : (get('작업자') || it.worker)) +
       kv('거래처', I['거래처'] || (inv ? get('수신처') : '') || it.clientKey) +
       kv('아티스트', I['아티스트명'] || (inv ? get('아티스트명') : '') || it.artist) +
       kv('프로젝트명', I['프로젝트명'] || String(it.title || '').split(' · ')[0]) +
       kv('거래처 담당자', I['담당자'] || (inv ? get('담당자') : '') || (String(it.title || '').split(' · ')[1] || '')) +
-      kv(inv ? '작업컷수' : '세금구분', inv ? (rowsT[0] && rowsT[0].q) || '' : (isVat ? '부가세 10%' : '원천세 3.3%')) + '</div>';
+      kv('프로젝트 의뢰일자', req) +
+      (inv ? kv('청구서 작성일', get('작성일')) + kv('검수완료일', get('검수완료일'))
+           : kv('지급내역 작성일자', get('작성일자')) + kv('지급일자', get('지급일자'))) + '</div>';
     var link = (w && w.link) || (inv ? get('작업링크') : '');
     h += '<div class="dv-links">' + (wi ? '<a href="' + esc((w && w.url) || ('https://docs.google.com/spreadsheets/d/' + wi.id + '/edit')) + '" target="_blank">작업내역서 ↗</a>' : '<span>작업내역서 못 찾음</span>') +
       (link && /^https?:/.test(link) ? '<a href="' + esc(link) + '" target="_blank">작업 업로드 폴더 ↗</a>' : '<span>' + (w ? '작업 폴더 링크 없음' : (wi ? '폴더 확인 중…' : '작업 폴더 없음')) + '</span>') +
