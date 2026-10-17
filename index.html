@@ -5211,12 +5211,33 @@ window.schSty = function (t, r, D) {
   window.pfOutCopy = function () {
     var d = null; try { d = vals(); d.text = (pfEl('pfout-x') || {}).value || PF.text || ''; } catch (e) {}
     _oc.apply(this, arguments);
-    if (!d || !d.text || d.text === last) return;
-    last = d.text;
-    woPost('pm_mm_add', d, function (r) {
-      if (r && r.ok) toast((d.kind === 'tax' ? '매출' : '매입') + ' 내역에 저장했어요 · ' + (r.tab || ''));
-      else { last = ''; toast('시트 저장 실패 — ' + ((r && r.error) || '다시 복사해 주세요')); }
-    });
+    if (!d || !d.text) return;
+    // 2026-10-17 (현아 요청): 복사만으로는 저장하지 않고, 마지막에 '청구/지급 기록에 저장'을 한 번 더 눌러야 저장 (계산만 해보는 경우)
+    pfSaveAsk(d, d.text === last);
+  };
+  function won(n) { n = Number(n) || 0; return n.toLocaleString('ko-KR'); }
+  window.pfSaveAsk = function (d, dup) {
+    var tax = d.kind === 'tax', lb = tax ? '청구' : '지급';
+    var who = tax ? (d['거래처명'] || '') : (d['지급처'] || '');
+    document.getElementById('pfsave-t').textContent = lb + ' 기록에 저장할까요?';
+    document.getElementById('pfsave-b').innerHTML =
+      '<div class="pfs-row"><span>' + (tax ? '거래처' : '지급처') + '</span><b>' + esc(who || '-') + '</b></div>' +
+      '<div class="pfs-row"><span>내역</span><b>' + esc([d['아티스트'], d['작업명']].filter(Boolean).join(' ') || '-') + '</b></div>' +
+      '<div class="pfs-row"><span>공급가액</span><b>' + won(d['공급가액']) + '</b></div>' +
+      '<div class="pfs-row"><span>' + (tax ? '부가세' : (/사업자/.test(d['세금구분'] || '') ? '부가세' : '원천세')) + '</span><b>' + won(d['세금']) + '</b></div>' +
+      '<div class="pfs-row"><span>최종' + (tax ? '청구액' : '지급액') + '</span><b>' + won(d['최종지급액']) + '</b></div>' +
+      '<div class="pfs-note">' + (dup ? '<span style="color:#f04452">방금 저장한 내용과 같아요. 한 번 더 저장하면 두 줄이 돼요.</span><br>' : '') +
+      '문구는 복사됐어요. 계산만 해본 거라면 \'저장 안 함\'을 눌러주세요.' + (tax ? '' : ' 원천세 건은 원천세신고에도 자동으로 들어가요.') + '</div>';
+    var go = document.getElementById('pfsave-go');
+    go.textContent = lb + ' 기록에 저장'; go.disabled = false;
+    go.onclick = function () {
+      go.disabled = true; go.textContent = '저장 중…';
+      woPost('pm_mm_add', d, function (r) {
+        if (r && r.ok) { last = d.text; closeMo('mo-pfsave'); toast(lb + ' 기록에 저장했어요 · ' + (tax ? '매출' : '매입') + ' 내역 ' + (r.tab || '')); }
+        else { go.disabled = false; go.textContent = lb + ' 기록에 저장'; toast('저장 실패 — ' + ((r && r.error) || '다시 눌러주세요')); }
+      });
+    };
+    openMo('mo-pfsave');
   };
 })();
 </script>
@@ -5892,6 +5913,15 @@ window.schSty = function (t, r, D) {
   new MutationObserver(function () { if (mo.classList.contains('open') && mo.classList.contains('sp-p')) fill(); }).observe(mo, { attributes: true, attributeFilter: ['class'] });
 })();
 </script>
+<div class="mo" id="mo-pfsave"><div class="md" style="max-width:420px"><div class="md-h"><span class="md-t" id="pfsave-t">기록에 저장할까요?</span><button class="xb" onclick="closeMo('mo-pfsave')">✕</button></div>
+  <div class="md-b"><div id="pfsave-b"></div>
+  <div style="display:flex;gap:8px;margin-top:6px"><button class="btn btn-g" style="flex:1;height:46px;border-radius:999px" onclick="closeMo('mo-pfsave');toast('저장하지 않았어요 (복사만 됨)')">저장 안 함</button><button class="btn btn-p" id="pfsave-go" style="flex:2;height:46px;border-radius:999px">기록에 저장</button></div></div></div></div>
+<style>
+#mo-pfsave .pfs-row{display:flex;justify-content:space-between;gap:12px;padding:9px 2px;border-bottom:1px solid #f2f4f6;font-size:14px}
+#mo-pfsave .pfs-row span{color:var(--txt3);flex:none}
+#mo-pfsave .pfs-row b{font-weight:600;color:var(--txt);text-align:right;word-break:break-all}
+#mo-pfsave .pfs-note{font-size:12px;color:var(--txt3);line-height:1.55;margin:10px 2px 4px}
+</style>
 </body>
 
 </html>
