@@ -7,7 +7,7 @@
 <meta name="theme-color" content="#f2f4f6">
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=3">
 <link rel="apple-touch-icon" href="apple-touch-icon.png?v=3">
-<meta name="pm-build" content="20261018082625">
+<meta name="pm-build" content="20261018082814">
 <link rel="manifest" href="manifest.webmanifest?v=3">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -952,8 +952,10 @@ function renderAg(){
           +'<span class="mc-contact-name" id="agmc-cm'+i+'x'+ci+'">'+esc(c.manager||'-')+'</span>'
           +(c.dept?'<span style="font-size:10px;color:var(--txt3);background:var(--sur2);padding:1px 6px;border-radius:3px">'+esc(c.dept)+'</span>':'')
         +'</div>'
+        +((c.email||c.tel)?'<div class="mc-ct-line">'  // 2026-10-18 (현아): 메일·연락처 한 줄
         +(c.email?'<span class="mc-contact-email" id="agmc-ce'+i+'x'+ci+'">'+esc(c.email)+'</span>':'')
         +(c.tel?'<span id="agmc-ct'+i+'x'+ci+'" class="copyable" style="font-size:11px;color:var(--txt2)">'+esc(c.tel)+'</span>':'')
+        +'</div>':'')
       +'</div>';
     }).join('');
     cards+='<div class="mc" id="agm'+i+'">'
@@ -6887,6 +6889,9 @@ header .hr .ib[aria-label="로그아웃"]{display:none!important}
 .dv-more>summary>span:after,#mo-wo .wv-more>summary>span:after{content:'';width:10px;height:10px;background:no-repeat center/10px 10px url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%234e5968' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");transition:transform .2s}
 .dv-more[open]>summary>span,#mo-wo .wv-more[open]>summary>span{font-size:0;gap:0;width:28px;padding:0;justify-content:center}
 .dv-more[open]>summary>span:after,#mo-wo .wv-more[open]>summary>span:after{transform:rotate(180deg)}
+</style>
+<style>/* 2026-10-18: 거래처 담당자 메일·연락처 한 줄 */
+.mc-ct-line{display:flex;align-items:center;flex-wrap:wrap;gap:2px 12px}
 </style>
 </body>
 
