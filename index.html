@@ -7,7 +7,7 @@
 <meta name="theme-color" content="#f2f4f6">
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=3">
 <link rel="apple-touch-icon" href="apple-touch-icon.png?v=3">
-<meta name="pm-build" content="20261017222751">
+<meta name="pm-build" content="20261017222921">
 <link rel="manifest" href="manifest.webmanifest?v=3">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -6508,6 +6508,18 @@ document.addEventListener('click', function (e) {
 <style>
 /* 2026-10-17 (현아): 목록 오른쪽 위 의뢰일 날짜 살짝 아래로 */
 .wo-g .wo-dt{position:relative;top:3px}
+</style>
+<style>
+/* 2026-10-17 (현아): 대금 확인 — 단추 줄을 아래 합계 칸 그리드에 맞춤 (휴대폰 2칸 · 넓은 화면 4칸 한 줄) */
+.mml-bar{display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px!important;align-items:center}
+.mml-bar>.rt-seg{display:flex!important;width:100%!important;box-sizing:border-box;align-self:stretch}
+.mml-bar>.rt-seg>button{flex:1 1 0!important;min-width:0;padding:0 4px!important;height:32px!important}
+.mml-bar>select{height:38px!important}
+.mml-bar>:nth-child(1){order:1}
+.mml-bar>:nth-child(3){order:2}
+.mml-bar>select{order:3;width:100%;box-sizing:border-box}
+.mml-bar>a{order:4;justify-self:end;margin-left:0!important}
+@media(max-width:560px){.mml-bar{grid-template-columns:1fr 1fr}}
 </style>
 </body>
 
