@@ -4300,7 +4300,7 @@ function woDlSave() {
     o.corp = lab('상\\s*호|법인명(?:\\s*\\(단체명\\))?|단체명|회사명|업체명');
     o.ceo = lab('대\\s*표\\s*자|대표이사|대표명|대\\s*표');
     o.name = lab('성\\s*명|이\\s*름|예금주');
-    o.addr = lab('사업장\\s*소재지|본점\\s*소재지|소\\s*재\\s*지|주\\s*소');
+    o.addr = lab('사업장\\s*소재지|본점\\s*소재지|소\\s*재\\s*지|(?<!메일\\s?|이메일\\s?)주\\s*소');
     o.manager = lab('담당자');
     o.artists = lab('아티스트|소속\\s*아티스트');
     o.dept = lab('담당\\s*부서|소속\\s*(?:팀|부서)|부\\s*서|팀\\s*명');
@@ -4332,7 +4332,10 @@ function woDlSave() {
     lt: function (o) {
       var m = { 'lt-name': 'name', 'lt-regid': o.biz ? 'biz' : 'reg', 'lt-addr': 'addr', 'lt-bank': 'bank', 'lt-acct': 'acct', 'lt-email': 'email', 'lt-tel': 'tel' };
       if (o.biz) { m['lt-ceo'] = 'ceo'; if (!o.name) o.name = o.ceo; }
-      var n = fill(m, o); if (o.biz || o.reg) { $('lt-tax').value = o.biz ? '사업자' : '원천세'; n++; } return n;
+      // 2026-10-17: 기존 외주처 수정 중이면 이름은 그대로 두고, 붙여넣은 정보로 나머지 칸만 채움(빈 칸 추가 · 다른 값은 교체)
+      var editing = typeof EI !== 'undefined' && EI >= 0 && $('lt-name') && $('lt-name').value.trim();
+      if (editing) { delete m['lt-name']; Object.keys(m).forEach(function (id) { var el = $(id), v = o[m[id]]; if (el && v && String(el.value).trim() === String(v).trim()) delete m[id]; }); }
+      var n = fill(m, o); if ((o.biz || o.reg) && !(editing && $('lt-tax').value === (o.biz ? '사업자' : '원천세'))) { $('lt-tax').value = o.biz ? '사업자' : '원천세'; $('lt-tax').classList.add('rg-fill'); n++; } return n;
     },
     agn: function (o) {
       return fill({ 'agn-ko': 'ko', 'agn-en': 'en', 'agn-ceo': 'ceo', 'agn-biz': 'biz', 'agn-addr': 'addr', 'agn-taxmail': 'taxMail', 'agn-mgr': 'manager', 'agn-dept': 'dept', 'agn-email': 'email', 'agn-tel': 'tel', 'agn-artists': 'artists' }, o);
@@ -4340,7 +4343,8 @@ function woDlSave() {
   };
   function applyParsed(k, text) {
     var o = parseInfo(text), n = FILL[k](o);
-    var st = $('imp-' + k + '-st'); if (st) st.textContent = n ? n + '칸을 채웠어요. 파란 테두리 칸을 확인해주세요.' : '알아볼 수 있는 정보가 없어요. 직접 입력해주세요.';
+    var st = $('imp-' + k + '-st'); if (st) st.textContent = n ? n + '칸을 채웠어요. 파란 테두리 칸을 확인하고 저장을 눌러주세요.' : '새로 채울 정보가 없어요. 이미 같은 값이거나 알아볼 수 없는 내용이에요.';
+    if (n && k === 'lt') { var tb = $('imp-lt-tst') || (function () { var d = document.createElement('div'); d.id = 'imp-lt-tst'; d.className = 'imp-st'; var p = document.querySelector('#imp-lt .imp-p[data-p="text"]'); if (p) p.appendChild(d); return d; })(); tb.textContent = n + '칸을 채웠어요 — 아래 파란 테두리 칸을 확인하고 저장을 눌러주세요.'; }
     toast(n ? n + '칸을 채웠어요 — 확인해주세요' : '읽은 정보가 없어요');
   }
   window.rgImpText = function (k) { applyParsed(k, $('imp-' + k + '-t').value); };
@@ -4389,7 +4393,7 @@ function woDlSave() {
     var bs = $('lt-bank');
     if (bs && !bs.getAttribute('data-rg')) { bs.setAttribute('data-rg', 1); if (![].some.call(bs.options, function (o) { return o.value === ''; })) bs.insertAdjacentHTML('afterbegin', '<option value="">선택</option>'); BANKS.forEach(function (n) { if (![].some.call(bs.options, function (o) { return o.value === n; })) bs.insertAdjacentHTML('beforeend', '<option>' + n + '</option>'); }); }
     document.querySelectorAll('#mo-lt .rg-fill').forEach(function (e) { e.classList.remove('rg-fill'); });
-    rgImpMode('lt', 'hand'); var st = $('imp-lt-st'); if (st) st.textContent = ''; var tx = $('imp-lt-t'); if (tx) tx.value = '';
+    rgImpMode('lt', 'hand'); var st = $('imp-lt-st'); if (st) st.textContent = ''; var tst = $('imp-lt-tst'); if (tst) tst.textContent = ''; var tx = $('imp-lt-t'); if (tx) tx.value = '';
   }
   window.rgLtNew = function () {
     ltPrep(); EI = -1; $('mo-lt-title').textContent = '외주처 등록';
@@ -5732,7 +5736,7 @@ window.schSty = function (t, r, D) {
 .iq-hint{font-size:12px;color:var(--txt3);margin:8px 2px 0;line-height:1.55;word-break:keep-all}
 .iq-hint b{color:var(--txt2);font-weight:600}
 .iq-hint .x{color:#f04452}
-.iq-go{width:100%;margin-top:10px}
+.iq-go{width:100%;margin-top:10px;height:48px!important;font-size:15px!important;font-weight:700!important;border-radius:14px!important}
 </style>
 <script>
 // 2026-10-17 (현아 요청): 견적서 빠른 작성 — 줄글로 소속사·아티스트·담당자·컷수를 적으면 소속사 단가로 항목 채우기
@@ -5945,6 +5949,122 @@ window.schSty = function (t, r, D) {
   invMode(m);
 })();
 </script>
+<script>
+// 2026-10-17: 견적서 '칸 채우기' 단추 = '견적서 구글시트 생성' 단추와 같은 높이·글자·모서리
+(function () {
+  function sync() {
+    var g = document.querySelector('.iq-go'), s = document.querySelector('#tab-invoice button[onclick="submitInvoice()"]'); if (!g || !s || !s.offsetHeight) return;
+    var c = getComputedStyle(s);
+    ['height', 'fontSize', 'fontWeight', 'borderRadius', 'letterSpacing', 'backgroundColor', 'color'].forEach(function (k) { g.style.setProperty(k.replace(/[A-Z]/g, function (m) { return '-' + m.toLowerCase(); }), c[k], 'important'); });
+  }
+  document.addEventListener('click', function (e) { if (e.target && e.target.closest && e.target.closest('[data-tab="invoice"], #inv-seg')) setTimeout(sync, 60); });
+  window.addEventListener('resize', sync); setTimeout(sync, 500);
+})();
+</script>
+<style>
+/* 2026-10-17 (현아): 매입·매출 상세 — 인보이스처럼 한눈에 보기 */
+.dv{display:flex;flex-direction:column;gap:14px}
+.dv-hd{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;padding:2px 2px 14px;border-bottom:2px solid var(--txt)}
+.dv-hd small{display:block;font-size:12px;font-weight:700;letter-spacing:.06em;color:var(--txt3);margin-bottom:4px}
+.dv-hd h3{margin:0;font-size:20px;font-weight:800;color:var(--txt);line-height:1.3;word-break:keep-all}
+.dv-hd .amt{text-align:right;flex:none}
+.dv-hd .amt span{display:block;font-size:12px;color:var(--txt3);margin-bottom:2px}
+.dv-hd .amt b{font-size:22px;font-weight:800;color:#3182f6;white-space:nowrap}
+.dv-sec{font-size:12px;font-weight:700;color:var(--txt3);margin:4px 2px -6px;letter-spacing:.02em}
+.dv-grid{display:grid;grid-template-columns:1fr 1fr;gap:0 18px;background:var(--chip);border-radius:14px;padding:6px 16px}
+.dv-grid .r{display:flex;justify-content:space-between;gap:10px;padding:9px 0;border-bottom:1px solid #e5e8eb;font-size:14px;min-width:0}
+.dv-grid .r:nth-last-child(-n+2){border-bottom:0}
+.dv-grid .r span{color:var(--txt3);flex:none;font-size:13px}
+.dv-grid .r b{font-weight:600;color:var(--txt);text-align:right;word-break:break-all}
+.dv-grid .r b.e{color:var(--faint);font-weight:500}
+@media(max-width:560px){.dv-grid{grid-template-columns:1fr}.dv-grid .r:nth-last-child(2){border-bottom:1px solid #e5e8eb}}
+.dv-links{display:flex;flex-wrap:wrap;gap:6px}
+.dv-links a,.dv-links>span{display:inline-flex;align-items:center;gap:4px;height:34px;padding:0 12px;border-radius:10px;background:var(--chip);color:var(--txt);font-size:13px;font-weight:600;text-decoration:none}
+.dv-links>span{color:var(--faint);font-weight:500}
+.dv-links a span{display:inline!important;height:auto!important;padding:0!important;background:none!important;color:inherit!important;font-weight:600!important}
+.dv-links a svg{width:15px;height:15px}
+.dv-links a{color:var(--txt)!important;opacity:1!important;background:var(--chip)!important}
+.dv-links a:before,.dv-links a:after{display:none!important}
+.dv-grid .r:nth-last-child(-n+2){border-bottom:0}.dv-grid .r:last-child:nth-child(odd){grid-column:1/-1}
+.dv-tbl{width:100%;border-collapse:collapse;font-size:14px}
+.dv-tbl th{font-size:12px;font-weight:600;color:var(--txt3);text-align:right;padding:8px 6px;border-bottom:1px solid var(--txt)}
+.dv-tbl th:first-child,.dv-tbl td:first-child{text-align:left}
+.dv-tbl td{padding:10px 6px;border-bottom:1px solid #f2f4f6;text-align:right;white-space:nowrap}
+.dv-tbl td:first-child{white-space:normal;word-break:keep-all;color:var(--txt)}
+.dv-tbl td.n{color:var(--txt3)}
+.dv-tot{display:flex;flex-direction:column;align-items:stretch;margin-left:auto;width:min(100%,320px)}
+.dv-tot .r{display:flex;justify-content:space-between;padding:8px 2px;font-size:14px;color:var(--txt2)}
+.dv-tot .r.t{border-top:2px solid var(--txt);margin-top:4px;padding-top:12px;font-size:16px;font-weight:800;color:var(--txt)}
+.dv-tot .r.t b{color:#3182f6}
+.dv-ft{display:flex;gap:8px;justify-content:flex-end}
+.dv-ft button{height:38px;padding:0 14px;border:0;border-radius:10px;background:var(--chip);color:var(--txt2);font:inherit;font-size:13px;font-weight:600;cursor:pointer}
+</style>
+<script>
+// 2026-10-17 (현아 요청): 매입(지급내역)·매출(청구서) 문서를 누르면 — 고르는 화면이 아니라 확인용 인보이스 화면
+//  의뢰일·작성일·지급일·담당자·거래처·아티스트·프로젝트·거래처 담당자 / 작업내역서·작업 폴더 / 세부내역·컷수·소계 / 합산·세금·최종액
+(function () {
+  var _edit = dcDetail, WOC = {};
+  window.dcEditView = function () { _edit.apply(this, arguments); var b = document.getElementById('dc-body'); if (b) b.insertAdjacentHTML('afterbegin', '<div class="dv-ft" style="margin-bottom:6px"><button type="button" onclick="dcDetail()">← 보기로</button></div>'); };
+  function N(v) { var n = Number(String(v == null ? '' : v).replace(/[^\d.-]/g, '')); return isNaN(n) ? 0 : n; }
+  function W(v) { var n = N(v); return n ? n.toLocaleString('ko-KR') : (String(v || '').trim() || '0'); }
+  function findWo(it) {
+    var t = String(it.title || '').split(' · ')[0];
+    return ((window.WO && WO.items) || []).filter(function (x) { return x.clientKey === it.clientKey && x.date6 === it.date6 && String(x.title || '').split(' · ')[0] === t; })[0] || null;
+  }
+  function kv(k, v) { var e = !String(v || '').trim(); return '<div class="r"><span>' + esc(k) + '</span><b' + (e ? ' class="e"' : '') + '>' + (e ? '-' : esc(v)) + '</b></div>'; }
+  window.dcDetail = function () {
+    var d = DC.cur; if (!d) return;
+    var b = document.getElementById('dc-body'), inv = d.type === 'invoice', it = (DC[d.type].items || []).filter(function (x) { return x.id === d.id; })[0] || {};
+    var get = function (k) { var x = (d.info || []).filter(function (i) { return i.k === k; })[0]; return x ? x.v : ''; };
+    var wi = findWo(it), w = wi && WOC[wi.id];
+    if (wi && !w && !WOC[wi.id + ':l']) { WOC[wi.id + ':l'] = 1; woGet('&wo=' + encodeURIComponent(wi.id), function (r) { if (r && r.ok) { WOC[wi.id] = r; if (DC.cur === d) dcDetail(); } }); }
+    var I = (w && w.info) || {};
+    var req = I['요청일'] || (/^\d{6}$/.test(it.date6 || '') ? '20' + it.date6.slice(0, 2) + '-' + it.date6.slice(2, 4) + '-' + it.date6.slice(4) : '');
+    var rowsT = (d.total || []), totV = function (i) { return rowsT[i] ? rowsT[i].v : ''; };
+    var taxRate = get('세금구분'), isVat = inv || /10/.test(taxRate) || /부가/.test(taxRate);
+    var fin = inv ? totV(2) : (get('지급액') || totV(2));
+    document.getElementById('dc-title').textContent = inv ? '청구서 (매출)' : '지급내역서 (매입)';
+    var h = '<div class="dv">' +
+      '<div class="dv-hd"><div><small>' + (inv ? 'INVOICE · 청구' : 'PAYMENT · 지급') + '</small><h3>' + esc([I['아티스트명'] ? String(I['아티스트명']).replace(/^.*\((.*)\)$/, '$1') : it.artist, I['프로젝트명'] || String(it.title || '').split(' · ')[0]].filter(Boolean).join(' ')) + '</h3></div>' +
+      '<div class="amt"><span>' + (inv ? '청구 금액 (VAT 포함)' : '최종 지급액') + '</span><b>' + W(fin) + '원</b></div></div>';
+    h += '<div class="dv-sec">일자</div><div class="dv-grid">' + kv('프로젝트 의뢰일자', req) +
+      (inv ? kv('청구서 작성일', get('작성일')) + kv('검수완료일', get('검수완료일'))
+           : kv('지급내역 작성일자', get('작성일자')) + kv('지급일자', get('지급일자'))) + '</div>';
+    h += '<div class="dv-sec">프로젝트</div><div class="dv-grid">' +
+      kv(inv ? '리터칭 담당' : '리터칭 담당자', inv ? ((String(it.title || '').match(/<([^>]*)>/) || [])[1] || (w ? (w.tabs || []).map(function (t) { return t.name; }).join(', ') : '')) : (get('작업자') || it.worker)) +
+      kv('거래처', I['거래처'] || (inv ? get('수신처') : '') || it.clientKey) +
+      kv('아티스트', I['아티스트명'] || (inv ? get('아티스트명') : '') || it.artist) +
+      kv('프로젝트명', I['프로젝트명'] || String(it.title || '').split(' · ')[0]) +
+      kv('거래처 담당자', I['담당자'] || (inv ? get('담당자') : '') || (String(it.title || '').split(' · ')[1] || '')) +
+      kv(inv ? '작업컷수' : '세금구분', inv ? (rowsT[0] && rowsT[0].q) || '' : (isVat ? '부가세 10%' : '원천세 3.3%')) + '</div>';
+    var link = (w && w.link) || (inv ? get('작업링크') : '');
+    h += '<div class="dv-links">' + (wi ? '<a href="' + esc((w && w.url) || ('https://docs.google.com/spreadsheets/d/' + wi.id + '/edit')) + '" target="_blank">작업내역서 ↗</a>' : '<span>작업내역서 못 찾음</span>') +
+      (link && /^https?:/.test(link) ? '<a href="' + esc(link) + '" target="_blank">작업 업로드 폴더 ↗</a>' : '<span>' + (w ? '작업 폴더 링크 없음' : (wi ? '폴더 확인 중…' : '작업 폴더 없음')) + '</span>') +
+      '<a href="' + esc(d.url) + '" target="_blank">' + (inv ? '청구서' : '지급내역서') + ' 시트 ↗</a></div>';
+    var rows = (d.rows || []).filter(function (r) { return r.v.some(function (x) { return String(x).trim(); }); });
+    h += '<table class="dv-tbl"><thead><tr><th>작업 세부내역</th><th>컷수</th><th>' + (inv ? '단가' : '컷당') + '</th><th>소계</th></tr></thead><tbody>' +
+      (rows.length ? rows.map(function (r) { var v = r.v; return '<tr><td>' + esc(v[1] || '-') + '</td><td class="n">' + esc(v[2] || '') + '</td><td class="n">' + W(v[3]) + '</td><td>' + W(v[4]) + '</td></tr>'; }).join('')
+        : '<tr><td colspan="4" style="text-align:center;color:var(--faint);padding:18px">작업내역서에 아직 작업이 없어요</td></tr>') + '</tbody></table>';
+    var sub = inv ? totV(0) : (get('합계') || totV(0)), tax = inv ? totV(1) : (get('세금') || totV(1));
+    h += '<div class="dv-tot"><div class="r"><span>합산 (공급가액)</span><b>' + W(sub) + '</b></div>' +
+      '<div class="r"><span>' + (isVat ? '부가세 (10%)' : '원천세 (3.3%)') + '</span><b>' + (isVat ? '' : (N(tax) > 0 ? '-' : '')) + W(tax) + '</b></div>' +
+      '<div class="r t"><span>' + (inv ? '최종 청구액' : '최종 지급액') + '</span><b>' + W(fin) + '</b></div></div>';
+    h += '<div class="dv-ft"><button type="button" onclick="dcEditView()">날짜·단가 수정</button></div></div>';
+    b.innerHTML = h;
+  };
+})();
+</script>
+<script>
+// 2026-10-17 (현아 요청): 외주처 카드도 거래처처럼 흰 박스 아무 데나 누르면 숨긴 정보 열고 닫기
+document.addEventListener('click', function (e) {
+  var t = e.target; if (!t || !t.closest) return;
+  var card = t.closest('#mc-lt .lt-c'); if (!card) return;
+  if (t.closest('button, a, input, select, textarea, label, .copyable, .mc-actions, .bank-tag')) return;
+  if (window.getSelection && String(window.getSelection())) return;
+  card.classList.toggle('open');
+});
+</script>
+<style>#mc-lt .lt-c{cursor:pointer}#mc-lt .lt-c .copyable{cursor:copy}</style>
 </body>
 
 </html>
