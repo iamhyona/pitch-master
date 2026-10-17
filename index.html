@@ -7,7 +7,7 @@
 <meta name="theme-color" content="#f2f4f6">
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=3">
 <link rel="apple-touch-icon" href="apple-touch-icon.png?v=3">
-<meta name="pm-build" content="20261018010021">
+<meta name="pm-build" content="20261018011812">
 <link rel="manifest" href="manifest.webmanifest?v=3">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -6769,6 +6769,27 @@ document.addEventListener('click', function (e) {
 .mml-bar>a.pf-ic{gap:0!important;color:var(--txt2)!important;text-decoration:none!important}
 .mml-bar>a.pf-ic>span{display:none!important}
 </style>
+<style>
+/* 2026-10-18 (현아): 상단 PITCH·관리 옆 오늘 날짜·현재 시각 */
+#hd-now{display:inline-flex;flex-direction:column;justify-content:center;margin-left:0;line-height:1.25;font-size:10px;font-weight:600;color:var(--txt3);white-space:nowrap;font-variant-numeric:tabular-nums}
+#hd-now b{font-size:11px;font-weight:700;color:var(--txt2)}
+@media(max-width:359px){#hd-now{display:none}}
+</style>
+<script>
+(function () {
+  var W = ['일', '월', '화', '수', '목', '금', '토'];
+  function p(n) { return (n < 10 ? '0' : '') + n; }
+  function tick() {
+    var tag = document.getElementById('role-tag'); if (!tag) return;
+    var el = document.getElementById('hd-now');
+    if (!el) { el = document.createElement('span'); el.id = 'hd-now'; tag.parentNode.insertBefore(el, tag.nextSibling); }
+    var d = new Date();
+    el.innerHTML = '<span>' + String(d.getFullYear()).slice(2) + '.' + p(d.getMonth() + 1) + '.' + p(d.getDate()) + ' ' + W[d.getDay()] + '</span><b>' + p(d.getHours()) + ':' + p(d.getMinutes()) + '</b>';
+  }
+  tick(); setInterval(tick, 10000);
+  document.addEventListener('visibilitychange', function () { if (!document.hidden) tick(); });
+})();
+</script>
 </body>
 
 </html>
