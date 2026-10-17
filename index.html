@@ -7,7 +7,7 @@
 <meta name="theme-color" content="#f2f4f6">
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=3">
 <link rel="apple-touch-icon" href="apple-touch-icon.png?v=3">
-<meta name="pm-build" content="20261017215635">
+<meta name="pm-build" content="20261017215818">
 <link rel="manifest" href="manifest.webmanifest?v=3">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -6363,6 +6363,12 @@ document.addEventListener('click', function (e) {
 /* 2026-10-17 (현아): 열 구분선 없애고 구분(1인·2인) 글자 작게 */
 #mo-wo .wv-th span,#mo-wo .wd-li.wv-sp>.wv-c,#mo-wo .wd-li.wv-sp>.wv-n,#mo-wo .wv-sr b{border-left:0!important}
 #mo-wo .wd-li.wv-sp>.wv-c{font-size:11px!important}
+</style>
+<style>
+/* 2026-10-17 (현아): 표 머리줄 — 셀 배경 없이, 검정 굵은 글씨 */
+#mo-wo .wv-th{background:none!important;color:var(--txt)!important;font-weight:700!important;font-size:12px!important}
+#mo-wo .wv-th span{color:var(--txt)!important}
+#mo-wo .wv-th span:first-child{padding-left:0!important}
 </style>
 </body>
 
