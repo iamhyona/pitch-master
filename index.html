@@ -2712,7 +2712,7 @@ woDetail = function () {
       else if (woFilled(r) || woRowDirty(r)) { box += woRowView(t, WO.tab, r, i); any = true; }
     });
     h += any ? '<div class="wd-sec">' + box + '</div>' : '<div class="wo-empty">아직 작성한 내역이 없어요</div>';
-    h += '<button class="wd-more" onclick="woNewRow()">+ 줄 추가</button>';
+    h += '<button class="wd-more" onclick="woNewRow()">+ 작업내역 추가</button>';
   }
   var n = woChanged();
   if (n) h += '<div class="wd-bar"><button class="wd-save" id="wo-save" onclick="woSave()">' + n + '칸 저장</button></div>';
@@ -6198,7 +6198,8 @@ document.addEventListener('click', function (e) {
 #mo-wo .wv-more summary:after{content:'';width:6px;height:6px;border-right:1.5px solid currentColor;border-bottom:1.5px solid currentColor;transform:rotate(45deg);margin-top:-3px}
 #mo-wo .wv-more[open] summary:after{transform:rotate(-135deg);margin-top:3px}
 #mo-wo .wd-sum{display:none!important}
-#mo-wo .wo-dlw{margin-top:4px}
+#mo-wo .wo-dlw{margin-top:10px}
+#mo-wo .wd-tabs{margin-top:14px!important}
 #mo-wo .wo-dlw .wo-dlr b{font-size:13px}
 #mo-wo .wd-tabs{margin-top:4px}
 #mo-wo .wd-tot{margin:6px 0 0!important}
@@ -6232,8 +6233,8 @@ document.addEventListener('click', function (e) {
       kv('거래처', shortC(I['거래처'])) + kv('아티스트', I['아티스트명']) + kv('프로젝트명', I['프로젝트명']) + kv('프로젝트 의뢰일자', I['요청일'] || '') + '</div></details>';
     var old = b.querySelector('.wv-top'); if (old) old.remove();
     var w = document.createElement('div'); w.className = 'wv-top'; w.innerHTML = top; b.insertBefore(w, b.firstChild);
-    // 마감일 상자는 정보 아래로
-    var dlw = b.querySelector('.wo-dlw'); if (dlw) w.parentNode.insertBefore(dlw, w.nextSibling);
+    // 마감일 상자는 '거래처 · 아티스트 · 날짜 정보' 접기 안으로
+    var dlw = b.querySelector('.wo-dlw'), mo = w.querySelector('.wv-more'); if (dlw && mo) mo.appendChild(dlw);
     // 목록 머리줄
     b.querySelectorAll('.wd-sec').forEach(function (sec) { if (!sec.previousElementSibling || !sec.previousElementSibling.classList.contains('wv-th')) sec.insertAdjacentHTML('beforebegin', '<div class="wv-th"><span>작업 세부내역</span><span>구분 · 컷수</span></div>'); });
     // 하단 바로가기
