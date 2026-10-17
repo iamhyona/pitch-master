@@ -6025,8 +6025,8 @@ window.schSty = function (t, r, D) {
     var fin = inv ? totV(2) : (get('지급액') || totV(2));
     document.getElementById('dc-title').textContent = inv ? '청구서 (매출)' : '지급내역서 (매입)';
     var h = '<div class="dv">' +
-      '<div class="dv-hd"><div><small>' + (inv ? 'INVOICE · 청구' : 'PAYMENT · 지급') + '</small><h3>' + esc([I['아티스트명'] ? String(I['아티스트명']).replace(/^.*\((.*)\)$/, '$1') : it.artist, I['프로젝트명'] || String(it.title || '').split(' · ')[0]].filter(Boolean).join(' ')) + '</h3></div>' +
-      '<div class="amt"><span>' + (inv ? '청구 금액 (VAT 포함)' : '최종 지급액') + '</span><b>' + W(fin) + '원</b></div></div>';
+      '<div class="dv-hd"><div><h3>' + esc([I['아티스트명'] ? String(I['아티스트명']).replace(/^.*\((.*)\)$/, '$1') : it.artist, I['프로젝트명'] || String(it.title || '').split(' · ')[0]].filter(Boolean).join(' ')) + '</h3></div>' +
+      '<div class="amt"><b>' + W(fin) + '원</b></div></div>';
     h += '<div class="dv-sec">프로젝트</div><div class="dv-grid">' +
       kv(inv ? '리터칭 담당' : '리터칭 담당자', inv ? ((String(it.title || '').match(/<([^>]*)>/) || [])[1] || (w ? (w.tabs || []).map(function (t) { return t.name; }).join(', ') : '')) : (get('작업자') || it.worker)) +
       kv('거래처', (function (c) { var t = String(c || '').replace(/\s*\(.*\)\s*$/, '').replace(/\s*ENTERTAINMENT\s*/i, ' ').trim(); return t || c; })(I['거래처'] || (inv ? get('수신처') : '') || it.clientKey)) +
@@ -6150,6 +6150,24 @@ document.addEventListener('click', function (e) {
   }
 })();
 </script>
+<style>
+/* 2026-10-17 (현아): 매입·매출 보기 — 머리 글자 작게(제목보다 작게) · 작은 라벨 없앰 · 프로젝트 정보는 박스 없이 · 전체 글자 줄임 · 표 첫 줄 여백 맞춤 */
+.dv{gap:12px}
+.dv-hd{align-items:center;padding:0 2px 10px}
+.dv-hd h3{font-size:16px!important;font-weight:700!important}
+.dv-hd .amt b{font-size:17px!important}
+.dv-sec{display:none}
+.dv-grid{background:none!important;padding:0!important;border-radius:0!important;gap:0 22px!important}
+.dv-grid .r{padding:5px 2px!important;font-size:13px!important;border-bottom:1px solid #f2f4f6!important}
+.dv-grid .r span{font-size:12px!important}
+.dv-links a,.dv-links>span{height:30px!important;font-size:12px!important;padding:0 10px!important}
+.dv-tbl{font-size:13px!important}
+.dv-tbl th{padding:6px 6px!important;font-size:11px!important}
+.dv-tbl td{padding:6px 6px!important}
+.dv-tot .r{padding:6px 2px!important;font-size:13px!important}
+.dv-tot .r.t{font-size:15px!important;padding-top:10px!important}
+.dv-ft button{height:34px!important;font-size:12px!important}
+</style>
 </body>
 
 </html>
