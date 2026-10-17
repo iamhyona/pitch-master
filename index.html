@@ -7,7 +7,7 @@
 <meta name="theme-color" content="#f2f4f6">
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=3">
 <link rel="apple-touch-icon" href="apple-touch-icon.png?v=3">
-<meta name="pm-build" content="20261018082814">
+<meta name="pm-build" content="20261018082949">
 <link rel="manifest" href="manifest.webmanifest?v=3">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -3767,7 +3767,7 @@ function txRender() {
   var chv = '<svg class="tx-chv" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>';
   lb.innerHTML = TX.items.map(function (x) {
     var s = x.sum || {}, mm = (TX.memos[x.ym] || {}).memo || '', op = !!TX_OPEN[x.id];
-    return '<div class="tx-c' + (op ? ' open' : '') + '" data-id="' + esc(x.id) + '"><button type="button" class="tx-card" onclick="txToggle(\'' + esc(x.id) + '\',\'' + x.ym + '\')"><div class="t"><b>' + txYm(x.ym) + '</b><span class="tx-r"><span>' + esc(s['인원 · 건수'] || '') + '</span>' + chv + '</span></div>' +
+    return '<div class="tx-c' + (op ? ' open' : '') + (/^0명/.test(String(s['인원 · 건수'] || '').trim()) ? ' z' : '') + '" data-id="' + esc(x.id) + '"><button type="button" class="tx-card" onclick="txToggle(\'' + esc(x.id) + '\',\'' + x.ym + '\')"><div class="t"><b>' + txYm(x.ym) + '</b><span class="tx-r"><span>' + esc(s['인원 · 건수'] || '') + '</span>' + chv + '</span></div>' +
       '<div class="g"><div><small>지급총액</small><em>' + esc(s['지급총액'] || '-') + '</em></div><div><small>원천징수</small><em>' + esc(s['원천징수 합계'] || '-') + '</em></div><div><small>실지급액</small><em>' + esc(s['실지급액 합계'] || '-') + '</em></div></div>' +
       (mm ? '<div class="m">' + esc(mm) + '</div>' : '') + '</button><div class="tx-dt">' + txInner(x.id, x.ym) + '</div></div>';
   }).join('');
@@ -6892,6 +6892,21 @@ header .hr .ib[aria-label="로그아웃"]{display:none!important}
 </style>
 <style>/* 2026-10-18: 거래처 담당자 메일·연락처 한 줄 */
 .mc-ct-line{display:flex;align-items:center;flex-wrap:wrap;gap:2px 12px}
+</style>
+<style>
+/* 2026-10-18 (현아): 신고 — 박스 안 박스 없애기 (요약 3칸·작업자 목록 배경 제거, 빈 달은 한 줄로) */
+#dc-tx .tx-card .g{gap:0;margin-top:10px;padding-top:12px;border-top:1px solid #f2f4f6}
+#dc-tx .tx-card .g div{background:none!important;border-radius:0;padding:0!important}
+#dc-tx .tx-card .g small{font-size:11px}
+#dc-tx .tx-card .g em{font-size:15px;margin-top:3px}
+#dc-tx .tx-dt .dc-rows{background:none!important;border-radius:0!important;margin-top:4px}
+#dc-tx .tx-dt .dc-row{padding:11px 2px!important;border-top:1px solid #f2f4f6!important}
+#dc-tx .tx-dt .dc-row:first-child{border-top:0!important}
+#dc-tx .tx-dt .tx-sec{margin-top:4px}
+#dc-tx .tx-c.z .tx-card{padding:14px 18px}
+#dc-tx .tx-c.z .tx-card .g{display:none}
+#dc-tx .tx-c.z .tx-card .t b{color:var(--txt3);font-size:14px}
+#dc-tx .tx-c.z{background:rgba(255,255,255,.6)}
 </style>
 </body>
 
