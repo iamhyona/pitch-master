@@ -379,6 +379,7 @@ select.fi option{background:var(--sur2)}
       <!-- 견적서 -->
       <div id="tab-invoice" class="tab-panel">
         <div id="inv-sync-bar" class="sync-bar" style="display:none"></div>
+        <div class="rt-seg" id="inv-seg"><button type="button" data-m="q" onclick="invMode('q')">빠른 작성</button><button type="button" data-m="d" onclick="invMode('d')">상세 작성</button></div>
 
         <!-- 발송처 정보 -->
         <div style="background:var(--sur);border:1px solid var(--bdr);border-radius:12px;padding:14px 16px;margin-bottom:10px">
@@ -5922,6 +5923,19 @@ window.schSty = function (t, r, D) {
 #mo-pfsave .pfs-row b{font-weight:600;color:var(--txt);text-align:right;word-break:break-all}
 #mo-pfsave .pfs-note{font-size:12px;color:var(--txt3);line-height:1.55;margin:10px 2px 4px}
 </style>
+<script>
+// 2026-10-17 (현아 요청): 견적서 — 상단 '빠른 작성 / 상세 작성' 단추 (기록·단가 메뉴와 같은 모양)
+(function () {
+  window.invMode = function (m) {
+    var q = document.getElementById('inv-quick-box'); if (q) q.style.display = m === 'q' ? '' : 'none';
+    document.querySelectorAll('#inv-seg button').forEach(function (b) { b.classList.toggle('on', b.getAttribute('data-m') === m); });
+    try { localStorage.setItem('pm_inv_mode', m); } catch (e) {}
+    if (m === 'q') { var t = document.getElementById('inv-quick'); if (t && document.getElementById('tab-invoice').classList.contains('active')) setTimeout(function () { t.focus(); }, 50); }
+  };
+  var m = 'q'; try { m = localStorage.getItem('pm_inv_mode') || 'q'; } catch (e) {}
+  invMode(m);
+})();
+</script>
 </body>
 
 </html>
