@@ -7,7 +7,7 @@
 <meta name="theme-color" content="#f2f4f6">
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=3">
 <link rel="apple-touch-icon" href="apple-touch-icon.png?v=3">
-<meta name="pm-build" content="20261018083053">
+<meta name="pm-build" content="20261018083513">
 <link rel="manifest" href="manifest.webmanifest?v=3">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -6766,6 +6766,16 @@ document.addEventListener('click', function (e) {
     });
     h += '<div class="pf2-note">· 매출·매입은 기록 메뉴의 매출/매입 내역(공급가액)입니다.<br>· 부대비용은 핏치 가계부(법인 통장) 출금 중 매입 지급·세금 납부·대표 계좌 이동을 뺀 금액입니다. 매입 지급은 금액·날짜·이름으로 자동으로 맞췄어요.<br>· 분류가 틀린 건 오른쪽에서 바꾸면 저장돼요. 빨간 줄은 사람에게 보낸 돈이라 확인이 필요한 건이에요.</div></div>';
     box.innerHTML = h;
+    // 2026-10-18 (현아): 내용별로 흰 박스 나누기 — 요약 / 월별 / 연도별 / 소속사·작업자 / 법인 통장
+    (function () {
+      var kids = [].slice.call(box.childNodes), card = null;
+      kids.forEach(function (n) {
+        var sec = n.nodeType === 1 && n.classList.contains('pf2-sec');
+        if (sec || !card) { card = document.createElement('div'); card.className = 'pf2-card'; box.insertBefore(card, n); }
+        card.appendChild(n);
+        if (sec) card = null;
+      });
+    })();
   }
   ensure();
   var _sw = switchTab;
@@ -6907,6 +6917,17 @@ header .hr .ib[aria-label="로그아웃"]{display:none!important}
 #dc-tx .tx-c.z .tx-card .g{display:none}
 #dc-tx .tx-c.z .tx-card .t b{color:var(--txt3);font-size:14px}
 #dc-tx .tx-c.z{background:rgba(255,255,255,.6)}
+</style>
+<style>
+/* 2026-10-18 (현아): 이익 — 내용별 흰 박스 */
+#tab-pf>.tc{background:none!important;border:0!important;box-shadow:none!important;overflow:visible!important;border-radius:0!important}
+#tab-pf .pf2-top{background:#fff;border-radius:20px;border-bottom:0!important;margin-bottom:10px}
+#tab-pf .pf2-b{padding:0!important}
+#tab-pf .pf2-card{background:#fff;border-radius:20px;padding:18px 16px;margin-bottom:10px}
+#tab-pf .pf2-card>.pf2-sec{margin-top:0}
+#tab-pf .pf2-card>.pf2-sec+.pf2-note,#tab-pf .pf2-card .pf2-note{margin-top:12px}
+#tab-pf .pf2-card>.pf2-leg:last-child{margin-bottom:0}
+#tab-pf .pf2-b>.pf2-empty{background:#fff;border-radius:20px}
 </style>
 </body>
 
