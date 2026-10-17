@@ -7,6 +7,7 @@
 <meta name="theme-color" content="#f2f4f6">
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=3">
 <link rel="apple-touch-icon" href="apple-touch-icon.png?v=3">
+<meta name="pm-build" content="20261017214719">
 <link rel="manifest" href="manifest.webmanifest?v=3">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -6329,6 +6330,22 @@ document.addEventListener('click', function (e) {
   var mo = new MutationObserver(function () { split(); });
   function hook() { var b = document.getElementById('wo-d-body'); if (b) mo.observe(b, { childList: true, subtree: true }); }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', hook); else hook();
+})();
+</script>
+<script>
+/* 2026-10-17: 홈화면 앱이 옛 버전을 붙들고 있지 않도록 — 새 버전이 올라가 있으면 자동으로 새로고침 */
+(function () {
+  function cur() { var m = document.querySelector('meta[name="pm-build"]'); return m ? m.content : ''; }
+  var busy = false;
+  function check() {
+    if (busy || !cur()) return; busy = true;
+    fetch(location.pathname, { cache: 'reload' }).then(function (r) { return r.text(); }).then(function (t) {
+      var m = t.match(/name="pm-build" content="(\d+)"/); busy = false;
+      if (m && m[1] !== cur() && !document.querySelector('.mo.open')) location.reload();
+    }).catch(function () { busy = false; });
+  }
+  window.addEventListener('load', function () { setTimeout(check, 1500); });
+  document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'visible') check(); });
 })();
 </script>
 </body>
