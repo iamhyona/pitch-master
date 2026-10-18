@@ -7,7 +7,7 @@
 <meta name="theme-color" content="#f2f4f6">
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=3">
 <link rel="apple-touch-icon" href="apple-touch-icon.png?v=3">
-<meta name="pm-build" content="20261018-132223">
+<meta name="pm-build" content="20261018-132533">
 <link rel="manifest" href="manifest.webmanifest?v=3">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -7190,6 +7190,12 @@ function txIc(id) {
 })();
 </script>
 
+<style>
+/* 2026-10-18 (현아): 매입·매출 상세 — 맨 위 굵은 구분선만 검정, 나머지 선은 작업내역서처럼 1px #b0b8c1 · 머리줄 배경 없음 · 머리글 검정 */
+#mo-doc .dv-tbl th,#mo-doc .dv-tbl thead tr{background:none!important;color:var(--txt)!important;border-bottom:1px solid #b0b8c1!important}
+#mo-doc .dv-tot .r.t{border-top:1px solid #b0b8c1!important}
+#mo-doc .pg-tbl tr.pg-t td{border-top:1px solid #b0b8c1!important}
+</style>
 </body>
 
 </html>
