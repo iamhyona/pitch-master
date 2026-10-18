@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
+<title>PITCH 작업내역서</title>
+<meta name="theme-color" content="#f2f4f6">
+<meta name="robots" content="noindex">
+<meta name="wo-build" content="20261018-1600">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=3">
+<link rel="apple-touch-icon" href="apple-touch-icon.png?v=3">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="작업내역서">
+<meta name="format-detection" content="telephone=no,email=no,address=no,date=no">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<style>
+:root{--bg:#f2f4f6;--sur:#fff;--line:#e5e8eb;--chip:#f2f4f6;--txt:#191f28;--txt2:#4e5968;--txt3:#8b95a1;--faint:#b0b8c1;--blue:#3182f6;--red:#f04452;--blue-bg:#e8f3ff}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{background:var(--bg);color:var(--txt);font-family:'Pretendard Variable',Pretendard,-apple-system,sans-serif;font-size:15px;letter-spacing:-0.01em;line-height:1.5}
+button,input,select,textarea{font-family:inherit;font-size:inherit;letter-spacing:inherit;color:inherit}
+button{cursor:pointer;border:0;background:none}
+.wrap{max-width:560px;margin:0 auto;padding:calc(12px + env(safe-area-inset-top)) 16px calc(40px + env(safe-area-inset-bottom))}
+.hidden{display:none!important}
+/* 로그인 */
+#login{min-height:100dvh;display:flex;align-items:center;justify-content:center;padding:16px}
+.lbox{width:100%;max-width:360px;background:var(--sur);border-radius:20px;padding:32px 24px}
+.lt{font-size:22px;font-weight:700}
+.ls{font-size:14px;color:var(--txt3);margin:4px 0 24px}
+.fl{display:block;font-size:13px;color:var(--txt2);font-weight:600;margin:0 0 6px}
+.fi{width:100%;height:50px;border:1px solid var(--line);border-radius:12px;padding:0 14px;background:var(--sur);font-size:16px;outline:none}
+.fi:focus{border-color:var(--blue)}
+.fg{margin-bottom:14px}
+.btn{width:100%;height:52px;border-radius:14px;background:var(--blue);color:#fff;font-size:16px;font-weight:600}
+.btn:disabled{opacity:.5}
+.btn.gray{background:var(--chip);color:var(--txt2)}
+.btn.red{background:#fee;color:var(--red)}
+.err{color:var(--red);font-size:13px;min-height:20px;margin:6px 0 4px}
+.lk{display:block;margin:18px auto 0;font-size:13px;color:var(--txt3);text-decoration:underline}
+/* 머리 */
+.hd{display:flex;align-items:center;justify-content:space-between;gap:8px;height:48px}
+.hd h1{font-size:20px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ib{height:36px;padding:0 12px;border-radius:10px;background:var(--sur);color:var(--txt2);font-size:13px;font-weight:600;white-space:nowrap}
+.back{width:36px;height:36px;border-radius:50%;background:var(--sur);display:flex;align-items:center;justify-content:center;flex:none}
+.back svg{width:20px;height:20px}
+.srch{margin:8px 0 12px}
+.srch input{width:100%;height:44px;border:0;border-radius:12px;background:var(--sur);padding:0 14px;font-size:15px;outline:none}
+.sec{font-size:13px;color:var(--txt3);font-weight:600;margin:18px 4px 8px}
+/* 목록 */
+.card{background:var(--sur);border-radius:16px;padding:16px;margin-bottom:8px;display:block;width:100%;text-align:left}
+.card:active{background:#f9fafb}
+.c1{display:flex;justify-content:space-between;align-items:center;font-size:13px;color:var(--txt3)}
+.c2{font-size:16px;font-weight:700;margin-top:4px;word-break:keep-all}
+.c3{font-size:13px;color:var(--txt2);margin-top:2px}
+.tag{display:inline-block;padding:2px 8px;border-radius:6px;font-size:12px;font-weight:600;background:var(--blue-bg);color:var(--blue)}
+.tag.lock{background:var(--chip);color:var(--txt3)}
+.wl{margin-top:8px;display:flex;gap:4px;flex-wrap:wrap}
+.wl span{font-size:12px;padding:2px 8px;border-radius:6px;background:var(--chip);color:var(--txt2)}
+.empty{text-align:center;color:var(--txt3);padding:48px 0;font-size:14px}
+.more{display:block;margin:4px auto 0;padding:10px 16px;color:var(--txt3);font-size:14px}
+/* 상세 */
+.info{background:var(--sur);border-radius:16px;padding:16px;margin-top:4px}
+.info .t{font-size:18px;font-weight:700;word-break:keep-all}
+.info .s{font-size:13px;color:var(--txt3);margin-top:2px}
+.info .lnk{display:inline-block;margin-top:10px;font-size:13px;font-weight:600;color:var(--blue)}
+.note{background:var(--chip);color:var(--txt2);border-radius:12px;padding:10px 12px;font-size:13px;margin-top:10px}
+.tabs{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;margin:14px 0 4px;padding-bottom:2px}
+.tabs::-webkit-scrollbar{display:none}
+.chip{flex:none;height:36px;padding:0 14px;border-radius:18px;background:var(--sur);color:var(--txt2);font-size:14px;font-weight:600;display:flex;align-items:center;gap:6px}
+.chip.on{background:var(--txt);color:#fff}
+.chip b{font-weight:600;opacity:.6;font-size:13px}
+.chip.add{background:transparent;border:1px dashed var(--faint);color:var(--txt3)}
+.tot{display:flex;justify-content:space-between;align-items:baseline;padding:12px 4px 6px;font-size:14px;color:var(--txt2)}
+.tot b{font-size:17px;color:var(--txt)}
+.row{background:var(--sur);border-radius:14px;padding:14px 16px;margin-bottom:6px;width:100%;text-align:left;display:block}
+.row .n{font-size:15px;font-weight:600;word-break:break-all}
+.row .it{margin-top:6px;display:flex;flex-wrap:wrap;gap:4px}
+.row .it i{font-style:normal;font-size:12px;padding:2px 8px;border-radius:6px;background:var(--chip);color:var(--txt2)}
+.row .it i b{color:var(--txt);font-weight:700;margin-left:2px}
+.row .sy{font-size:12px;color:var(--txt3);margin-top:4px}
+.row.dim{opacity:.6}
+.addrow{width:100%;height:50px;border-radius:14px;border:1px dashed var(--faint);color:var(--blue);font-weight:600;margin-top:4px;background:transparent}
+.ex{font-size:12px;color:var(--faint);font-style:italic;margin:6px 4px 10px;line-height:1.6}
+/* 편집 시트 */
+.sheet{position:fixed;inset:0;background:rgba(0,0,0,.4);display:flex;align-items:flex-end;justify-content:center;z-index:50}
+.sh{background:var(--sur);width:100%;max-width:560px;border-radius:20px 20px 0 0;max-height:92dvh;overflow:auto;padding:20px 16px calc(16px + env(safe-area-inset-bottom))}
+.sh h2{font-size:18px;font-weight:700;margin-bottom:12px}
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.grid label{display:block}
+.grid span{display:block;font-size:12px;color:var(--txt3);margin-bottom:3px;text-align:center}
+.grid input{width:100%;height:46px;border:1px solid var(--line);border-radius:10px;text-align:center;font-size:17px;outline:none;background:var(--sur)}
+.grid input:focus{border-color:var(--blue)}
+.grid input:disabled{background:var(--chip);color:var(--txt3)}
+.bt2{display:flex;gap:8px;margin-top:16px}
+.bt2 .btn{flex:1}
+.hint{font-size:12px;color:var(--txt3);margin-top:5px;line-height:1.5}
+/* 관리 */
+.pr{display:flex;align-items:center;justify-content:space-between;background:var(--sur);border-radius:14px;padding:12px 16px;margin-bottom:6px;gap:8px}
+.pr .nm{font-weight:600}
+.pr .st{font-size:12px;color:var(--txt3)}
+.pr .st.ok{color:var(--blue)}
+.pinbox{background:var(--blue-bg);color:var(--txt);border-radius:12px;padding:12px 14px;font-size:14px;margin-top:12px}
+.pinbox b{font-size:22px;letter-spacing:.12em;color:var(--blue);display:block;margin-top:2px}
+#toast{position:fixed;left:50%;bottom:calc(28px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(20px);background:#191f28;color:#fff;padding:12px 18px;border-radius:14px;font-size:14px;opacity:0;pointer-events:none;transition:.2s;z-index:99;max-width:calc(100% - 32px)}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.spin{display:block;margin:40px auto;width:28px;height:28px;border:3px solid var(--line);border-top-color:var(--blue);border-radius:50%;animation:sp .8s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<div id="login">
+  <div class="lbox" id="l-worker">
+    <div class="lt">PITCH 작업내역서</div>
+    <div class="ls">이름과 받은 PIN으로 로그인해주세요</div>
+    <div class="fg"><label class="fl" for="l-n">이름</label><input class="fi" id="l-n" autocomplete="username" placeholder="홍길동"></div>
+    <div class="fg"><label class="fl" for="l-p">PIN</label><input class="fi" id="l-p" type="password" inputmode="numeric" autocomplete="current-password" placeholder="숫자"></div>
+    <div class="err" id="l-err"></div>
+    <button class="btn" id="l-go" onclick="login()">로그인</button>
+    <button class="lk" onclick="showAdminLogin(true)">관리자</button>
+  </div>
+  <div class="lbox hidden" id="l-admin">
+    <div class="lt">작업자 PIN 관리</div>
+    <div class="ls">관리 비밀번호로 들어가요</div>
+    <div class="fg"><label class="fl" for="a-p">관리 비밀번호</label><input class="fi" id="a-p" type="password" autocomplete="current-password"></div>
+    <div class="err" id="a-err"></div>
+    <button class="btn" id="a-go" onclick="adminLogin()">들어가기</button>
+    <button class="lk" onclick="showAdminLogin(false)">작업자 로그인으로</button>
+  </div>
+</div>
+<div id="app" class="hidden"><div class="wrap" id="main"></div></div>
+<div id="sheet" class="sheet hidden" onclick="if(event.target===this)closeSheet()"><div class="sh" id="sh"></div></div>
+<div id="toast"></div>
+<script>
+var API = 'https://script.google.com/macros/s/AKfycbxLa9jGkHXvy6pMzeYs58O3siUf4_n_9w1OMVEM2ERDnyqjtn_I_HlPnl2FlKlIpyVH-A/exec';
+var S = { t: '', name: '', allow: [], items: [], q: '', all: false, cur: null, tab: 0, ed: null, admK: '', names: [] };
+var EX = '작성 예시 ▸ 1차_옥상_01_가원  ·  2순위_글램_단체  ·  개인 — 차수/순위_컨셉_번호_멤버 순서. 컷수는 아래 칸에만 적고, 뒤의 (N인)은 저장하면 자동으로 붙어요.';
+function $(id) { return document.getElementById(id); }
+function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+var _tt; function toast(m) { var e = $('toast'); e.textContent = m; e.classList.add('show'); clearTimeout(_tt); _tt = setTimeout(function () { e.classList.remove('show'); }, 2400); }
+function get(qs, cb) {
+  fetch(API + '?api=wk' + qs + '&_=' + Date.now()).then(function (r) { return r.json(); }).catch(function () { return null; })
+    .then(function (d) { d = d || { ok: false, error: '연결이 안 돼요. 잠시 후 다시 해주세요.' }; if (d.auth === false && S.t) { logout(); toast('다시 로그인해주세요'); return; } cb(d); });
+}
+function post(action, data, k, cb) {
+  fetch(API, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ action: action, data: data, k: k }) })
+    .then(function (r) { return r.json(); }).catch(function () { return null; })
+    .then(function (d) { d = d || { ok: false, error: '연결이 안 돼요. 잠시 후 다시 해주세요.' }; if (d.auth === false && S.t) { logout(); toast('다시 로그인해주세요'); return; } cb(d); });
+}
+function d6(x) { return /^\d{6}$/.test(x || '') ? x.slice(0, 2) + '.' + x.slice(2, 4) + '.' + x.slice(4) : ''; }
+function num(x) { return Number(String(x || '').replace(/[^\d.\-]/g, '')) || 0; }
+
+/* ── 로그인 ── */
+function showAdminLogin(on) { $('l-worker').classList.toggle('hidden', on); $('l-admin').classList.toggle('hidden', !on); (on ? $('a-p') : $('l-n')).focus(); }
+$('l-p').addEventListener('keydown', function (e) { if (e.key === 'Enter') login(); });
+$('a-p').addEventListener('keydown', function (e) { if (e.key === 'Enter') adminLogin(); });
+function login() {
+  var n = $('l-n').value.trim(), p = $('l-p').value.trim(), er = $('l-err');
+  if (!n || !p) { er.textContent = '이름과 PIN을 입력해주세요'; return; }
+  er.textContent = ''; $('l-go').disabled = true; $('l-go').textContent = '확인 중...';
+  post('wk_login', { n: n, p: p }, '', function (d) {
+    $('l-go').disabled = false; $('l-go').textContent = '로그인';
+    if (!d.ok) { er.textContent = d.error || '로그인하지 못했어요'; $('l-p').value = ''; return; }
+    S.t = d.token; S.name = d.name; S.allow = d.allow || [d.name];
+    try { localStorage.setItem('wk_auth', JSON.stringify({ t: d.token, name: d.name, allow: S.allow })); } catch (e) {}
+    $('l-p').value = ''; enter();
+  });
+}
+function logout() {
+  S.t = ''; S.name = ''; S.items = []; S.cur = null; S.admK = '';
+  try { localStorage.removeItem('wk_auth'); localStorage.removeItem('wk_list'); } catch (e) {}
+  $('app').classList.add('hidden'); $('login').classList.remove('hidden'); showAdminLogin(false); closeSheet();
+}
+function enter() {
+  $('login').classList.add('hidden'); $('app').classList.remove('hidden');
+  try { var c = JSON.parse(localStorage.getItem('wk_list') || 'null'); if (c && c.name === S.name) S.items = c.items; } catch (e) {}
+  renderList(); loadList();
+}
+
+/* ── 목록 ── */
+function loadList() {
+  S.loading = true; if (!S.items.length) renderList();
+  get('&t=' + encodeURIComponent(S.t), function (d) {
+    S.loading = false;
+    if (!d.ok) { S.err = d.error; renderList(); return; }
+    S.err = ''; S.items = d.items || []; S.allow = d.allow || S.allow;
+    try { localStorage.setItem('wk_list', JSON.stringify({ name: S.name, items: S.items })); } catch (e) {}
+    if (!S.cur) renderList();
+  });
+}
+function cardHtml(x) {
+  var fam = S.allow.length > 1;
+  return '<button class="card" onclick="openDoc(\'' + esc(x.id) + '\')">' +
+    '<div class="c1"><span>' + esc(d6(x.date6)) + (x.folder ? ' · ' + esc(x.folder) : '') + '</span>' +
+    (x.locked ? '<span class="tag lock">정산 완료</span>' : (x.lockTabs && x.lockTabs.length ? '<span class="tag lock">일부 정산</span>' : '<span class="tag">작성 가능</span>')) + '</div>' +
+    '<div class="c2">' + esc(String(x.title || '').split(' · ')[0] || '-') + '</div>' +
+    '<div class="c3">' + esc([x.clientKey, x.artist].filter(Boolean).join(' · ')) + '</div>' +
+    (fam && x.workers && x.workers.length ? '<div class="wl">' + x.workers.map(function (w) { return '<span>' + esc(w) + '</span>'; }).join('') + '</div>' : '') +
+    '</button>';
+}
+function renderList() {
+  var h = '<div class="hd"><h1>' + esc(S.name) + '님 작업내역서</h1><button class="ib" onclick="logout()">로그아웃</button></div>' +
+    '<div class="srch"><input id="q" placeholder="거래처 · 아티스트 · 프로젝트 검색" value="' + esc(S.q) + '" oninput="S.q=this.value;renderListBody()"></div><div id="lb"></div>';
+  $('main').innerHTML = h; renderListBody();
+}
+function renderListBody() {
+  var q = S.q.trim().toUpperCase().replace(/\s/g, '');
+  var v = S.items.filter(function (x) { return !q || [x.clientKey, x.artist, x.title, x.date6, x.folder].join(' ').toUpperCase().replace(/\s/g, '').indexOf(q) >= 0; });
+  var open = v.filter(function (x) { return !x.locked; }), done = v.filter(function (x) { return x.locked; }), h = '';
+  if (S.loading && !S.items.length) h = '<span class="spin"></span>';
+  else if (S.err && !S.items.length) h = '<div class="empty">' + esc(S.err) + '<br><button class="more" onclick="loadList()">다시 불러오기</button></div>';
+  else if (!v.length) h = '<div class="empty">' + (q ? '검색 결과가 없어요' : '참여한 작업내역서가 아직 없어요') + '</div>';
+  else {
+    h += '<div class="sec">작성 중 ' + open.length + '</div>' + (open.length ? open.map(cardHtml).join('') : '<div class="empty" style="padding:20px 0">작성할 작업이 없어요</div>');
+    if (done.length) {
+      var dv = S.all || q ? done : done.slice(0, 10);
+      h += '<div class="sec">정산 완료 ' + done.length + '</div>' + dv.map(cardHtml).join('');
+      if (dv.length < done.length) h += '<button class="more" onclick="S.all=true;renderListBody()">' + (done.length - dv.length) + '건 더 보기</button>';
+    }
+  }
+  $('lb').innerHTML = h;
+}
+
+/* ── 상세 ── */
+function openDoc(id) {
+  S.cur = { id: id, loading: true }; S.ed = null; renderDoc(); window.scrollTo(0, 0);
+  history.pushState({ doc: id }, '');
+  get('&t=' + encodeURIComponent(S.t) + '&wo=' + encodeURIComponent(id), function (d) {
+    if (!S.cur || S.cur.id !== id) return;
+    if (!d.ok) { S.cur = { id: id, err: d.error || '불러오지 못했어요' }; renderDoc(); return; }
+    var prev = S.cur.tabName;
+    d.tabs.forEach(function (t) { t.rows.forEach(function (r) { r.e = r.v.slice(); }); });
+    S.cur = d; S.cur.id = id;
+    var k = 0; d.tabs.forEach(function (t, i) { if (t.name === prev) k = i; else if (!prev && t.name === S.name) k = i; });
+    S.tab = k; renderDoc();
+  });
+}
+window.addEventListener('popstate', function () { if (S.cur) { S.cur = null; closeSheet(); renderList(); } });
+function backList() { if (history.state && history.state.doc) history.back(); else { S.cur = null; renderList(); } }
+function lbl(j) { return ((S.cur && S.cur.head) || [])[j + 1] || ''; }
+function filled(r) { return r.v.some(function (x) { return String(x).trim(); }); }
+function rowCuts(r) { var n = 0; for (var j = 1; j <= 11; j++) n += num(r.v[j]); return n; }
+function renderDoc() {
+  var d = S.cur, it = (d && d.item) || S.items.filter(function (x) { return d && x.id === d.id; })[0] || {};
+  var h = '<div class="hd"><button class="back" onclick="backList()" aria-label="목록"><svg viewBox="0 0 24 24" fill="none" stroke="#191f28" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button><h1 style="flex:1;font-size:17px">작업내역</h1><button class="ib" onclick="openDoc(\'' + esc(d.id) + '\')">새로고침</button></div>';
+  h += '<div class="info"><div class="t">' + esc(String(it.title || '').split(' · ')[0] || (d.info && d.info['프로젝트명']) || '-') + '</div><div class="s">' +
+    esc([it.clientKey || d.clientKey, it.artist, d6(it.date6)].filter(Boolean).join(' · ')) + '</div>' +
+    (d.link ? '<a class="lnk" href="' + esc(d.link) + '" target="_blank" rel="noopener">작업 폴더 열기 ›</a>' : '') + '</div>';
+  if (d.loading) { $('main').innerHTML = h + '<span class="spin"></span>'; return; }
+  if (d.err) { $('main').innerHTML = h + '<div class="empty">' + esc(d.err) + '</div>'; return; }
+  h += '<div class="tabs">' + d.tabs.map(function (t, i) {
+    var n = 0; t.rows.forEach(function (r) { n += rowCuts(r); });
+    return '<button class="chip' + (i === S.tab ? ' on' : '') + '" onclick="S.tab=' + i + ';renderDoc()">' + esc(t.name) + '<b>' + n + '</b></button>';
+  }).join('') + (d.canAdd || []).map(function (w) { return '<button class="chip add" onclick="addTab(\'' + esc(w) + '\')">+ ' + esc(w) + '</button>'; }).join('') + '</div>';
+  var t = d.tabs[S.tab];
+  if (!t) { $('main').innerHTML = h + '<div class="empty">' + ((d.canAdd || []).length ? '위에서 작업자를 추가해주세요' : '내 탭이 없어요. 현아님께 말씀해주세요.') + '</div>'; return; }
+  var rows = t.rows.map(function (r, i) { return { r: r, i: i }; }).filter(function (x) { return filled(x.r); }), tot = 0;
+  rows.forEach(function (x) { tot += rowCuts(x.r); });
+  if (t.locked) h += '<div class="note">지급내역서가 나간 작업이라 보기만 할 수 있어요. 고칠 곳이 있으면 현아님께 말씀해주세요.</div>';
+  h += '<div class="tot"><span>' + esc(t.name) + ' · ' + rows.length + '줄</span><span>합계 <b>' + tot + '</b>컷</span></div>';
+  if (!t.locked) h += '<div class="ex">' + esc(EX) + '</div>';
+  h += rows.map(function (x) {
+    var r = x.r, its = [];
+    for (var j = 2; j <= 11; j++) if (num(r.v[j])) its.push('<i>' + esc(lbl(j)) + '<b>' + esc(r.v[j]) + '</b></i>');
+    if (num(r.v[1])) its.push('<i>' + esc(lbl(1)) + '<b>' + esc(r.v[1]) + '</b></i>');
+    return '<button class="row' + (t.locked ? ' dim' : '') + '" onclick="' + (t.locked ? '' : 'editRow(' + x.i + ')') + '"><div class="n">' + esc(r.v[0] || '(폴더명 없음)') + '</div>' +
+      (its.length ? '<div class="it">' + its.join('') + '</div>' : '') + (String(r.v[12] || '').trim() ? '<div class="sy">' + esc(lbl(12)) + ': ' + esc(r.v[12]) + '</div>' : '') + '</button>';
+  }).join('');
+  if (!rows.length) h += '<div class="empty" style="padding:24px 0">아직 적은 작업이 없어요</div>';
+  if (!t.locked) h += '<button class="addrow" onclick="editRow(-1)">+ 작업 추가</button>';
+  $('main').innerHTML = h;
+}
+
+/* ── 편집 ── */
+function editRow(i) {
+  var t = S.cur.tabs[S.tab]; if (!t || t.locked) return;
+  if (i < 0) { i = -1; for (var k = 0; k < t.rows.length; k++) if (!filled(t.rows[k]) && !t.rows[k].f.some(Boolean)) { i = k; break; } if (i < 0) i = t.rows.length; }
+  var r = t.rows[i] || { v: Array(13).fill(''), f: Array(13).fill(0) }, isNew = !filled(r);
+  S.ed = { i: i, isNew: isNew, del: false };
+  var inp = function (j, ph) { var dis = r.f[j] ? ' disabled' : ''; return '<label><span>' + esc(lbl(j)) + '</span><input inputmode="numeric" id="e' + j + '" value="' + esc(r.v[j]) + '" placeholder="' + (ph || '') + '"' + dis + '></label>'; };
+  var g = ''; for (var j = 2; j <= 11; j++) g += inp(j); g += inp(1);
+  $('sh').innerHTML = '<h2>' + (isNew ? '작업 추가' : '작업 고치기') + ' <span style="font-size:14px;color:var(--txt3);font-weight:500">' + esc(t.name) + '</span></h2>' +
+    '<div class="fg"><label class="fl" for="e0">맡은 작업 폴더명</label><input class="fi" id="e0" value="' + esc(r.v[0]) + '" placeholder="1차_옥상_01_가원"' + (r.f[0] ? ' disabled' : '') + '>' +
+    '<div class="hint">차수/순위_컨셉_번호_멤버 순서로 적어주세요. 컷수와 (N인)은 이름에 넣지 않아도 돼요.</div></div>' +
+    '<label class="fl">인원별 컷수</label><div class="grid">' + g + '</div>' +
+    '<div class="fg" style="margin-top:14px"><label class="fl" for="e12">' + esc(lbl(12) || '합성컷(합성멤버)') + '</label><input class="fi" id="e12" value="' + esc(r.v[12]) + '" placeholder="합성한 경우만"' + (r.f[12] ? ' disabled' : '') + '></div>' +
+    '<div class="err" id="e-err"></div>' +
+    '<div class="bt2">' + (isNew ? '' : '<button class="btn red" id="e-del" onclick="delRow()">삭제</button>') + '<button class="btn gray" onclick="closeSheet()">취소</button><button class="btn" id="e-save" onclick="saveRow()">저장</button></div>';
+  $('sheet').classList.remove('hidden');
+  if (isNew) setTimeout(function () { $('e0').focus(); }, 50);
+}
+function closeSheet() { $('sheet').classList.add('hidden'); if (S.ed) S.ed = null; }
+function sendRow(val, done) {
+  var t = S.cur.tabs[S.tab], i = S.ed.i, r = t.rows[i] || { v: Array(13).fill('') }, err = $('e-err');
+  var btns = document.querySelectorAll('#sh .btn'); btns.forEach(function (b) { b.disabled = true; });
+  post('wk_save', { id: S.cur.id, tab: t.name, rows: [{ i: i, val: val, old: r.v }] }, S.t, function (d) {
+    btns.forEach(function (b) { b.disabled = false; });
+    if (!d.ok) { err.textContent = d.error || '저장하지 못했어요'; return; }
+    if (d.skipped && d.skipped.length) toast('그 사이 다른 곳에서 바뀐 칸 ' + d.skipped.length + '개는 그대로 뒀어요');
+    else toast(done);
+    S.cur.tabName = t.name; closeSheet(); openDocKeep();
+  });
+}
+function openDocKeep() { var id = S.cur.id, nm = S.cur.tabName; S.cur.loading = false; var keep = S.cur; get('&t=' + encodeURIComponent(S.t) + '&wo=' + encodeURIComponent(id), function (d) {
+  if (!S.cur || S.cur.id !== id) return; if (!d.ok) { toast(d.error || '새로 불러오지 못했어요'); return; }
+  d.tabs.forEach(function (t) { t.rows.forEach(function (r) { r.e = r.v.slice(); }); }); d.id = id; S.cur = d;
+  var k = 0; d.tabs.forEach(function (t, i) { if (t.name === nm) k = i; }); S.tab = k; renderDoc(); loadList();
+}); }
+function saveRow() {
+  var t = S.cur.tabs[S.tab], r = t.rows[S.ed.i] || { v: Array(13).fill(''), f: [] }, val = r.v.slice(), err = $('e-err');
+  for (var j = 0; j <= 12; j++) { var e = $('e' + j); if (e && !e.disabled) val[j] = e.value.trim(); }
+  for (var j2 = 1; j2 <= 11; j2++) if (val[j2] && !/^\d+$/.test(val[j2])) { err.textContent = lbl(j2) + ' 칸에는 숫자만 적어주세요'; return; }
+  var cuts = 0; for (var j3 = 1; j3 <= 11; j3++) cuts += num(val[j3]);
+  if (!val[0]) { err.textContent = '맡은 작업 폴더명을 적어주세요'; return; }
+  if (!cuts) { err.textContent = '컷수를 하나 이상 적어주세요'; return; }
+  if (val.every(function (x, j) { return String(x) === String(r.v[j] || ''); })) { closeSheet(); return; }
+  sendRow(val, '저장했어요');
+}
+function delRow() {
+  var b = $('e-del');
+  if (!S.ed.del) { S.ed.del = true; b.textContent = '한 번 더 누르면 삭제'; return; }
+  var t = S.cur.tabs[S.tab], r = t.rows[S.ed.i], val = r.v.map(function (x, j) { return r.f[j] ? x : ''; });
+  sendRow(val, '삭제했어요');
+}
+function addTab(w) {
+  toast(w + ' 탭을 만드는 중이에요...');
+  post('wk_add_tab', { id: S.cur.id, worker: w }, S.t, function (d) {
+    if (!d.ok) { toast(d.error || '추가하지 못했어요'); return; }
+    S.cur.tabName = w; openDocKeep();
+  });
+}
+
+/* ── 관리자: 작업자 PIN 지정 ── */
+function adminLogin() {
+  var p = $('a-p').value.trim(), er = $('a-err'); if (!p) { er.textContent = '관리 비밀번호를 입력해주세요'; return; }
+  er.textContent = ''; $('a-go').disabled = true; $('a-go').textContent = '확인 중...';
+  post('wk_pin_list', {}, p, function (d) {
+    $('a-go').disabled = false; $('a-go').textContent = '들어가기';
+    if (!d.ok) { er.textContent = d.error || '비밀번호가 맞지 않아요'; $('a-p').value = ''; return; }
+    S.admK = p; S.names = d.names; $('a-p').value = '';
+    $('login').classList.add('hidden'); $('app').classList.remove('hidden'); renderAdmin();
+  });
+}
+function renderAdmin(last) {
+  var h = '<div class="hd"><h1>작업자 PIN 관리</h1><button class="ib" onclick="logout()">나가기</button></div>' +
+    '<div class="note" style="margin-top:4px">PIN은 서버에 암호화해서 저장해요. 지정한 PIN은 지금 한 번만 보이니 작업자에게 바로 전달해주세요. PIN을 바꾸면 그 작업자는 다시 로그인해야 해요.<br>강영순 PIN으로 들어가면 박종배 · 박슬기 · 박현아 내역도 따로 적을 수 있어요.</div>';
+  if (last) h += '<div class="pinbox">' + esc(last.name) + ' PIN<b>' + esc(last.pin) + '</b><span style="font-size:12px;color:var(--txt3)">주소: ' + esc(location.href.split('#')[0].split('?')[0]) + '</span></div>';
+  h += '<div class="sec">작업자 ' + S.names.length + '명 · PIN 있음 ' + S.names.filter(function (x) { return x.pin; }).length + '</div>';
+  h += S.names.map(function (x, i) { return '<div class="pr"><div><div class="nm">' + esc(x.name) + '</div><div class="st' + (x.pin ? ' ok' : '') + '">' + (x.pin ? 'PIN 지정됨' : 'PIN 없음') + '</div></div><button class="ib" style="background:var(--chip)" onclick="pinSheet(' + i + ')">' + (x.pin ? '바꾸기' : '지정') + '</button></div>'; }).join('');
+  $('main').innerHTML = h;
+}
+function pinSheet(i) {
+  var x = S.names[i], rnd = String(Math.floor(100000 + (crypto.getRandomValues(new Uint32Array(1))[0] % 900000)));
+  $('sh').innerHTML = '<h2>' + esc(x.name) + ' PIN ' + (x.pin ? '바꾸기' : '지정') + '</h2>' +
+    '<div class="fg"><label class="fl" for="pn">PIN (숫자 4~8자리)</label><input class="fi" id="pn" inputmode="numeric" value="' + rnd + '"><div class="hint">무작위 6자리를 넣어뒀어요. 원하는 숫자로 바꿔도 돼요.</div></div>' +
+    '<div class="err" id="pn-err"></div><div class="bt2">' + (x.pin ? '<button class="btn red" onclick="pinSave(' + i + ',true)">PIN 없애기</button>' : '') +
+    '<button class="btn gray" onclick="closeSheet()">취소</button><button class="btn" onclick="pinSave(' + i + ')">저장</button></div>';
+  $('sheet').classList.remove('hidden');
+}
+function pinSave(i, clear) {
+  var x = S.names[i], pin = clear ? '' : $('pn').value.trim(), er = $('pn-err');
+  if (!clear && !/^\d{4,8}$/.test(pin)) { er.textContent = '숫자 4~8자리로 적어주세요'; return; }
+  post('wk_pin_set', { name: x.name, pin: pin, clear: !!clear }, S.admK, function (d) {
+    if (!d.ok) { er.textContent = d.error || '저장하지 못했어요'; return; }
+    x.pin = !clear; closeSheet(); renderAdmin(clear ? null : { name: x.name, pin: pin }); toast(clear ? 'PIN을 없앴어요' : 'PIN을 저장했어요'); window.scrollTo(0, 0);
+  });
+}
+
+/* ── 시작 ── */
+(function () {
+  try { var a = JSON.parse(localStorage.getItem('wk_auth') || 'null'); if (a && a.t) { S.t = a.t; S.name = a.name; S.allow = a.allow || [a.name]; enter(); return; } } catch (e) {}
+})();
+</script>
+</body>
+</html>
