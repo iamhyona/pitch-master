@@ -7,7 +7,7 @@
 <meta name="theme-color" content="#f2f4f6">
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=3">
 <link rel="apple-touch-icon" href="apple-touch-icon.png?v=3">
-<meta name="pm-build" content="20261019-1400">
+<meta name="pm-build" content="20261019-1500">
 <link rel="manifest" href="manifest.webmanifest?v=3">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -6643,8 +6643,8 @@ document.addEventListener('click', function (e) {
   var MGR = {"윤은수": "STARSHIP", "조수연": "STARSHIP", "정수연": "STARSHIP", "박솔채": "STARSHIP", "김윤지": "STARSHIP", "김소진": "STARSHIP", "박수현": "STARSHIP", "김소영": "YG PLUS", "심승현": "YG PLUS", "임준": "YG PLUS", "문창윤": "YG PLUS", "이가은": "YG PLUS", "임준식": "YG PLUS", "복찬솔": "YG", "이슬기": "YG", "정재식": "YG", "김수진": "YG", "허윤영": "YG", "김건영": "YG", "김진욱": "YG", "신지애": "YG", "오승원": "YG", "최인영": "YG", "심주희": "THE BLACK LABEL", "김슬기": "THE BLACK LABEL", "조영선": "THE BLACK LABEL", "신자경": "EDAM", "김소현": "EDAM", "양은하": "EDAM", "김보성": "EDAM", "임혜린": "HYBE", "조훈": "HYBE", "문성언": "HYBE", "정혜영": "MORE VISION", "이경환": "MORE VISION", "김은주": "AURA", "정남결": "iNKODE", "윤정윤": "SOUND CONTENTS", "고정아": "JYP", "강이레": "KQ"};
   // 2026-10-19 (현아): 아티스트가 없는 정정 건 등 — 카톡 기록으로 확인한 소속사
   var FIX = [[/지급계산오류/, 'STARSHIP'], [/^전소미/, 'THE BLACK LABEL']];
-  var CL_ALIAS = { 'HYBEUSA': 'HYBE' }; // 2026-10-19 (현아): 하이브USA는 하이브로 합쳐서 봄
-  window.pfClAlias = function (k) { return CL_ALIAS[k] || k; };
+  // 2026-10-19 (현아): 하이브 재팬·코리아·USA 등 하이브 계열은 모두 HYBE 하나로 합쳐서 봄
+  window.pfClAlias = function (k) { return /HYBE|하이브/i.test(String(k || '')) ? 'HYBE' : k; };
   function clientOfBuy(x, sales) {
     if (x._c !== undefined) return x._c;
     var o = (typeof WO !== 'undefined' && WO.opts) || null, J = String(x.job || ''), JN = nz(J), cand = [], best = '', blen = 0;
@@ -6672,7 +6672,7 @@ document.addEventListener('click', function (e) {
       if (cand.length > 1) best = top > 1 ? pick : cand[0]; // 아티스트 이름만 겹치면(점수 1) 마스터 첫 소속사
       else best = pick;
     }
-    var r = CL_ALIAS[best] || best || '소속사 미확인';
+    var r = best ? pfClAlias(best) : '소속사 미확인';
     if (o) x._c = r; // 거래처 마스터를 불러온 뒤에만 기억
     return r;
   }
@@ -6829,7 +6829,7 @@ document.addEventListener('click', function (e) {
       P.open = P.open || {};
       var ks = Object.keys(g).sort(function (a, b) { return (g[b].s - g[b].b) - (g[a].s - g[a].b); }), mx = Math.max.apply(null, ks.map(function (k) { return g[k].s; }).concat([1]));
       h += donut(ks.map(function (k) { return [k, g[k].s]; }), '매출 비중');
-      h += ks.map(function (k) { var o = g[k], p = o.s - o.b, kn = famNorm(k), kn2 = famNorm(String(k).replace(/\(.*$/, '')), fs = kn ? famSplit(function (x) { var c = famNorm(x.c); return c && (c === kn || c === kn2); }) : null; return '<div class="pf2-row pf2-cr' + (P.open[k] ? ' on' : '') + '" data-k="' + esc(k) + '" onclick="pf2Open(this)"><span class="n">' + esc(k) + '</span><span class="v' + (p < 0 ? ' neg' : '') + '">' + W(p) + '</span><span class="m"><span>매출 ' + W(o.s) + ' (' + o.n + '건)</span><span>매입 ' + W(o.b) + ' (' + o.BL.length + '건)</span>' + (o.s ? '<span>이익률 ' + Math.round(p / o.s * 100) + '%</span>' : '') + '</span>' + famLine(fs) + crList(o) + '<span class="bar"><i style="width:' + (o.s / mx * 100) + '%;background:' + C.sale + '"></i></span></div>'; }).join('') || '<div class="pf2-empty">내역이 없어요</div>';
+      h += ks.map(function (k) { var o = g[k], p = o.s - o.b, kn = famNorm(k), kn2 = famNorm(String(k).replace(/\(.*$/, '')), fs = kn ? famSplit(function (x) { var c = famNorm(pfClAlias(x.c)); return c && (c === kn || c === kn2); }) : null; return '<div class="pf2-row pf2-cr' + (P.open[k] ? ' on' : '') + '" data-k="' + esc(k) + '" onclick="pf2Open(this)"><span class="n">' + esc(k) + '</span><span class="v' + (p < 0 ? ' neg' : '') + '">' + W(p) + '</span><span class="m"><span>매출 ' + W(o.s) + ' (' + o.n + '건)</span><span>매입 ' + W(o.b) + ' (' + o.BL.length + '건)</span>' + (o.s ? '<span>이익률 ' + Math.round(p / o.s * 100) + '%</span>' : '') + '</span>' + famLine(fs) + crList(o) + '<span class="bar"><i style="width:' + (o.s / mx * 100) + '%;background:' + C.sale + '"></i></span></div>'; }).join('') || '<div class="pf2-empty">내역이 없어요</div>';
       h += '<div class="pf2-note">· 소속사별 이익 = 매출 − 그 소속사 작업의 매입 (부대비용은 전체에서만 뺌). 줄을 누르면 매출·매입 내역이 펼쳐져요.<br>· 매입의 소속사: 내역에 소속사 이름(YGP 등)이나 담당자 이름(카톡 청구 기록 기준: 문창윤=YG PLUS, 최인영·오승원·정재식=YG 등)이 있으면 그 소속사 → 없으면 거래처 마스터의 아티스트 소속사 → 소속사가 둘이면(트레저 등) 내역이 가장 비슷한 매출의 소속사.<br>· 소속사 미확인 = 매입 내역에서 아티스트를 찾지 못한 건 (예: 지급계산오류 정정, 거래처 마스터에 없는 아티스트).</div>';
     } else {
       var w = {};
