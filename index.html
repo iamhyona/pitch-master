@@ -7,7 +7,7 @@
 <meta name="theme-color" content="#f2f4f6">
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=3">
 <link rel="apple-touch-icon" href="apple-touch-icon.png?v=3">
-<meta name="pm-build" content="20261019-0900">
+<meta name="pm-build" content="20261019-1100">
 <link rel="manifest" href="manifest.webmanifest?v=3">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -6629,16 +6629,44 @@ document.addEventListener('click', function (e) {
     draw();
     woPost('pm_wo_profit_ov', { key: key, bucket: v === undefined ? '' : (function () { var b = r.bank.filter(function (x) { return x.key === key; })[0]; return b && v === b.auto ? '' : v; })() }, function (res) { if (!res || !res.ok) toast('분류 저장 실패: ' + ((res && res.error) || '연결 확인')); else toast('분류를 바꿨어요'); });
   };
-  // 매입 → 소속사: 같은 아티스트(작업내역 첫 단어)의 매출 거래처, 없으면 거래처 마스터의 아티스트 소속
+  // 매입 → 소속사 (2026-10-19 현아: 'YG PLUS 매입이 더 많다' — 날짜만 가까운 매출에 붙던 문제 고침)
+  //  1) 내역에 YGP·YG PLUS 같은 소속사 이름이 있으면 그 소속사
+  //  2) 거래처 마스터의 아티스트(한글·영문 이름, '아이브장원영'처럼 붙여 쓴 것도) → 그 아티스트의 소속사
+  //  3) 소속사가 둘 이상이면(예: 트레저 = YG·YG PLUS) 같은 아티스트 매출 중 내역 단어가 가장 많이 겹치는 매출의 소속사, 겹치는 게 없으면 마스터의 첫 소속사
+  //  4) 마스터에 없는 아티스트는 매출 내역 첫 단어로 맞춤 · 그래도 없으면 '소속사 미확인'
+  var STOP = /^(리터칭|외주비용|외주|비용|지급|청구|외|추가|건|세트|긴급|프로모션|최종)$/;
+  function nz(v) { return String(v || '').toUpperCase().replace(/[\s_\-·.,()\[\]+&]/g, ''); }
+  function words(t) { return String(t || '').split(/[\s_\-·.,()\[\]+&]+/).filter(function (w) { return w.length >= 2 && !STOP.test(w); }); }
+  function names(disp) { var m = String(disp || '').match(/^(.*?)\((.*)\)\s*$/); return (m ? [m[1], m[2]] : [disp]).map(nz).filter(function (x) { return x.length >= 2; }); }
+  function ckOf(disp) { var o = (typeof WO !== 'undefined' && WO.opts) || {}, d = String(disp || '').trim(); var c = (o.clients || []).filter(function (c) { return c.disp === d || c.key === d; })[0]; return c ? c.key : d.replace(/\(.*$/, '').trim(); }
   function clientOfBuy(x, sales) {
     if (x._c !== undefined) return x._c;
-    var tok = String(x.job || '').trim().split(/\s+/)[0] || '', best = '', bd = 1e15;
-    if (tok) sales.forEach(function (s) { if (String(s.job || '').indexOf(tok) === 0) { var d = Math.abs(new Date(s.d) - new Date(x.d)); if (d < bd) { bd = d; best = s.tab; } } });
-    if (!best && typeof WO !== 'undefined' && WO.opts && WO.opts.artists && tok) {
-      var a = WO.opts.artists.filter(function (a) { return String(a.disp || '').indexOf(tok) >= 0; })[0];
-      if (a) { var ck = String(a.clientsKey || '').split(',')[0].trim(); var c = (WO.opts.clients || []).filter(function (c) { return c.disp === ck; })[0]; best = c ? c.key : ck.replace(/\(.*$/, '').trim(); }
+    var o = (typeof WO !== 'undefined' && WO.opts) || null, J = String(x.job || ''), JN = nz(J), cand = [], best = '', blen = 0;
+    if (/YGP|YG\s*PLUS|와이지플러스/i.test(J)) best = 'YG PLUS';
+    if (!best && o) {
+      (o.clients || []).forEach(function (c) { names(c.disp).concat([nz(c.key)]).forEach(function (n) { if (n.length >= 3 && JN.indexOf(n) === 0 && n.length > blen) { blen = n.length; best = c.key; } }); });
+      blen = 0;
+      (o.artists || []).forEach(function (a) { names(a.disp).forEach(function (n) { if (JN.indexOf(n) === 0 && n.length > blen) { blen = n.length; cand = String(a.clientsKey || '').split(',').map(function (k) { return ckOf(k); }).filter(String); } }); });
+      if (!best && cand.length === 1) best = cand[0];
     }
-    x._c = best || '미분류'; return x._c;
+    if (!best) {
+      var tok = J.trim().split(/\s+/)[0] || '', tn = nz(tok), my = words(J), top = -1, pick = '', sco = {}, amt = {};
+      sales.forEach(function (s) {
+        var st = nz(String(s.job || '').trim().split(/\s+/)[0]);
+        var same = cand.length ? cand.indexOf(s.tab) >= 0 && (tn && (st.indexOf(tn) === 0 || tn.indexOf(st) === 0)) : (tn.length >= 2 && st.length >= 2 && (st.indexOf(tn) === 0 || tn.indexOf(st) === 0));
+        if (!same) return;
+        var sw = words(s.job), sc = my.filter(function (w) { return sw.indexOf(w) >= 0; }).length;
+        amt[s.tab] = (amt[s.tab] || 0) + (Number(s.amt) || 0);
+        if (sc > (sco[s.tab] || -1)) sco[s.tab] = sc;
+      });
+      // 점수가 같으면 그 아티스트 매출이 더 많은 소속사 (예: 베이비몬스터 = YG 쪽 매출이 더 큼)
+      Object.keys(sco).forEach(function (t) { if (sco[t] > top || (sco[t] === top && (amt[t] || 0) > (amt[pick] || 0))) { top = sco[t]; pick = t; } });
+      if (cand.length > 1) best = top > 1 ? pick : cand[0]; // 아티스트 이름만 겹치면(점수 1) 마스터 첫 소속사
+      else best = pick;
+    }
+    var r = best || '소속사 미확인';
+    if (o) x._c = r; // 거래처 마스터를 불러온 뒤에만 기억
+    return r;
   }
   // 2026-10-19 (현아): 기간(언제부터~언제까지)이 있으면 기간이 우선, 없으면 월 필터
   function inM(d) { d = String(d || '').slice(0, 10); if (P.from || P.to) return (!P.from || d >= P.from) && (!P.to || d <= P.to); return !P.m || d.slice(5, 7) === P.m; }
@@ -6667,6 +6695,12 @@ document.addEventListener('click', function (e) {
     var a = FPPL.filter(function (w) { return fs[w]; }), tot = a.reduce(function (s0, w) { return s0 + fs[w].sum; }, 0) || 1;
     return '<span class="pf2-fb"><span class="h">강영순을 3명으로 나누면 <small>· 관리 모드에서만 보여요</small></span>' + a.map(function (w) { var x = fs[w]; return '<span class="i"><span class="n">' + w + '</span><span class="v">' + W(x.sum) + '</span><span class="m">' + x.n + '건 · 핏치지급 ' + W(x.net) + ' · 실제지급 <b>' + W(x.act) + '</b> · ' + Math.round(x.sum / tot * 100) + '%</span></span>'; }).join('') + '</span>';
   }
+  function crList(o) {
+    var it = function (x, t) { return '<span class="i"><span class="d">' + esc(String(x.d).slice(2).replace(/-/g, '.')) + '</span><span class="t">' + esc(x.job) + (t === 'b' && x.who ? ' <em>' + esc(x.who) + '</em>' : '') + '</span><span class="a' + (t === 'b' ? ' b' : '') + '">' + (t === 'b' ? '−' : '+') + W(x.amt) + '</span></span>'; };
+    var srt = function (a, b) { return String(b.d).localeCompare(String(a.d)); };
+    return '<span class="pf2-cl">' + (o.SL.length ? '<span class="h">매출 ' + o.SL.length + '건</span>' + o.SL.slice().sort(srt).map(function (x) { return it(x, 's'); }).join('') : '') + (o.BL.length ? '<span class="h">매입 ' + o.BL.length + '건</span>' + o.BL.slice().sort(srt).map(function (x) { return it(x, 'b'); }).join('') : '') + '</span>';
+  }
+  window.pf2Open = function (el) { var k = el.getAttribute('data-k'); P.open = P.open || {}; P.open[k] = !P.open[k]; el.classList.toggle('on', !!P.open[k]); };
   function famNorm(v) { return String(v || '').toUpperCase().replace(/[^0-9A-Z가-힣]/g, ''); }
   function sum(a, f) { return a.reduce(function (s, x) { return s + (f ? f(x) : x.amt); }, 0); }
   function costAmt(b) { return b.kind === '취소' ? -b.amt : b.amt; }
@@ -6782,12 +6816,13 @@ document.addEventListener('click', function (e) {
     h += '<div class="pf2-sec"><div class="pf2-seg"><button class="' + (P.by === 'client' ? 'on' : '') + '" onclick="pf2Set(\'by\',\'client\')">소속사별</button><button class="' + (P.by === 'worker' ? 'on' : '') + '" onclick="pf2Set(\'by\',\'worker\')">작업자별</button></div>';
     if (P.by === 'client') {
       var g = {};
-      S.forEach(function (x) { var k = x.tab || '미분류'; (g[k] = g[k] || { s: 0, b: 0, n: 0 }).s += x.amt; g[k].n++; });
-      B.forEach(function (x) { var k = clientOfBuy(x, r.sales); (g[k] = g[k] || { s: 0, b: 0, n: 0 }).b += x.amt; });
+      S.forEach(function (x) { var k = x.tab || '소속사 미확인'; (g[k] = g[k] || { s: 0, b: 0, n: 0, SL: [], BL: [] }).s += x.amt; g[k].n++; g[k].SL.push(x); });
+      B.forEach(function (x) { var k = clientOfBuy(x, r.sales); (g[k] = g[k] || { s: 0, b: 0, n: 0, SL: [], BL: [] }).b += x.amt; g[k].BL.push(x); });
+      P.open = P.open || {};
       var ks = Object.keys(g).sort(function (a, b) { return (g[b].s - g[b].b) - (g[a].s - g[a].b); }), mx = Math.max.apply(null, ks.map(function (k) { return g[k].s; }).concat([1]));
       h += donut(ks.map(function (k) { return [k, g[k].s]; }), '매출 비중');
-      h += ks.map(function (k) { var o = g[k], p = o.s - o.b, kn = famNorm(k), kn2 = famNorm(String(k).replace(/\(.*$/, '')), fs = kn ? famSplit(function (x) { var c = famNorm(x.c); return c && (c === kn || c === kn2); }) : null; return '<div class="pf2-row"><span class="n">' + esc(k) + '</span><span class="v' + (p < 0 ? ' neg' : '') + '">' + W(p) + '</span><span class="m"><span>매출 ' + W(o.s) + ' (' + o.n + '건)</span><span>매입 ' + W(o.b) + '</span>' + (o.s ? '<span>이익률 ' + Math.round(p / o.s * 100) + '%</span>' : '') + '</span>' + famLine(fs) + '<span class="bar"><i style="width:' + (o.s / mx * 100) + '%;background:' + C.sale + '"></i></span></div>'; }).join('') || '<div class="pf2-empty">내역이 없어요</div>';
-      h += '<div class="pf2-note">소속사별 이익 = 매출 − 그 소속사 작업의 매입 (부대비용은 전체에서만 뺌). 매입의 소속사는 같은 아티스트의 매출로 맞췄어요.</div>';
+      h += ks.map(function (k) { var o = g[k], p = o.s - o.b, kn = famNorm(k), kn2 = famNorm(String(k).replace(/\(.*$/, '')), fs = kn ? famSplit(function (x) { var c = famNorm(x.c); return c && (c === kn || c === kn2); }) : null; return '<div class="pf2-row pf2-cr' + (P.open[k] ? ' on' : '') + '" data-k="' + esc(k) + '" onclick="pf2Open(this)"><span class="n">' + esc(k) + '</span><span class="v' + (p < 0 ? ' neg' : '') + '">' + W(p) + '</span><span class="m"><span>매출 ' + W(o.s) + ' (' + o.n + '건)</span><span>매입 ' + W(o.b) + ' (' + o.BL.length + '건)</span>' + (o.s ? '<span>이익률 ' + Math.round(p / o.s * 100) + '%</span>' : '') + '</span>' + famLine(fs) + crList(o) + '<span class="bar"><i style="width:' + (o.s / mx * 100) + '%;background:' + C.sale + '"></i></span></div>'; }).join('') || '<div class="pf2-empty">내역이 없어요</div>';
+      h += '<div class="pf2-note">· 소속사별 이익 = 매출 − 그 소속사 작업의 매입 (부대비용은 전체에서만 뺌). 줄을 누르면 매출·매입 내역이 펼쳐져요.<br>· 매입의 소속사: 내역에 소속사 이름(YGP 등)이 있으면 그 소속사 → 없으면 거래처 마스터의 아티스트 소속사 → 소속사가 둘이면(트레저 등) 내역이 가장 비슷한 매출의 소속사.<br>· 소속사 미확인 = 매입 내역에서 아티스트를 찾지 못한 건 (예: 지급계산오류 정정, 거래처 마스터에 없는 아티스트).</div>';
     } else {
       var w = {};
       B.forEach(function (x) { var k = x.who || x.tab; if (typeof pmHidden === 'function' && pmHidden(k)) return; (w[k] = w[k] || { b: 0, n: 0, net: 0 }).b += x.amt; w[k].n++; w[k].net += (x.tot || x.amt); });
@@ -7404,6 +7439,16 @@ function txIc(id) {
 #tab-pf .pf2-rg .dt-w>svg{display:none}
 #tab-pf .pf2-rg .dt-w>span{width:100%;text-align:center}
 #tab-pf .pf2-rx{flex:none;width:30px;height:30px;border-radius:50%;border:0;background:var(--chip);color:var(--txt2);font-size:16px;line-height:1;cursor:pointer}
+#tab-pf .pf2-cr{cursor:pointer;-webkit-tap-highlight-color:transparent}
+#tab-pf .pf2-cl{display:none;grid-column:1/3;margin:6px 0 2px}
+#tab-pf .pf2-cr.on .pf2-cl{display:block}
+#tab-pf .pf2-cl .h{display:block;font-size:11px;font-weight:700;color:var(--txt2);padding:8px 0 2px}
+#tab-pf .pf2-cl .i{display:grid;grid-template-columns:52px minmax(0,1fr) auto;gap:6px;padding:5px 0;border-bottom:1px solid #f2f4f6;font-size:12px;align-items:baseline}
+#tab-pf .pf2-cl .d{color:var(--txt3);font-size:11px;font-variant-numeric:tabular-nums}
+#tab-pf .pf2-cl .t{min-width:0;color:var(--txt2);word-break:keep-all}
+#tab-pf .pf2-cl .t em{font-style:normal;color:var(--txt3);font-size:11px}
+#tab-pf .pf2-cl .a{font-weight:600;color:#3182f6;white-space:nowrap}
+#tab-pf .pf2-cl .a.b{color:#4e5968}
 #tab-pf .pf2-fs{grid-column:1/3;font-size:11px;color:var(--txt3)}
 #tab-pf .pf2-fs b{color:var(--txt2);font-weight:600}
 #tab-pf .pf2-fb{grid-column:1/3;display:flex;flex-direction:column;margin:8px 0 4px;padding:4px 0 0 12px;border-left:2px solid #3182f6}
