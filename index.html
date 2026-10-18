@@ -7,7 +7,7 @@
 <meta name="theme-color" content="#f2f4f6">
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=3">
 <link rel="apple-touch-icon" href="apple-touch-icon.png?v=3">
-<meta name="pm-build" content="20261018092426">
+<meta name="pm-build" content="20261018092952">
 <link rel="manifest" href="manifest.webmanifest?v=3">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -6791,7 +6791,7 @@ document.addEventListener('click', function (e) {
         return '<div class="pf2-it1 gi-' + g + (vd ? ' vd' : '') + '" title="' + esc(tip) + '"><span class="d">' + esc(dv ? (b.tm || '') : b.d.slice(2).replace(/-/g, '.') + '(' + WD[new Date(b.d + 'T00:00:00').getDay()] + ')') + '</span><span class="c">' + esc(b.cat2 || b.sub || '') + '</span><span class="t">' + esc(b.txt) + '</span><span class="a">' + (g === 'in' ? '+' : '') + ((b.kind === '취소' && !vd) ? '−' : '') + W(b.amt) + '</span></div>';
       }).join('');
     });
-    h += '<div class="pf2-note">· 매출·매입은 기록 메뉴의 매출/매입 내역(공급가액)이에요. 법인 통장의 매입(외주 지급)·매출(입금)은 자동으로 나눠 보여주기만 하고 비용에는 넣지 않아요.<br>· 부대비용 = 고정지출(급여·4대보험·세금·수수료·구독·관리비) + 기타지출(물품구매·주유비·식비·영업비·기타).<br>· 분류는 핏치 가계부의 카테고리를 그대로 따라요. 흐린 줄은 승인취소와 짝이 맞는 결제라 비용에서 빠져요.</div></div>';
+    h += '<div class="pf2-note">· 매출·매입은 기록 메뉴의 매출/매입 내역(공급가액)이에요. 법인 통장의 매입(외주 지급)·매출(입금)은 자동으로 나눠 보여주기만 하고 비용에는 넣지 않아요.<br>· 부대비용 = 고정지출(급여·4대보험·세금·수수료·구독·관리비) + 기타지출(물품구매·주유비·교통비·식비·영업비·기타).<br>· 분류는 핏치 가계부의 카테고리를 그대로 따라요. 흐린 줄은 승인취소와 짝이 맞는 결제라 비용에서 빠져요.</div></div>';
     box.innerHTML = h;
     // 2026-10-18 (현아): 내용별로 흰 박스 나누기 — 요약 / 월별 / 연도별 / 소속사·작업자 / 법인 통장
     (function () {
