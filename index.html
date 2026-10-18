@@ -7,7 +7,7 @@
 <meta name="theme-color" content="#f2f4f6">
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=3">
 <link rel="apple-touch-icon" href="apple-touch-icon.png?v=3">
-<meta name="pm-build" content="20261018-153157">
+<meta name="pm-build" content="20261018-1805">
 <link rel="manifest" href="manifest.webmanifest?v=3">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -7301,6 +7301,63 @@ function txIc(id) {
   // 매입 탭을 열 때 작업내역서 목록이 없으면 바로 불러오기
   var _sw = switchTab;
   switchTab = function (t) { var r = _sw.apply(this, arguments); try { if (t === 'py' && PM_K && !(WO.items && WO.items.length) && !WO.loading) woLoad(false); } catch (e) {} return r; };
+})();
+</script>
+<style>
+/* 2026-10-18 (현아): 박현아 작업 귀속 (박종배/박슬기) */
+.wd-own{display:inline-block;margin-top:3px;font-size:11px;font-weight:600;color:#3182f6;background:#e8f3ff;padding:1px 7px;border-radius:6px}
+.wd-own.no{color:#f04452;background:#fff0f1}
+.wd-ownsel{display:flex;align-items:center;gap:6px;margin:8px 0 2px;font-size:13px;color:var(--txt2)}
+.wd-ownsel span{flex:none;font-weight:600}
+.wd-ownsel button{flex:1;height:36px;border-radius:10px;border:0;background:var(--chip);color:var(--txt2);font-weight:600;font-family:inherit}
+.wd-ownsel button.on{background:var(--txt);color:#fff}
+</style>
+<script>
+/* ═══ 2026-10-18 (현아): 박현아 작업 귀속 — 박현아 탭 작업 줄마다 박종배·박슬기 중 누구 몫인지 보기·고치기 (관리 모드)
+   - 서버: 박현아 탭 P열 '귀속' (작업자 웹앱 wo.html 과 같은 칸) ═══ */
+(function () {
+  function ownOf(t, i) { if (!t.ownE) t.ownE = (t.own || []).slice(); return t.ownE[i] || ''; }
+  function ownDiff(t, i) { return t.ownOpts && ownOf(t, i) !== ((t.own || [])[i] || ''); }
+  var _view = woRowView;
+  woRowView = function (t, ti, r, i, who) {
+    var h = _view(t, ti, r, i, who); if (!t.ownOpts) return h;
+    var o = ownOf(t, i), tag = o ? '<span class="wd-own">' + esc(o) + ' 작업</span>' : '<span class="wd-own no">귀속 미지정</span>';
+    if (ownDiff(t, i) && h.indexOf('ch-dot') < 0) tag += '<span class="ch-dot"></span>';
+    return h.replace('</span><span class="wd-its">', tag + '</span><span class="wd-its">');
+  };
+  var _ed = woRowEditor;
+  woRowEditor = function (t, ti, r, i) {
+    var h = _ed(t, ti, r, i); if (!t.ownOpts) return h;
+    var o = ownOf(t, i), sel = '<div class="wd-ownsel"><span>누구 작업?</span>' + t.ownOpts.map(function (x) { return '<button class="' + (o === x ? 'on' : '') + '" onclick="woOwnPick(' + ti + ',' + i + ',\'' + x + '\')">' + esc(x) + '</button>'; }).join('') + '</div>';
+    return h.replace('<button class="wd-done"', sel + '<button class="wd-done"');
+  };
+  window.woOwnPick = function (ti, i, v) { var t = WO.cur.tabs[ti]; ownOf(t, i); t.ownE[i] = t.ownE[i] === v ? '' : v; woDetail(); };
+  var _ch = woChanged;
+  woChanged = function () { var n = _ch(); (WO.cur && WO.cur.tabs || []).forEach(function (t) { if (t.ownOpts) t.rows.forEach(function (r, i) { if (ownDiff(t, i)) n++; }); }); return n; };
+  var _save = woSave;
+  woSave = function () {
+    var d = WO.cur, extra = [];
+    (d && d.tabs || []).forEach(function (t) {
+      if (!t.ownOpts) return;
+      var rows = [];
+      t.rows.forEach(function (r, i) { if (ownDiff(t, i) || (r.e.some(function (x, j) { return String(x).trim() !== String(r.v[j] || '').trim(); }))) rows.push({ i: i, old: r.v, val: r.e, own: ownOf(t, i) }); });
+      if (rows.length) extra.push({ tab: t.name, rows: rows });
+      // 이 탭은 아래에서 따로 저장하므로 기본 저장에서는 빼둠
+      t._skip = true; t._rowsBak = t.rows; t.rows = t.rows.map(function (r) { return { v: r.v, e: r.v.slice(), f: r.f }; });
+    });
+    if (!extra.length) { (d && d.tabs || []).forEach(function (t) { if (t._skip) { t.rows = t._rowsBak; delete t._skip; delete t._rowsBak; } }); return _save(); }
+    var hasOther = (d.tabs || []).some(function (t) { return !t._skip && t.rows.some(function (r) { return r.e.some(function (x, j) { return String(x).trim() !== String(r.v[j] || '').trim(); }); }); });
+    var left = extra.length, errs = [];
+    extra.forEach(function (j) {
+      woPost('pm_wo_save', { id: d.id, tab: j.tab, rows: j.rows }, function (res) {
+        if (!res.ok) errs.push(j.tab + ': ' + (res.error || ''));
+        if (--left) return;
+        (d.tabs || []).forEach(function (t) { if (t._skip) { delete t._skip; delete t._rowsBak; } });
+        if (hasOther) _save();
+        else { toast(errs.length ? '저장 실패: ' + errs.join(' / ') : '저장했어요 · 시트에 반영됨'); var id = d.id; WO.cur = null; woOpen(id); WO.loaded = false; woLoad(true); }
+      });
+    });
+  };
 })();
 </script>
 </body>

@@ -6,7 +6,7 @@
 <title>PITCH 작업내역서</title>
 <meta name="theme-color" content="#f2f4f6">
 <meta name="robots" content="noindex">
-<meta name="wo-build" content="20261018-1640">
+<meta name="wo-build" content="20261018-1800">
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=3">
 <link rel="apple-touch-icon" href="apple-touch-icon.png?v=3">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -79,6 +79,11 @@ button{cursor:pointer;border:0;background:none}
 .row .it i b{color:var(--txt);font-weight:700;margin-left:2px}
 .row .sy{font-size:12px;color:var(--txt3);margin-top:4px}
 .row.dim{opacity:.6}
+.own{display:inline-block;margin-top:6px;font-size:12px;font-weight:600;color:var(--blue);background:var(--blue-bg);padding:2px 8px;border-radius:6px}
+.own.no{color:var(--red);background:#fff0f1}
+.seg{display:flex;gap:6px}
+.seg button{flex:1;height:44px;border-radius:12px;background:var(--chip);color:var(--txt2);font-weight:600}
+.seg button.on{background:var(--txt);color:#fff}
 .addrow{width:100%;height:50px;border-radius:14px;border:1px dashed var(--faint);color:var(--blue);font-weight:600;margin-top:4px;background:transparent}
 .ex{font-size:12px;color:var(--faint);font-style:italic;margin:6px 4px 10px;line-height:1.6}
 /* 편집 시트 */
@@ -266,7 +271,8 @@ function renderDoc() {
     for (var j = 2; j <= 11; j++) if (num(r.v[j])) its.push('<i>' + esc(lbl(j)) + '<b>' + esc(r.v[j]) + '</b></i>');
     if (num(r.v[1])) its.push('<i>' + esc(lbl(1)) + '<b>' + esc(r.v[1]) + '</b></i>');
     return '<button class="row' + (t.locked ? ' dim' : '') + '" onclick="' + (t.locked ? '' : 'editRow(' + x.i + ')') + '"><div class="n">' + esc(r.v[0] || '(폴더명 없음)') + '</div>' +
-      (its.length ? '<div class="it">' + its.join('') + '</div>' : '') + (String(r.v[12] || '').trim() ? '<div class="sy">' + esc(lbl(12)) + ': ' + esc(r.v[12]) + '</div>' : '') + '</button>';
+      (its.length ? '<div class="it">' + its.join('') + '</div>' : '') + (String(r.v[12] || '').trim() ? '<div class="sy">' + esc(lbl(12)) + ': ' + esc(r.v[12]) + '</div>' : '') +
+      (t.ownOpts ? ((t.own || [])[x.i] ? '<div class="own">' + esc(t.own[x.i]) + ' 작업으로 처리</div>' : '<div class="own no">누구 작업인지 아직 안 정했어요</div>') : '') + '</button>';
   }).join('');
   if (!rows.length) h += '<div class="empty" style="padding:24px 0">아직 적은 작업이 없어요</div>';
   if (!t.locked) h += '<button class="addrow" onclick="editRow(-1)">+ 작업 추가</button>';
@@ -286,16 +292,19 @@ function editRow(i) {
     '<div class="hint">차수/순위_컨셉_번호_멤버 순서로 적어주세요. 컷수와 (N인)은 이름에 넣지 않아도 돼요.</div></div>' +
     '<label class="fl">인원별 컷수</label><div class="grid">' + g + '</div>' +
     '<div class="fg" style="margin-top:14px"><label class="fl" for="e12">' + esc(lbl(12) || '합성컷(합성멤버)') + '</label><input class="fi" id="e12" value="' + esc(r.v[12]) + '" placeholder="합성한 경우만"' + (r.f[12] ? ' disabled' : '') + '></div>' +
+    (t.ownOpts ? '<div class="fg"><label class="fl">누구 작업으로 처리할까요?</label><div class="seg" id="e-own">' + t.ownOpts.map(function (o) { return '<button type="button" data-v="' + esc(o) + '" class="' + (((t.own || [])[i] || '') === o ? 'on' : '') + '" onclick="ownPick(this)">' + esc(o) + '</button>'; }).join('') + '</div><div class="hint">박현아가 한 작업을 박종배·박슬기 중 누구 몫으로 칠지 골라주세요.</div></div>' : '') +
     '<div class="err" id="e-err"></div>' +
     '<div class="bt2">' + (isNew ? '' : '<button class="btn red" id="e-del" onclick="delRow()">삭제</button>') + '<button class="btn gray" onclick="closeSheet()">취소</button><button class="btn" id="e-save" onclick="saveRow()">저장</button></div>';
   $('sheet').classList.remove('hidden');
   if (isNew) setTimeout(function () { $('e0').focus(); }, 50);
 }
 function closeSheet() { $('sheet').classList.add('hidden'); if (S.ed) S.ed = null; }
-function sendRow(val, done) {
+function ownPick(b) { var on = b.classList.contains('on'); document.querySelectorAll('#e-own button').forEach(function (x) { x.classList.remove('on'); }); if (!on) b.classList.add('on'); }
+function ownVal() { var b = document.querySelector('#e-own button.on'); return b ? b.getAttribute('data-v') : ''; }
+function sendRow(val, done, own) {
   var t = S.cur.tabs[S.tab], i = S.ed.i, r = t.rows[i] || { v: Array(13).fill('') }, err = $('e-err');
   var btns = document.querySelectorAll('#sh .btn'); btns.forEach(function (b) { b.disabled = true; });
-  post('wk_save', { id: S.cur.id, tab: t.name, rows: [{ i: i, val: val, old: r.v }] }, S.t, function (d) {
+  post('wk_save', { id: S.cur.id, tab: t.name, rows: [own === undefined ? { i: i, val: val, old: r.v } : { i: i, val: val, old: r.v, own: own }] }, S.t, function (d) {
     btns.forEach(function (b) { b.disabled = false; });
     if (!d.ok) { err.textContent = d.error || '저장하지 못했어요'; return; }
     if (d.skipped && d.skipped.length) toast('그 사이 다른 곳에서 바뀐 칸 ' + d.skipped.length + '개는 그대로 뒀어요');
@@ -315,14 +324,16 @@ function saveRow() {
   var cuts = 0; for (var j3 = 1; j3 <= 11; j3++) cuts += num(val[j3]);
   if (!val[0]) { err.textContent = '맡은 작업 폴더명을 적어주세요'; return; }
   if (!cuts) { err.textContent = '컷수를 하나 이상 적어주세요'; return; }
-  if (val.every(function (x, j) { return String(x) === String(r.v[j] || ''); })) { closeSheet(); return; }
-  sendRow(val, '저장했어요');
+  var own = t.ownOpts ? ownVal() : undefined;
+  if (t.ownOpts && !own) { err.textContent = '박종배·박슬기 중 누구 작업인지 골라주세요'; return; }
+  if (val.every(function (x, j) { return String(x) === String(r.v[j] || ''); }) && (own === undefined || own === ((t.own || [])[S.ed.i] || ''))) { closeSheet(); return; }
+  sendRow(val, '저장했어요', own);
 }
 function delRow() {
   var b = $('e-del');
   if (!S.ed.del) { S.ed.del = true; b.textContent = '한 번 더 누르면 삭제'; return; }
   var t = S.cur.tabs[S.tab], r = t.rows[S.ed.i], val = r.v.map(function (x, j) { return r.f[j] ? x : ''; });
-  sendRow(val, '삭제했어요');
+  sendRow(val, '삭제했어요', t.ownOpts ? '' : undefined);
 }
 function addTab(w) {
   toast(w + ' 탭을 만드는 중이에요...');
