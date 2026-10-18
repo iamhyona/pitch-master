@@ -7,7 +7,7 @@
 <meta name="theme-color" content="#f2f4f6">
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=3">
 <link rel="apple-touch-icon" href="apple-touch-icon.png?v=3">
-<meta name="pm-build" content="20261018-133201">
+<meta name="pm-build" content="20261018-133335">
 <link rel="manifest" href="manifest.webmanifest?v=3">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -6030,7 +6030,7 @@ window.schSty = function (t, r, D) {
     document.getElementById('dc-title').textContent = inv ? '청구서 (매출)' : '지급내역서 (매입)';
     var h = '<div class="dv">' +
       '<div class="dv-hd"><div><h3>' + esc([I['아티스트명'] ? String(I['아티스트명']).replace(/^.*\((.*)\)$/, '$1') : it.artist, I['프로젝트명'] || String(it.title || '').split(' · ')[0]].filter(Boolean).join(' ')) + '</h3></div>' +
-      '<div class="amt"><b>' + W(fin) + '원</b></div></div>';
+      '<div class="amt"><b' + (inv ? '' : ' style="color:#f04452"') + '>' + W(fin) + '원</b></div></div>';
     var kWho = kv(inv ? '리터칭 담당' : '리터칭 담당자', inv ? ((String(it.title || '').match(/<([^>]*)>/) || [])[1] || (w ? (w.tabs || []).map(function (t) { return t.name; }).join(', ') : '')) : (get('작업자') || it.worker));
     var kMgr = kv('거래처 담당자', I['담당자'] || (inv ? get('담당자') : '') || (String(it.title || '').split(' · ')[1] || ''));
     var rest = kv('거래처', (function (c) { var t = String(c || '').replace(/\s*\(.*\)\s*$/, '').replace(/\s*ENTERTAINMENT\s*/i, ' ').trim(); return t || c; })(I['거래처'] || (inv ? get('수신처') : '') || it.clientKey)) +
@@ -6054,7 +6054,7 @@ window.schSty = function (t, r, D) {
     var sub = inv ? totV(0) : (get('합계') || totV(0)), tax = inv ? totV(1) : (get('세금') || totV(1));
     h += '<div class="dv-tot"><div class="r"><span>합산 (공급가액)</span><b>' + W(sub) + '</b></div>' +
       '<div class="r"><span>' + (isVat ? '부가세 (10%)' : '원천세 (3.3%)') + '</span><b>' + (isVat ? '' : (N(tax) > 0 ? '-' : '')) + W(tax) + '</b></div>' +
-      '<div class="r t"><span>' + (inv ? '최종 청구액' : '최종 지급액') + '</span><b>' + W(fin) + '</b></div></div>';
+      '<div class="r t"><span>' + (inv ? '최종 청구액' : '최종 지급액') + '</span><b' + (inv ? '' : ' style="color:#f04452"') + '>' + W(fin) + '</b></div></div>';
     h += btns + '</div>';
     b.innerHTML = h;
   };
@@ -7227,6 +7227,15 @@ function txIc(id) {
 #mo-doc table.pg-tbl tbody tr.pg-t td{border-top:0!important;border-bottom:0!important;box-shadow:inset 0 1px 0 #b0b8c1}
 #mo-doc table.pg-tbl tbody tr:nth-last-child(2) td{border-bottom:0!important}
 #mo-doc .dv-tot .r.t{border-top:1px solid #b0b8c1!important}
+</style>
+<style>
+/* 2026-10-18 (현아): 공급가액 = 진한 회색(#4e5968) · 개별 지급액 = 검정 · 합산 = 매입 빨강 / 매출 파랑 */
+#mo-doc table.pg-tbl tbody td:nth-child(2){color:#4e5968!important}
+#mo-doc table.pg-tbl tbody tr.pg-x td:nth-child(2){color:var(--txt3)!important}
+#mo-doc table.pg-tbl tbody td.fin{color:#191f28!important}
+#mo-doc table.pg-tbl tbody tr.pg-x td.fin{color:var(--txt3)!important}
+#mo-doc table.pg-tbl tbody tr.pg-t td.fin{color:#f04452!important}
+#mo-doc .dv-tot .r:not(.t) b{color:#4e5968!important}
 </style>
 </body>
 
