@@ -6,7 +6,7 @@
 <title>PITCH 작업내역서</title>
 <meta name="theme-color" content="#f2f4f6">
 <meta name="robots" content="noindex">
-<meta name="wo-build" content="20261018-1830">
+<meta name="wo-build" content="20261018-1915">
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=3">
 <link rel="apple-touch-icon" href="apple-touch-icon.png?v=3">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -138,7 +138,7 @@ button{cursor:pointer;border:0;background:none}
 <script>
 var API = 'https://script.google.com/macros/s/AKfycbxLa9jGkHXvy6pMzeYs58O3siUf4_n_9w1OMVEM2ERDnyqjtn_I_HlPnl2FlKlIpyVH-A/exec';
 var S = { t: '', name: '', allow: [], items: [], q: '', all: false, cur: null, tab: 0, ed: null, admK: '', names: [] };
-var EX = '작성 예시 ▸ 1차_옥상_01_가원  ·  2순위_글램_단체  ·  개인 — 차수/순위_컨셉_번호_멤버 순서. 컷수는 아래 칸에만 적고, 뒤의 (N인)은 저장하면 자동으로 붙어요.';
+var EX = '작성 예시: 1차_옥상_01_가원 (1인) / 2순위_글램_단체 (5인)  / 옥상_합성 (1345+1357가원+1789나린) ▸ 차수·순위_컨셉_번호_멤버(N인 · 합성은 합성내역), 컷수는 컷수칸에만 작성';
 function $(id) { return document.getElementById(id); }
 function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
 var _tt; function toast(m) { var e = $('toast'); e.textContent = m; e.classList.add('show'); clearTimeout(_tt); _tt = setTimeout(function () { e.classList.remove('show'); }, 2400); }
@@ -288,8 +288,8 @@ function editRow(i) {
   var inp = function (j, ph) { var dis = r.f[j] ? ' disabled' : ''; return '<label><span>' + esc(lbl(j)) + '</span><input inputmode="numeric" id="e' + j + '" value="' + esc(r.v[j]) + '" placeholder="' + (ph || '') + '"' + dis + '></label>'; };
   var g = ''; for (var j = 2; j <= 11; j++) g += inp(j); g += inp(1);
   $('sh').innerHTML = '<h2>' + (isNew ? '작업 추가' : '작업 고치기') + ' <span style="font-size:14px;color:var(--txt3);font-weight:500">' + esc(t.name) + '</span></h2>' +
-    '<div class="fg"><label class="fl" for="e0">맡은 작업 폴더명</label><input class="fi" id="e0" value="' + esc(r.v[0]) + '" placeholder="1차_옥상_01_가원"' + (r.f[0] ? ' disabled' : '') + '>' +
-    '<div class="hint">차수/순위_컨셉_번호_멤버 순서로 적어주세요. 컷수와 (N인)은 이름에 넣지 않아도 돼요.</div></div>' +
+    '<div class="fg"><label class="fl" for="e0">맡은 작업 폴더명</label><input class="fi" id="e0" value="' + esc(r.v[0]) + '" placeholder="1차_옥상_01_가원 (1인)"' + (r.f[0] ? ' disabled' : '') + '>' +
+    '<div class="hint">차수·순위_컨셉_번호_멤버(N인 · 합성은 합성내역) 순서로 적고, 컷수는 아래 컷수칸에만 적어주세요.</div></div>' +
     '<label class="fl">인원별 컷수</label><div class="grid">' + g + '</div>' +
     '<div class="fg" style="margin-top:14px"><label class="fl" for="e12">' + esc(lbl(12) || '합성컷(합성멤버)') + '</label><input class="fi" id="e12" value="' + esc(r.v[12]) + '" placeholder="합성한 경우만"' + (r.f[12] ? ' disabled' : '') + '></div>' +
     (t.actOpts ? '<div class="fg"><label class="fl">실제 작업자</label><div class="seg" id="e-own">' + t.actOpts.map(function (o) { return '<button type="button" data-v="' + esc(o) + '" class="' + ((((t.act || [])[i]) || t.name) === o ? 'on' : '') + '" onclick="ownPick(this)">' + esc(o) + '</button>'; }).join('') + '</div><div class="hint">' + esc(t.name) + ' 이름으로 정산되지만 실제로 다른 사람이 작업했다면 골라주세요. 이 정보는 PITCH_FAM에만 저장되고 다른 곳에는 보이지 않아요.</div></div>' : '') +
