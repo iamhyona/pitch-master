@@ -6,7 +6,7 @@
 <title>PITCH 작업내역서</title>
 <meta name="theme-color" content="#f2f4f6">
 <meta name="robots" content="noindex">
-<meta name="wo-build" content="20261018-1615">
+<meta name="wo-build" content="20261018-1620">
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=3">
 <link rel="apple-touch-icon" href="apple-touch-icon.png?v=3">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -137,14 +137,17 @@ var EX = '작성 예시 ▸ 1차_옥상_01_가원  ·  2순위_글램_단체  ·
 function $(id) { return document.getElementById(id); }
 function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
 var _tt; function toast(m) { var e = $('toast'); e.textContent = m; e.classList.add('show'); clearTimeout(_tt); _tt = setTimeout(function () { e.classList.remove('show'); }, 2400); }
-function get(qs, cb) {
+var NET_ERR = '서버 연결이 잠깐 안 됐어요. 다시 눌러주세요.';
+function ours(d) { return d && typeof d === 'object' && 'ok' in d ? d : null; }
+function done(d, cb) { d = d || { ok: false, net: true, error: NET_ERR }; if (d.auth === false && S.t) { logout(); toast('다시 로그인해주세요'); return; } cb(d); }
+function get(qs, cb, tries) {
   fetch(API + '?api=wk' + qs + '&_=' + Date.now()).then(function (r) { return r.json(); }).catch(function () { return null; })
-    .then(function (d) { d = d || { ok: false, error: '연결이 안 돼요. 잠시 후 다시 해주세요.' }; if (d.auth === false && S.t) { logout(); toast('다시 로그인해주세요'); return; } cb(d); });
+    .then(function (d) { d = ours(d); if (!d && !tries) return setTimeout(function () { get(qs, cb, 1); }, 800); done(d, cb); });
 }
-function post(action, data, k, cb) {
+function post(action, data, k, cb, tries) {
   fetch(API, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ action: action, data: data, k: k }) })
     .then(function (r) { return r.json(); }).catch(function () { return null; })
-    .then(function (d) { d = d || { ok: false, error: '연결이 안 돼요. 잠시 후 다시 해주세요.' }; if (d.auth === false && S.t) { logout(); toast('다시 로그인해주세요'); return; } cb(d); });
+    .then(function (d) { d = ours(d); if (!d && !tries) return setTimeout(function () { post(action, data, k, cb, 1); }, 800); done(d, cb); });
 }
 function d6(x) { return /^\d{6}$/.test(x || '') ? x.slice(0, 2) + '.' + x.slice(2, 4) + '.' + x.slice(4) : ''; }
 function num(x) { return Number(String(x || '').replace(/[^\d.\-]/g, '')) || 0; }
@@ -157,9 +160,9 @@ function login() {
   var n = $('l-n').value.trim(), p = $('l-p').value.trim(), er = $('l-err');
   if (!n || !p) { er.textContent = '이름과 PIN을 입력해주세요'; return; }
   er.textContent = ''; $('l-go').disabled = true; $('l-go').textContent = '확인 중...';
-  post('wk_login', { n: n, p: p }, '', function (d) {
+  get('&login=1&n=' + encodeURIComponent(n) + '&p=' + encodeURIComponent(p), function (d) {
     $('l-go').disabled = false; $('l-go').textContent = '로그인';
-    if (!d.ok) { er.textContent = d.error || '로그인하지 못했어요'; $('l-p').value = ''; return; }
+    if (!d.ok) { er.textContent = d.error || '로그인하지 못했어요'; if (!d.net) $('l-p').value = ''; return; }
     S.t = d.token; S.name = d.name; S.allow = d.allow || [d.name];
     try { localStorage.setItem('wk_auth', JSON.stringify({ t: d.token, name: d.name, allow: S.allow })); } catch (e) {}
     $('l-p').value = ''; enter();
@@ -333,9 +336,9 @@ function addTab(w) {
 function adminLogin() {
   var p = $('a-p').value.trim(), er = $('a-err'); if (!p) { er.textContent = '관리 비밀번호를 입력해주세요'; return; }
   er.textContent = ''; $('a-go').disabled = true; $('a-go').textContent = '확인 중...';
-  post('wk_pin_list', {}, p, function (d) {
+  get('&adm=1&k=' + encodeURIComponent(p), function (d) {
     $('a-go').disabled = false; $('a-go').textContent = '들어가기';
-    if (!d.ok) { er.textContent = d.error || '비밀번호가 맞지 않아요'; $('a-p').value = ''; return; }
+    if (!d.ok) { er.textContent = d.error || '비밀번호가 맞지 않아요'; if (!d.net) $('a-p').value = ''; return; }
     S.admK = p; S.names = d.names; $('a-p').value = '';
     $('login').classList.add('hidden'); $('app').classList.remove('hidden'); renderAdmin();
   });
