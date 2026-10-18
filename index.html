@@ -7,7 +7,7 @@
 <meta name="theme-color" content="#f2f4f6">
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=3">
 <link rel="apple-touch-icon" href="apple-touch-icon.png?v=3">
-<meta name="pm-build" content="20261018-132533">
+<meta name="pm-build" content="20261018-132955">
 <link rel="manifest" href="manifest.webmanifest?v=3">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -7084,7 +7084,16 @@ function txIc(id) {
 </style>
 <script>
 (function () {
-  var PG = { groups: {}, cache: {}, cur: null, sel: -1 };
+  var PG = { groups: {}, cache: {}, cur: null, sel: -1, woc: {} };
+  function pgN(v) { return String(v || '').toUpperCase().replace(/[\s_\-·()]/g, ''); }
+  function pgWo(g) {
+    var x = g.first, its = (window.WO && WO.items) || []; if (!its.length) return null;
+    var c = pgN(x.clientKey), p = pgN(proj(x.title)), same = its.filter(function (w) { return pgN(w.clientKey) === c && w.date6 === x.date6; });
+    var hit = same.filter(function (w) { return pgN(String(w.title || '').split(' · ')[0]) === p; })[0];
+    if (!hit && p) hit = same.filter(function (w) { var q = pgN(String(w.title || '').split(' · ')[0]); return q && (q.indexOf(p) >= 0 || p.indexOf(q) >= 0); })[0];
+    if (!hit && x.artist) hit = same.filter(function (w) { return pgN(w.artist) === pgN(x.artist); })[0];
+    return hit || (same.length === 1 ? same[0] : null);
+  }
   var PG_INT = ['김현수']; // 2026-10-18 (현아): 내부 인원 — 표기는 하되 매입 집계에서는 제외
   function isInt(w) { return PG_INT.indexOf(String(w || '').trim()) >= 0; }
   function N(v) { var n = Number(String(v == null ? '' : v).replace(/[^\d.-]/g, '')); return isNaN(n) ? 0 : n; }
@@ -7156,8 +7165,17 @@ function txIc(id) {
     var anyVat = ok.some(function (r) { return r.v.vat; }), anyWh = ok.some(function (r) { return !r.v.vat; });
     var h = '<div class="dv"><div class="dv-hd"><div><h3>' + esc([x.artist, proj(x.title)].filter(Boolean).join(' ')) + '</h3></div>' +
       '<div class="amt"><span>최종 지급액 합계' + (R.some(function (r) { return isInt(r.w); }) ? ' (' + PG_INT.join('·') + ' 제외)' : '') + '</span><b style="color:#f04452">' + W(tot) + '원</b></div></div>';
-    h += '<div class="dv-grid"><div class="r"><span>리터칭 담당자</span><b>' + esc(R.map(function (r) { return r.w; }).join(', ') || '-') + '</b></div>' +
-      '<div class="r"><span>거래처</span><b>' + esc(x.clientKey || '-') + '</b></div></div>';
+    // 2026-10-18 (현아): 작업내역서처럼 — 리터칭 담당자·거래처 담당자만 보이고 나머지는 '세부정보'로 접기
+    var wi = pgWo(g), wd = wi && PG.woc[wi.id];
+    if (wi && !wd && !PG.woc[wi.id + ':l']) { PG.woc[wi.id + ':l'] = 1; woGet('&wo=' + encodeURIComponent(wi.id), function (r) { if (r && r.ok) { PG.woc[wi.id] = r; if (PG.cur === g) pgDraw(); } }); }
+    var I = (wd && wd.info) || {}, kv = function (k, v) { var e = !String(v || '').trim(); return '<div class="r"><span>' + esc(k) + '</span><b' + (e ? ' class="e"' : '') + '>' + (e ? '-' : esc(v)) + '</b></div>'; };
+    var d0 = ok.length ? ok[0].d : null, g0 = function (k) { var y = d0 && (d0.info || []).filter(function (i) { return i.k === k; })[0]; return y ? y.v : ''; };
+    var req = I['요청일'] || (/^\d{6}$/.test(x.date6 || '') ? '20' + x.date6.slice(0, 2) + '-' + x.date6.slice(2, 4) + '-' + x.date6.slice(4) : '');
+    var mgr = I['담당자'] || (String(x.title || '').split(' · ')[1] || '');
+    h += '<div class="dv-grid">' + kv('리터칭 담당자', R.map(function (r) { return r.w; }).join(', ')) + kv('거래처 담당자', mgr) + '</div>' +
+      '<details class="dv-more"' + (window.DV_MORE ? ' open' : '') + ' ontoggle="window.DV_MORE=this.open"><summary><span>세부정보</span></summary><div class="dv-grid">' +
+      kv('거래처', String(I['거래처'] || x.clientKey || '').replace(/\s*\(.*\)\s*$/, '')) + kv('아티스트', I['아티스트명'] || x.artist) + kv('프로젝트명', I['프로젝트명'] || proj(x.title)) +
+      kv('프로젝트 의뢰일자', req) + kv('지급내역 작성일자', g0('작성일자')) + kv('지급일자', g0('지급일자')) + '</div></details>';
     h += '<div class="wd-tabs"><button class="wo-chip' + (PG.sel < 0 ? ' on' : '') + '" onclick="pgSel(-1)">전체</button>' +
       R.map(function (r, i) { return '<button class="wo-chip' + (PG.sel === i ? ' on' : '') + (isInt(r.w) ? ' pg-xc' : '') + '" onclick="pgSel(' + i + ')">' + esc(r.w) + '</button>'; }).join('') + '</div>';
     if (PG.sel < 0) {
@@ -7180,9 +7198,15 @@ function txIc(id) {
         h += '<div class="dv-tot"><div class="r"><span>합산 (공급가액)</span><b>' + W(r.v.sub) + '</b></div>' +
           '<div class="r"><span>' + (r.v.vat ? '부가세 (10%)' : '원천세 (3.3%)') + '</span><b>' + (r.v.vat ? '+' : '<i class="pf2-mn">−</i>') + W(Math.abs(r.v.tax)) + '</b></div>' +
           '<div class="r t"><span>최종 지급액</span><b style="color:#f04452">' + W(r.v.fin) + '</b></div></div>';
-        h += '<div class="dv-ft"><button type="button" onclick="dcOpen(\'' + esc(r.it.id) + '\')">' + esc(r.w) + ' 지급내역서 열기 · 수정</button></div>';
       }
     }
+    // 2026-10-18 (현아): 맨 아래 바로가기 — 작업폴더 · 작업내역서 · (선택한 외주처) 지급내역서 · 수정
+    var sr = PG.sel >= 0 ? R[PG.sel] : null, sd = sr && sr.d && !sr.d.err ? sr.d : null;
+    var link = (wd && wd.link) || '', fd = /^https?:/.test(link) ? link : '', wu = wi ? ((wd && wd.url) || ('https://docs.google.com/spreadsheets/d/' + wi.id + '/edit')) : '';
+    var ob = function (u, t) { return '<button type="button"' + (u ? ' onclick="window.open(\'' + esc(u).replace(/'/g, '%27') + '\',\'_blank\')"' : ' disabled') + '>' + t + '</button>'; };
+    h += '<div class="dv-btns">' + ob(fd, '작업폴더') + ob(wu, '작업내역서') + ob(sd && sd.url, '지급내역서') +
+      '<button type="button"' + (sr && sr.it ? ' onclick="dcOpen(\'' + esc(sr.it.id) + '\');setTimeout(function(){try{dcEditView()}catch(e){}},1200)"' : ' disabled') + '>수정</button></div>';
+    if (!sr) h += '<div class="pg-hint" style="margin-top:2px">지급내역서·수정은 위에서 작업자를 고르면 눌러져요</div>';
     h += '</div>';
     document.getElementById('dc-body').innerHTML = h;
   };
