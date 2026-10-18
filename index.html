@@ -7,7 +7,7 @@
 <meta name="theme-color" content="#f2f4f6">
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=3">
 <link rel="apple-touch-icon" href="apple-touch-icon.png?v=3">
-<meta name="pm-build" content="20261018-131602">
+<meta name="pm-build" content="20261018-131726">
 <link rel="manifest" href="manifest.webmanifest?v=3">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -7063,6 +7063,7 @@ function txIc(id) {
 .pg-tbl td.w{font-weight:500;color:var(--txt)}
 /* 2026-10-18 (현아): 지급내역서 표처럼 — 머리 줄 아래만 검정 선, 나머지는 옅은 선 · 금액 농도 단계 */
 .pg-tbl td{color:var(--txt3)}
+#mo-doc .pg-tbl th,#mo-doc .pg-tbl thead tr{background:none!important}
 .pg-tbl td.fin{color:var(--txt)!important;font-weight:600!important}
 .pg-tbl td.tx{color:#b0b8c1!important}
 .pg-tbl tr.pg-t td{border-top:1px solid #e5e8eb!important;color:var(--txt);font-weight:700}
@@ -7148,8 +7149,8 @@ function txIc(id) {
       '<div class="amt"><span>최종 지급액 합계' + (R.some(function (r) { return isInt(r.w); }) ? ' (' + PG_INT.join('·') + ' 제외)' : '') + '</span><b style="color:#f04452">' + W(tot) + '원</b></div></div>';
     h += '<div class="dv-grid"><div class="r"><span>리터칭 담당자</span><b>' + esc(R.map(function (r) { return r.w; }).join(', ') || '-') + '</b></div>' +
       '<div class="r"><span>거래처</span><b>' + esc(x.clientKey || '-') + '</b></div></div>';
-    h += '<div class="wd-tabs"><button class="wo-chip' + (PG.sel < 0 ? ' on' : '') + '" onclick="pgSel(-1)">전체<b>' + W(tot) + '</b></button>' +
-      R.map(function (r, i) { return '<button class="wo-chip' + (PG.sel === i ? ' on' : '') + (isInt(r.w) ? ' pg-xc' : '') + '" onclick="pgSel(' + i + ')">' + esc(r.w) + '<b>' + (r.v ? W(r.v.fin) : '…') + '</b></button>'; }).join('') + '</div>';
+    h += '<div class="wd-tabs"><button class="wo-chip' + (PG.sel < 0 ? ' on' : '') + '" onclick="pgSel(-1)">전체</button>' +
+      R.map(function (r, i) { return '<button class="wo-chip' + (PG.sel === i ? ' on' : '') + (isInt(r.w) ? ' pg-xc' : '') + '" onclick="pgSel(' + i + ')">' + esc(r.w) + '</button>'; }).join('') + '</div>';
     if (PG.sel < 0) {
       h += '<table class="dv-tbl pg-tbl"><thead><tr><th>작업자</th><th>공급가액</th><th>세금</th><th>지급액</th></tr></thead><tbody>' +
         R.map(function (r, i) {
