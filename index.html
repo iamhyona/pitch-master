@@ -7,7 +7,7 @@
 <meta name="theme-color" content="#f2f4f6">
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=3">
 <link rel="apple-touch-icon" href="apple-touch-icon.png?v=3">
-<meta name="pm-build" content="20261018-104244">
+<meta name="pm-build" content="20261018-104347">
 <link rel="manifest" href="manifest.webmanifest?v=3">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -6766,6 +6766,7 @@ document.addEventListener('click', function (e) {
     h += '</div>';
     // 2026-10-18 (현아): 법인 통장 입출금 — 입출금 카테고리 기준 (고정지출 / 기타지출 / 매입 / 매출), 승인취소 짝은 흐리게
     var GN = { fix: '고정지출', etc: '기타지출', mm: '매입', 'in': '매출' }, GO = ['fix', 'etc', 'mm', 'in'];
+    function pf2Sg(b) { return (gOf(b) === 'in' || b.kind === '수입' || b.kind === '입금' || b.kind === '취소' || /승인취소/.test(b.txt || '')) ? 1 : -1; }
     function gOf(b) { return b.grp || (b.bucket === 'in' ? 'in' : (b.bucket === 'mm' ? 'mm' : 'etc')); }
     var grp = {}, order;
     h += '<div class="pf2-sec"><div class="pf2-h">법인 통장 입출금<small>' + (r.bankFrom ? r.bankFrom + '부터 기록' : '핏치 가계부 기록 없음') + '</small></div>';
@@ -6784,11 +6785,14 @@ document.addEventListener('click', function (e) {
       var it = grp[k], dv = P.bv === 'date', live = it.filter(function (b) { return b.bucket !== 'void'; });
       var tt = dv || k === 'fix' || k === 'etc' ? sum(it.filter(isCost), costAmt) : sum(live);
       var lab = dv ? (k.slice(2).replace(/-/g, '.') + '(' + WD[new Date(k + 'T00:00:00').getDay()] + ')') : GN[k];
-      h += '<div class="pf2-grp g-' + (dv ? 'd' : k) + '"><span>' + esc(lab) + ' <em>' + it.length + '건</em></span><span>' + (dv ? (tt ? W(tt) + '원' : '') : W(tt) + '원') + '</span></div>';
+      // 2026-10-18 (현아): 금액에 +/− 기호 — 입금(매출)·승인취소 +, 출금 −. 날짜별 합계는 그날 입출금 합(취소 짝 제외)
+      if (dv) tt = live.reduce(function (s0, b) { return s0 + pf2Sg(b) * (Number(b.amt) || 0); }, 0);
+      else tt = (k === 'in' ? 1 : -1) * Math.abs(tt);
+      h += '<div class="pf2-grp g-' + (dv ? 'd' : k) + '"><span>' + esc(lab) + ' <em>' + it.length + '건</em></span><span>' + (tt || !dv ? (tt > 0 ? '+' : tt < 0 ? '−' : '') + W(Math.abs(tt)) + '원' : '') + '</span></div>';
       h += it.map(function (b) {
         var vd = b.bucket === 'void', g = gOf(b);
         var tip = [b.d + (b.tm ? ' ' + b.tm : ''), b.sub && b.sub !== b.cat2 ? b.sub : '', vd ? '승인취소와 짝 — 비용에서 빠짐' : ''].filter(function (x) { return x; }).join(' · ');
-        return '<div class="pf2-it1 gi-' + g + (vd ? ' vd' : '') + '" title="' + esc(tip) + '"><span class="d">' + esc(dv ? (b.tm || '') : b.d.slice(2).replace(/-/g, '.') + '(' + WD[new Date(b.d + 'T00:00:00').getDay()] + ')') + '</span><span class="c">' + esc(b.cat2 || b.sub || '') + '</span><span class="t">' + esc(b.txt) + '</span><span class="a">' + (g === 'in' ? '+' : '') + ((b.kind === '취소' && !vd) ? '−' : '') + W(b.amt) + '</span></div>';
+        return '<div class="pf2-it1 gi-' + g + (vd ? ' vd' : '') + '" title="' + esc(tip) + '"><span class="d">' + esc(dv ? (b.tm || '') : b.d.slice(2).replace(/-/g, '.') + '(' + WD[new Date(b.d + 'T00:00:00').getDay()] + ')') + '</span><span class="c">' + esc(b.cat2 || b.sub || '') + '</span><span class="t">' + esc(b.txt) + '</span><span class="a">' + (pf2Sg(b) > 0 ? '+' : '−') + W(Math.abs(Number(b.amt) || 0)) + '</span></div>';
       }).join('');
     });
     h += '<div class="pf2-note">· 매출·매입은 기록 메뉴의 매출/매입 내역(공급가액)이에요. 법인 통장의 매입(외주 지급)·매출(입금)은 자동으로 나눠 보여주기만 하고 비용에는 넣지 않아요.<br>· 부대비용 = 고정지출(급여·4대보험·세금·수수료·구독·관리비) + 기타지출(물품구매·주유비·교통비·식비·영업비·기타).<br>· 분류는 핏치 가계부의 카테고리를 그대로 따라요. 흐린 줄은 승인취소와 짝이 맞는 결제라 비용에서 빠져요.</div></div>';
