@@ -7,7 +7,7 @@
 <meta name="theme-color" content="#f2f4f6">
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=3">
 <link rel="apple-touch-icon" href="apple-touch-icon.png?v=3">
-<meta name="pm-build" content="20261018-131942">
+<meta name="pm-build" content="20261018-132117">
 <link rel="manifest" href="manifest.webmanifest?v=3">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -7127,7 +7127,8 @@ function txIc(id) {
   // 2026-10-18 (현아): 지급내역서가 없어도 작업내역서에 있는 작업자 + 김현수는 항상 표기 (집계는 제외 규칙 그대로)
   function pgExtra(g) {
     var have = g.items.map(function (i) { return i.worker || i.sub || ''; }), out = [];
-    g.items.forEach(function (i) { (i._ws || []).forEach(function (w) { if (w && !hid(w) && have.indexOf(w) < 0 && out.indexOf(w) < 0) out.push(w); }); });
+    var fam = have.indexOf('강영순') >= 0 ? ['박슬기', '박종배', '박현아', '박현제'] : []; // 강영순 지급내역서에 합쳐지는 하위 작업자는 따로 안 넣음
+    g.items.forEach(function (i) { (i._ws || []).forEach(function (w) { w = String(w || '').trim(); if (w && !hid(w) && fam.indexOf(w) < 0 && have.indexOf(w) < 0 && out.indexOf(w) < 0) out.push(w); }); });
     PG_INT.forEach(function (w) { if (have.indexOf(w) < 0 && out.indexOf(w) < 0) out.push(w); });
     return out;
   }
