@@ -7,7 +7,7 @@
 <meta name="theme-color" content="#f2f4f6">
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=3">
 <link rel="apple-touch-icon" href="apple-touch-icon.png?v=3">
-<meta name="pm-build" content="20261018-151936">
+<meta name="pm-build" content="20261018-153157">
 <link rel="manifest" href="manifest.webmanifest?v=3">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -7143,33 +7143,56 @@ function txIc(id) {
     g.items.forEach(function (i) { (i._ws || []).forEach(function (w) { names.push(w); }); });
     var wi = pgWo(g), wd = wi && PG.woc[wi.id];
     if (wd && wd.tabs) wd.tabs.forEach(function (t) { names.push(t.name); });
+    if (wi) pgTabs(wi).forEach(function (n) { names.push(n); });
     names.forEach(function (w) { w = String(w || '').trim(); if (w && w !== '강영순' && !hid(w) && have.indexOf(w) < 0 && out.indexOf(w) < 0) out.push(w); });
     return out;
   }
   var PQ = [], PB = 0, PT = 0;
+  // 2026-10-18 (현아): 빠르게 — 작업자 탭 명단은 한 번에(wos), 지급내역서는 한 번에(dvs) + 기기 캐시
+  var PT = 0, WT = {}, WPEND = {};
+  function lsGet(k) { try { return JSON.parse(localStorage.getItem(k) || 'null'); } catch (e) { return null; } }
+  function lsSet(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+  (function () { var c = lsGet('pg_wtabs'); if (c) WT = c; })();
   function pgPrefetch(gs) {
-    gs.forEach(function (g) { var wi = pgWo(g); if (wi && !PG.woc[wi.id] && !PG.woc[wi.id + ':l'] && PQ.indexOf(wi.id) < 0) PQ.push(wi.id); });
-    pump();
+    var ids = [];
+    gs.forEach(function (g) { var wi = pgWo(g); if (wi && !WPEND[wi.id] && !(WT[wi.id] && WT[wi.id].t === wi.t)) ids.push(wi.id); });
+    if (!ids.length) return;
+    ids.forEach(function (id) { WPEND[id] = 1; });
+    woGet('&wos=' + encodeURIComponent(ids.slice(0, 60).join(',')), function (r) {
+      ids.forEach(function (id) { delete WPEND[id]; });
+      if (!r || !r.ok || !r.tabs) return;
+      var its = (window.WO && WO.items) || [];
+      Object.keys(r.tabs).forEach(function (id) { var w = its.filter(function (x) { return x.id === id; })[0]; WT[id] = { t: w ? w.t : 0, n: r.tabs[id] || [] }; });
+      lsSet('pg_wtabs', WT);
+      clearTimeout(PT); PT = setTimeout(function () { try { dcList('pay'); if (PG.cur) pgDraw(); } catch (e) {} }, 200);
+    });
   }
-  function pump() {
-    while (PB < 3 && PQ.length) {
-      var id = PQ.shift(); if (PG.woc[id] || PG.woc[id + ':l']) continue;
-      PG.woc[id + ':l'] = 1; PB++;
-      woGet('&wo=' + encodeURIComponent(id), (function (id) { return function (r) { PB--; if (r && r.ok) { PG.woc[id] = r; clearTimeout(PT); PT = setTimeout(function () { try { dcList('pay'); if (PG.cur) pgDraw(); } catch (e) {} }, 400); } pump(); }; })(id));
-    }
-  }
+  function pgTabs(wi) { return (WT[wi.id] && WT[wi.id].n) || []; }
   window.pgOpen = function (k) {
     var g = PG.groups[k]; if (!g) return;
     PG.cur = g; PG.sel = -1; DC.cur = null; if (typeof TX !== 'undefined') TX.cur = null;
     document.getElementById('dc-title').textContent = '지급내역 (매입)';
     document.getElementById('dc-body').innerHTML = '<div class="wo-empty">작업자별 지급내역서 불러오는 중...</div>';
     openMo('mo-doc');
-    var left = 0;
+    var need = [];
     g.items.forEach(function (i) {
-      if (PG.cache[i.id]) return; left++;
-      woGet('&dv=' + encodeURIComponent(i.id), function (d) { PG.cache[i.id] = (d && d.ok) ? d : { err: (d && d.error) || '불러오지 못했어요' }; if (--left <= 0 && PG.cur === g) pgDraw(); else if (PG.cur === g) pgDraw(true); });
+      if (PG.cache[i.id]) return;
+      var c = lsGet('pg_dv_' + i.id); if (c && c.t === i.t && c.d) { PG.cache[i.id] = c.d; return; }
+      need.push(i);
     });
-    if (!left) pgDraw();
+    pgDraw();
+    if (!need.length) return;
+    woGet('&dvs=' + encodeURIComponent(need.map(function (i) { return i.id; }).join(',')), function (r) {
+      var docs = (r && r.ok && r.docs) || {};
+      need.forEach(function (i) {
+        var d = docs[i.id];
+        if (d && d.ok) { PG.cache[i.id] = d; lsSet('pg_dv_' + i.id, { t: i.t, d: d }); }
+        else if (!r || !r.ok) { // 예전 서버면 하나씩
+          woGet('&dv=' + encodeURIComponent(i.id), function (x) { PG.cache[i.id] = (x && x.ok) ? x : { err: (x && x.error) || '불러오지 못했어요' }; if (x && x.ok) lsSet('pg_dv_' + i.id, { t: i.t, d: x }); if (PG.cur === g) pgDraw(); });
+        } else PG.cache[i.id] = { err: (d && d.error) || '불러오지 못했어요' };
+      });
+      if (PG.cur === g) pgDraw();
+    });
   };
   function pgFam(w, R) { return /^(박슬기|박종배|박현아|박현제)$/.test(w) && R.some(function (r) { return r.w === '강영순' && !r.none; }); }
   window.pgSel = function (i) { PG.sel = i; pgDraw(); };
