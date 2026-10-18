@@ -7,7 +7,7 @@
 <meta name="theme-color" content="#f2f4f6">
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=3">
 <link rel="apple-touch-icon" href="apple-touch-icon.png?v=3">
-<meta name="pm-build" content="20261018-111757">
+<meta name="pm-build" content="20261018-113006">
 <link rel="manifest" href="manifest.webmanifest?v=3">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -7067,6 +7067,10 @@ function txIc(id) {
 .pg-tbl td.tx{color:var(--txt3)}
 .pg-tbl td.fin{color:#f04452;font-weight:700}
 .pg-hint{font-size:12px;color:var(--faint);margin:-6px 2px 0}
+.pg-tbl tr.pg-x td{opacity:.45}
+.pg-tbl tr.pg-x td.fin{color:var(--txt3)}
+.pg-tag{display:inline-block;margin-left:6px;padding:1px 6px;border-radius:6px;background:var(--chip);color:var(--txt3);font-size:11px;font-weight:600;vertical-align:1px}
+#mo-doc .wo-chip.pg-xc b{text-decoration:line-through;opacity:.6}
 .pg-wsub{font-size:12px;color:var(--txt3);font-weight:500;margin-left:4px}
 #mo-doc .wd-tabs{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding:2px 0!important;margin:0!important}
 #mo-doc .wd-tabs::-webkit-scrollbar{display:none}
@@ -7074,6 +7078,8 @@ function txIc(id) {
 <script>
 (function () {
   var PG = { groups: {}, cache: {}, cur: null, sel: -1 };
+  var PG_INT = ['김현수']; // 2026-10-18 (현아): 내부 인원 — 표기는 하되 매입 집계에서는 제외
+  function isInt(w) { return PG_INT.indexOf(String(w || '').trim()) >= 0; }
   function N(v) { var n = Number(String(v == null ? '' : v).replace(/[^\d.-]/g, '')); return isNaN(n) ? 0 : n; }
   function W(n) { return Math.round(n).toLocaleString('ko-KR'); }
   function proj(t) { return String(t || '').split(' · ')[0].replace(/<[^>]*>.*$/, '').replace(/지급내역$/, '').trim(); }
@@ -7128,24 +7134,24 @@ function txIc(id) {
     var g = PG.cur; if (!g) return;
     var x = g.first, list = g.items.filter(function (i) { return !hid(i.worker || i.sub || ''); });
     var R = list.map(function (i) { var d = PG.cache[i.id]; return { it: i, w: i.worker || i.sub || '', d: d, v: d && !d.err ? row(d) : null }; });
-    var ok = R.filter(function (r) { return r.v; });
+    var ok = R.filter(function (r) { return r.v && !isInt(r.w); });
     var sum = function (f) { return ok.reduce(function (a, r) { return a + r.v[f]; }, 0); };
     var tot = sum('fin');
     var anyVat = ok.some(function (r) { return r.v.vat; }), anyWh = ok.some(function (r) { return !r.v.vat; });
     var h = '<div class="dv"><div class="dv-hd"><div><h3>' + esc([x.artist, proj(x.title)].filter(Boolean).join(' ')) + '</h3></div>' +
-      '<div class="amt"><span>최종 지급액 합계</span><b style="color:#f04452">' + W(tot) + '원</b></div></div>';
+      '<div class="amt"><span>최종 지급액 합계' + (R.some(function (r) { return isInt(r.w); }) ? ' (' + PG_INT.join('·') + ' 제외)' : '') + '</span><b style="color:#f04452">' + W(tot) + '원</b></div></div>';
     h += '<div class="dv-grid"><div class="r"><span>리터칭 담당자</span><b>' + esc(R.map(function (r) { return r.w; }).join(', ') || '-') + '</b></div>' +
       '<div class="r"><span>거래처</span><b>' + esc(x.clientKey || '-') + '</b></div></div>';
     h += '<div class="wd-tabs"><button class="wo-chip' + (PG.sel < 0 ? ' on' : '') + '" onclick="pgSel(-1)">전체<b>' + W(tot) + '</b></button>' +
-      R.map(function (r, i) { return '<button class="wo-chip' + (PG.sel === i ? ' on' : '') + '" onclick="pgSel(' + i + ')">' + esc(r.w) + '<b>' + (r.v ? W(r.v.fin) : '…') + '</b></button>'; }).join('') + '</div>';
+      R.map(function (r, i) { return '<button class="wo-chip' + (PG.sel === i ? ' on' : '') + (isInt(r.w) ? ' pg-xc' : '') + '" onclick="pgSel(' + i + ')">' + esc(r.w) + '<b>' + (r.v ? W(r.v.fin) : '…') + '</b></button>'; }).join('') + '</div>';
     if (PG.sel < 0) {
       h += '<table class="dv-tbl pg-tbl"><thead><tr><th>작업자</th><th>공급가액</th><th>세금</th><th>지급액</th></tr></thead><tbody>' +
         R.map(function (r, i) {
           if (!r.v) return '<tr><td class="w">' + esc(r.w) + '</td><td colspan="3" class="n">' + (r.d && r.d.err ? '⚠ ' + esc(r.d.err) : '불러오는 중…') + '</td></tr>';
-          return '<tr class="pg-r" onclick="pgSel(' + i + ')"><td class="w">' + esc(r.w) + '</td><td>' + W(r.v.sub) + '</td><td class="tx">' + (r.v.vat ? '+' : '<i class="pf2-mn">−</i>') + W(Math.abs(r.v.tax)) + '</td><td class="fin">' + W(r.v.fin) + '</td></tr>';
+          return '<tr class="pg-r' + (isInt(r.w) ? ' pg-x' : '') + '" onclick="pgSel(' + i + ')"><td class="w">' + esc(r.w) + (isInt(r.w) ? '<span class="pg-tag">집계 제외</span>' : '') + '</td><td>' + W(r.v.sub) + '</td><td class="tx">' + (r.v.vat ? '+' : '<i class="pf2-mn">−</i>') + W(Math.abs(r.v.tax)) + '</td><td class="fin">' + W(r.v.fin) + '</td></tr>';
         }).join('') +
         '<tr class="pg-t"><td>합계</td><td>' + W(sum('sub')) + '</td><td class="tx"></td><td class="fin">' + W(tot) + '</td></tr></tbody></table>' +
-        '<div class="pg-hint">세금: ' + [anyWh ? '원천세 3.3% 차감(−)' : '', anyVat ? '사업자 부가세 10% 추가(+)' : ''].filter(String).join(' · ') + ' · 작업자를 누르면 그 사람 내역이 보여요</div>';
+        '<div class="pg-hint">' + (R.some(function (r) { return isInt(r.w); }) ? PG_INT.join('·') + '은 내부 인원이라 표기만 하고 합계에서 빠져요 · ' : '') + '세금: ' + [anyWh ? '원천세 3.3% 차감(−)' : '', anyVat ? '사업자 부가세 10% 추가(+)' : ''].filter(String).join(' · ') + ' · 작업자를 누르면 그 사람 내역이 보여요</div>';
     } else {
       var r = R[PG.sel];
       if (!r || !r.v) h += '<div class="wo-empty">' + (r && r.d && r.d.err ? '⚠ ' + esc(r.d.err) : '불러오는 중…') + '</div>';
