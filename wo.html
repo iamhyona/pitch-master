@@ -6,7 +6,7 @@
 <title>PITCH 작업내역서</title>
 <meta name="theme-color" content="#f2f4f6">
 <meta name="robots" content="noindex">
-<meta name="wo-build" content="20261018-1620">
+<meta name="wo-build" content="20261018-1640">
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=3">
 <link rel="apple-touch-icon" href="apple-touch-icon.png?v=3">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -194,7 +194,7 @@ function cardHtml(x) {
   var fam = S.allow.length > 1;
   return '<button class="card" onclick="openDoc(\'' + esc(x.id) + '\')">' +
     '<div class="c1"><span>' + esc(d6(x.date6)) + (x.folder ? ' · ' + esc(x.folder) : '') + '</span>' +
-    (x.locked ? '<span class="tag lock">정산 완료</span>' : (x.lockTabs && x.lockTabs.length ? '<span class="tag lock">일부 정산</span>' : '<span class="tag">작성 가능</span>')) + '</div>' +
+    (x.locked ? '<span class="tag lock">입금 완료</span>' : (x.lockTabs && x.lockTabs.length ? '<span class="tag lock">일부 입금</span>' : '<span class="tag">작성 가능</span>')) + '</div>' +
     '<div class="c2">' + esc([x.artist, String(x.title || '').split(' · ')[0]].filter(Boolean).join(' ') || '-') + '</div>' +
     '<div class="c3">' + esc([x.clientKey].concat(String(x.title || '').split(' · ').slice(1)).filter(Boolean).join(' · ')) + '</div>' +
     (fam && x.workers && x.workers.length ? '<div class="wl">' + x.workers.map(function (w) { return '<span>' + esc(w) + '</span>'; }).join('') + '</div>' : '') +
@@ -216,7 +216,7 @@ function renderListBody() {
     h += '<div class="sec">작성 중 ' + open.length + '</div>' + (open.length ? open.map(cardHtml).join('') : '<div class="empty" style="padding:20px 0">작성할 작업이 없어요</div>');
     if (done.length) {
       var dv = S.all || q ? done : done.slice(0, 10);
-      h += '<div class="sec">정산 완료 ' + done.length + '</div>' + dv.map(cardHtml).join('');
+      h += '<div class="sec">입금 완료 ' + done.length + '</div>' + dv.map(cardHtml).join('');
       if (dv.length < done.length) h += '<button class="more" onclick="S.all=true;renderListBody()">' + (done.length - dv.length) + '건 더 보기</button>';
     }
   }
@@ -258,7 +258,7 @@ function renderDoc() {
   if (!t) { $('main').innerHTML = h + '<div class="empty">' + ((d.canAdd || []).length ? '위에서 작업자를 추가해주세요' : '내 탭이 없어요. 현아님께 말씀해주세요.') + '</div>'; return; }
   var rows = t.rows.map(function (r, i) { return { r: r, i: i }; }).filter(function (x) { return filled(x.r); }), tot = 0;
   rows.forEach(function (x) { tot += rowCuts(x.r); });
-  if (t.locked) h += '<div class="note">지급내역서가 나간 작업이라 보기만 할 수 있어요. 고칠 곳이 있으면 현아님께 말씀해주세요.</div>';
+  if (t.locked) h += '<div class="note">입금이 끝난 작업이라 보기만 할 수 있어요. 고칠 곳이 있으면 현아님께 말씀해주세요.</div>';
   h += '<div class="tot"><span>' + esc(t.name) + ' · ' + rows.length + '줄</span><span>합계 <b>' + tot + '</b>컷</span></div>';
   if (!t.locked) h += '<div class="ex">' + esc(EX) + '</div>';
   h += rows.map(function (x) {
