@@ -7,7 +7,7 @@
 <meta name="theme-color" content="#f2f4f6">
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=3">
 <link rel="apple-touch-icon" href="apple-touch-icon.png?v=3">
-<meta name="pm-build" content="20261018-1830">
+<meta name="pm-build" content="20261019-0900">
 <link rel="manifest" href="manifest.webmanifest?v=3">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -6577,7 +6577,7 @@ document.addEventListener('click', function (e) {
 (function () {
   var C = { sale: '#3182f6', buy: '#b0b8c1', cost: '#f04452', net: '#191f28' };
   var BK = [['cost', '부대비용'], ['check', '부대비용 (확인 필요)'], ['mm', '매입 중복 · 제외'], ['tax', '세금 납부 · 제외'], ['owner', '대표·계좌 이동 · 제외'], ['skip', '기타 제외']];
-  var P = { y: '', m: '', by: 'client', data: {}, loading: false, err: '' };
+  var P = { y: '', m: '', from: '', to: '', by: 'client', data: {}, loading: false, err: '' }; // 2026-10-19: from·to = 기간 필터
   window.PF2 = P;
   function W(n) { return Math.round(n).toLocaleString('ko-KR'); }
   function Wk(n) { var a = Math.abs(n), s = n < 0 ? '-' : ''; if (a >= 100000000) return s + (a / 100000000).toFixed(1).replace(/\.0$/, '') + '억'; if (a >= 10000) return s + Math.round(a / 10000).toLocaleString('ko-KR') + '만'; return s + W(a); }
@@ -6585,7 +6585,7 @@ document.addEventListener('click', function (e) {
   function ensure() {
     if (document.getElementById('tab-pf')) return;
     var tabs = document.querySelector('.tabs'); if (!tabs) return;
-    var t = document.createElement('div'); t.className = 'tab'; t.dataset.tab = 'pf'; t.id = 'tab-btn-pf'; t.textContent = '이익';
+    var t = document.createElement('div'); t.className = 'tab'; t.dataset.tab = 'pf'; t.id = 'tab-btn-pf'; t.textContent = '통계'; // 2026-10-19 (현아): 이익 → 통계
     var ref = tabs.querySelector('[data-tab="tx"]'); tabs.insertBefore(t, ref ? ref.nextSibling : null);
     t.addEventListener('click', function () { switchTab('pf'); });
     var ci = document.querySelector('.content .ci'); if (!ci) return;
@@ -6620,7 +6620,9 @@ document.addEventListener('click', function (e) {
     })();
   }
   window.pf2Load = load;
+  window.P2Clr = function () { P.from = ''; P.to = ''; draw(); };
   window.pf2Set = function (k, v) { P[k] = v; if (k === 'y') { load(); } else draw(); };
+  window.pf2Range = function () { var a = document.getElementById('pf2-from'), b = document.getElementById('pf2-to'); P.from = a ? a.value : ''; P.to = b ? b.value : ''; if (P.from && P.to && P.from > P.to) { var t = P.from; P.from = P.to; P.to = t; } draw(); };
   window.pf2Bucket = function (key, v, el) {
     var r = P.data[P.y]; if (!r) return;
     r.bank.forEach(function (b) { if (b.key === key) { b.bucket = v; b.ov = v !== b.auto; } });
@@ -6638,7 +6640,34 @@ document.addEventListener('click', function (e) {
     }
     x._c = best || '미분류'; return x._c;
   }
-  function inM(d) { return !P.m || String(d || '').slice(5, 7) === P.m; }
+  // 2026-10-19 (현아): 기간(언제부터~언제까지)이 있으면 기간이 우선, 없으면 월 필터
+  function inM(d) { d = String(d || '').slice(0, 10); if (P.from || P.to) return (!P.from || d >= P.from) && (!P.to || d <= P.to); return !P.m || d.slice(5, 7) === P.m; }
+  function rangeData() {
+    if (!P.from && !P.to) return null;
+    var base = P.data[P.y] || P.data['_']; if (!base) return null;
+    var y0 = P.from ? P.from.slice(0, 4) : '0000', y1 = P.to ? P.to.slice(0, 4) : '9999';
+    var ys = (base.years || [P.y]).filter(function (y) { return y >= y0 && y <= y1; });
+    var miss = ys.filter(function (y) { return !P.data[y]; }); if (miss.length) setTimeout(function () { loadYears(miss); }, 30);
+    var o = { ok: true, y: P.y, years: base.years, bankFrom: base.bankFrom, sales: [], buys: [], bank: [], partial: miss.length };
+    ys.forEach(function (y) { var d = P.data[y]; if (!d) return; o.sales = o.sales.concat(d.sales); o.buys = o.buys.concat(d.buys); o.bank = o.bank.concat(d.bank); });
+    return o;
+  }
+  function famSplit(f) { // 2026-10-19 (현아): 강영순 → 박종배·박슬기·박현아 실제 몫 (관리 전용, 핏치 모드에서는 안 보임)
+    if (!adm() || typeof famPayData !== 'function') return null;
+    var F = famPayData(function () { draw(); }); if (!F) return null;
+    var out = {}, any = false;
+    F.forEach(function (o) { if (!inM(o.d) || (f && !f(o))) return; Object.keys(o.w || {}).forEach(function (w) { var x = o.w[w], t = out[w] = out[w] || { sum: 0, net: 0, act: 0, n: 0 }; t.sum += x.sum; t.net += x.net; t.act += x.act; t.n++; any = true; }); });
+    return any ? out : null;
+  }
+  var FPPL = ['박종배', '박슬기', '박현아'];
+  function famLine(fs) { if (!fs) return ''; var a = FPPL.filter(function (w) { return fs[w]; }); if (!a.length) return ''; return '<span class="pf2-fs">강영순 → ' + a.map(function (w) { return w + ' <b>' + W(fs[w].sum) + '</b>'; }).join(' · ') + '</span>'; }
+  function famBox(fs) {
+    if (!adm()) return '';
+    if (!fs) return '<span class="pf2-fb"><span class="e">' + (typeof famPayData === 'function' && famPayLoading() ? '박종배·박슬기·박현아 나눈 값 불러오는 중…' : '나눈 값이 없어요') + '</span></span>';
+    var a = FPPL.filter(function (w) { return fs[w]; }), tot = a.reduce(function (s0, w) { return s0 + fs[w].sum; }, 0) || 1;
+    return '<span class="pf2-fb"><span class="h">강영순을 3명으로 나누면 <small>· 관리 모드에서만 보여요</small></span>' + a.map(function (w) { var x = fs[w]; return '<span class="i"><span class="n">' + w + '</span><span class="v">' + W(x.sum) + '</span><span class="m">' + x.n + '건 · 핏치지급 ' + W(x.net) + ' · 실제지급 <b>' + W(x.act) + '</b> · ' + Math.round(x.sum / tot * 100) + '%</span></span>'; }).join('') + '</span>';
+  }
+  function famNorm(v) { return String(v || '').toUpperCase().replace(/[^0-9A-Z가-힣]/g, ''); }
   function sum(a, f) { return a.reduce(function (s, x) { return s + (f ? f(x) : x.amt); }, 0); }
   function costAmt(b) { return b.kind === '취소' ? -b.amt : b.amt; }
   function isCost(b) { return b.bucket === 'cost' || b.bucket === 'check'; }
@@ -6727,17 +6756,19 @@ document.addEventListener('click', function (e) {
   }
   function draw() {
     var top = document.getElementById('pf2-top'), box = document.getElementById('pf2-b'); if (!top || !box) return;
-    var r = P.data[P.y] || P.data['_'];
+    var r = rangeData() || P.data[P.y] || P.data['_'];
     var years = (r && r.years) || (P.y ? [P.y] : []);
     var mo = '<option value="">전체 월</option>'; for (var m = 1; m <= 12; m++) { var mm = ('0' + m).slice(-2); mo += '<option value="' + mm + '"' + (P.m === mm ? ' selected' : '') + '>' + m + '월</option>'; }
     top.innerHTML = '<select onchange="pf2Set(\'y\',this.value)">' + (years.length ? years.map(function (y) { return '<option value="' + y + '"' + (y === P.y ? ' selected' : '') + '>' + y + '년</option>'; }).join('') : '<option>연도</option>') + '</select>' +
       '<select onchange="pf2Set(\'m\',this.value)">' + mo + '</select><span class="sp"></span>' +
-      '<button class="pf2-ic" type="button" title="새로 불러오기" onclick="pf2Load(true)">' + SV_R + '</button>';
+      '<button class="pf2-ic" type="button" title="새로 불러오기" onclick="pf2Load(true)">' + SV_R + '</button>' +
+      '<div class="pf2-rg"><span>기간</span><input type="date" id="pf2-from" value="' + (P.from || '') + '" onchange="pf2Range()"><i>~</i><input type="date" id="pf2-to" value="' + (P.to || '') + '" onchange="pf2Range()">' + (P.from || P.to ? '<button type="button" class="pf2-rx" title="기간 지우기" onclick="P2Clr()">×</button>' : '') + '</div>';
+    top.classList.toggle('rg-on', !!(P.from || P.to));
     if (P.err) { box.innerHTML = '<div class="pf2-empty">⚠ ' + esc(P.err) + '</div>'; return; }
     if (!r) { box.innerHTML = '<div class="pf2-empty">' + (P.loading ? '매출·매입·법인 통장 내역을 모으는 중…' : '') + '</div>'; return; }
     var S = r.sales.filter(function (x) { return inM(x.d); }), B = r.buys.filter(function (x) { return inM(x.d); }), K = r.bank.filter(function (x) { return x.grp !== 'move' && x.bucket !== 'skip' && (x.grp || x.bucket !== 'in') && inM(x.d); });
     var sAmt = sum(S), bAmt = sum(B), cAmt = sum(K.filter(isCost), costAmt), gross = sAmt - bAmt, net = gross - cAmt, rate = sAmt ? Math.round(net / sAmt * 1000) / 10 : 0;
-    var per = (P.m ? P.y + '년 ' + (+P.m) + '월' : P.y + '년');
+    var per = (P.from || P.to) ? ((P.from ? P.from.slice(2).replace(/-/g, '.') : '처음') + ' ~ ' + (P.to ? P.to.slice(2).replace(/-/g, '.') : '오늘')) : (P.m ? P.y + '년 ' + (+P.m) + '월' : P.y + '년');
     var h = '<div class="pf2-hero"><span>' + per + ' 순이익 · 공급가액 기준</span><b class="' + (net < 0 ? 'neg' : '') + '">' + W(net) + '원</b><small>매출 대비 ' + rate + '% · 매출 ' + S.length + '건 · 지급 ' + B.length + '건</small></div>';
     h += '<div class="pf2-kpi"><div><span>매출</span><b style="color:' + C.sale + '">' + W(sAmt) + '</b></div><div><span>매입 (외주 지급)</span><b style="color:#8b95a1">' + W(bAmt) + '</b></div><div><span>부대비용</span><b style="color:' + C.cost + '">' + W(cAmt) + '</b></div><div><span>매출총이익</span><b>' + W(gross) + '</b></div></div>';
     var tot = Math.max(sAmt, bAmt + cAmt, 1), pB = bAmt / tot * 100, pC = Math.max(cAmt, 0) / tot * 100, pN = Math.max(net, 0) / tot * 100;
@@ -6755,14 +6786,14 @@ document.addEventListener('click', function (e) {
       B.forEach(function (x) { var k = clientOfBuy(x, r.sales); (g[k] = g[k] || { s: 0, b: 0, n: 0 }).b += x.amt; });
       var ks = Object.keys(g).sort(function (a, b) { return (g[b].s - g[b].b) - (g[a].s - g[a].b); }), mx = Math.max.apply(null, ks.map(function (k) { return g[k].s; }).concat([1]));
       h += donut(ks.map(function (k) { return [k, g[k].s]; }), '매출 비중');
-      h += ks.map(function (k) { var o = g[k], p = o.s - o.b; return '<div class="pf2-row"><span class="n">' + esc(k) + '</span><span class="v' + (p < 0 ? ' neg' : '') + '">' + W(p) + '</span><span class="m"><span>매출 ' + W(o.s) + ' (' + o.n + '건)</span><span>매입 ' + W(o.b) + '</span>' + (o.s ? '<span>이익률 ' + Math.round(p / o.s * 100) + '%</span>' : '') + '</span><span class="bar"><i style="width:' + (o.s / mx * 100) + '%;background:' + C.sale + '"></i></span></div>'; }).join('') || '<div class="pf2-empty">내역이 없어요</div>';
+      h += ks.map(function (k) { var o = g[k], p = o.s - o.b, kn = famNorm(k), kn2 = famNorm(String(k).replace(/\(.*$/, '')), fs = kn ? famSplit(function (x) { var c = famNorm(x.c); return c && (c === kn || c === kn2); }) : null; return '<div class="pf2-row"><span class="n">' + esc(k) + '</span><span class="v' + (p < 0 ? ' neg' : '') + '">' + W(p) + '</span><span class="m"><span>매출 ' + W(o.s) + ' (' + o.n + '건)</span><span>매입 ' + W(o.b) + '</span>' + (o.s ? '<span>이익률 ' + Math.round(p / o.s * 100) + '%</span>' : '') + '</span>' + famLine(fs) + '<span class="bar"><i style="width:' + (o.s / mx * 100) + '%;background:' + C.sale + '"></i></span></div>'; }).join('') || '<div class="pf2-empty">내역이 없어요</div>';
       h += '<div class="pf2-note">소속사별 이익 = 매출 − 그 소속사 작업의 매입 (부대비용은 전체에서만 뺌). 매입의 소속사는 같은 아티스트의 매출로 맞췄어요.</div>';
     } else {
       var w = {};
       B.forEach(function (x) { var k = x.who || x.tab; if (typeof pmHidden === 'function' && pmHidden(k)) return; (w[k] = w[k] || { b: 0, n: 0, net: 0 }).b += x.amt; w[k].n++; w[k].net += (x.tot || x.amt); });
       var ws = Object.keys(w).sort(function (a, b) { return w[b].b - w[a].b; }), mw = Math.max.apply(null, ws.map(function (k) { return w[k].b; }).concat([1]));
       h += donut(ws.map(function (k) { return [k, w[k].b]; }), '매입 비중');
-      h += ws.map(function (k) { var o = w[k]; return '<div class="pf2-row"><span class="n">' + esc(k) + '</span><span class="v">' + W(o.b) + '</span><span class="m"><span>' + o.n + '건</span><span>실지급 ' + W(o.net) + '</span><span>매입의 ' + Math.round(o.b / Math.max(bAmt, 1) * 100) + '%</span></span><span class="bar"><i style="width:' + (o.b / mw * 100) + '%;background:' + C.buy + '"></i></span></div>'; }).join('') || '<div class="pf2-empty">내역이 없어요</div>';
+      h += ws.map(function (k) { var o = w[k]; return '<div class="pf2-row"><span class="n">' + esc(k) + '</span><span class="v">' + W(o.b) + '</span><span class="m"><span>' + o.n + '건</span><span>실지급 ' + W(o.net) + '</span><span>매입의 ' + Math.round(o.b / Math.max(bAmt, 1) * 100) + '%</span></span>' + (k === '강영순' ? famBox(famSplit()) : '') + '<span class="bar"><i style="width:' + (o.b / mw * 100) + '%;background:' + C.buy + '"></i></span></div>'; }).join('') || '<div class="pf2-empty">내역이 없어요</div>';
     }
     h += '</div>';
     // 2026-10-18 (현아): 법인 통장 입출금 — 입출금 카테고리 기준 (고정지출 / 기타지출 / 매입 / 매출), 승인취소 짝은 흐리게
@@ -7357,6 +7388,244 @@ function txIc(id) {
       });
     });
   };
+})();
+</script>
+<style>
+/* 2026-10-19 (현아): 통계 — 필터 고정(스크롤해도 보임) · 기간 필터 · 강영순 나눈 값 */
+#tab-pf .pf2-top{position:sticky;top:0;z-index:6;flex-wrap:wrap;box-shadow:0 4px 14px rgba(0,0,0,.06)}
+#tab-pf .pf2-rg{flex-basis:100%;display:flex;align-items:center;gap:6px;margin-top:2px}
+#tab-pf .pf2-rg>span{font-size:12px;font-weight:600;color:var(--txt3);flex:none}
+#tab-pf .pf2-rg>i{font-style:normal;color:var(--txt3);font-size:12px}
+#tab-pf .pf2-rg input{flex:1 1 0;width:0;min-width:0;height:34px;border:0;border-radius:999px;background:var(--chip);padding:0 12px;font:inherit;font-size:13px;font-weight:600;color:var(--txt);-webkit-appearance:none;appearance:none}
+#tab-pf .pf2-top.rg-on .pf2-rg input{background:rgba(49,130,246,.1);color:#3182f6}
+#tab-pf .pf2-top.rg-on>select:nth-of-type(2){opacity:.4}
+#tab-pf .pf2-rg .dt-w{flex:1 1 0!important;width:0!important;min-width:0!important;font-size:12px!important;padding:0 10px!important}
+#tab-pf .pf2-top.rg-on .pf2-rg .dt-w{background:rgba(49,130,246,.1)!important;color:#3182f6!important}
+#tab-pf .pf2-rg .dt-w>svg{display:none}
+#tab-pf .pf2-rg .dt-w>span{width:100%;text-align:center}
+#tab-pf .pf2-rx{flex:none;width:30px;height:30px;border-radius:50%;border:0;background:var(--chip);color:var(--txt2);font-size:16px;line-height:1;cursor:pointer}
+#tab-pf .pf2-fs{grid-column:1/3;font-size:11px;color:var(--txt3)}
+#tab-pf .pf2-fs b{color:var(--txt2);font-weight:600}
+#tab-pf .pf2-fb{grid-column:1/3;display:flex;flex-direction:column;margin:8px 0 4px;padding:4px 0 0 12px;border-left:2px solid #3182f6}
+#tab-pf .pf2-fb .h{font-size:11px;font-weight:700;color:#3182f6;margin-bottom:2px}
+#tab-pf .pf2-fb .h small{font-weight:500;color:var(--txt3)}
+#tab-pf .pf2-fb .e{font-size:11px;color:var(--txt3)}
+#tab-pf .pf2-fb .i{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:0 10px;padding:6px 0;border-bottom:1px solid #f2f4f6}
+#tab-pf .pf2-fb .i:last-child{border-bottom:0}
+#tab-pf .pf2-fb .n{font-size:13px;font-weight:600;color:var(--txt)}
+#tab-pf .pf2-fb .v{font-size:13px;font-weight:700;text-align:right;white-space:nowrap}
+#tab-pf .pf2-fb .m{grid-column:1/3;font-size:11px;color:var(--txt3)}
+#tab-pf .pf2-fb .m b{color:#f04452;font-weight:700}
+
+/* 2026-10-19 (현아): 팸 메뉴 (관리 전용) — 작업자배정 빠르게 보기 · 박종배·박슬기·박현아 실제 작업비 정산 */
+#tab-fam>.tc{background:none!important;border:0!important;box-shadow:none!important;overflow:visible!important;border-radius:0!important}
+#tab-fam .fm-top{position:sticky;top:0;z-index:6;background:#fff;border-radius:20px;padding:12px 14px;margin-bottom:10px;display:flex;flex-wrap:wrap;align-items:center;gap:6px;box-shadow:0 4px 14px rgba(0,0,0,.06)}
+#tab-fam .fm-seg{display:inline-flex;background:var(--chip);border-radius:10px;padding:3px;gap:2px}
+#tab-fam .fm-seg button{border:0;background:none;height:30px;padding:0 14px;border-radius:8px;font:inherit;font-size:13px;font-weight:600;color:var(--txt3);cursor:pointer}
+#tab-fam .fm-seg button.on{background:#fff;color:var(--txt);box-shadow:0 1px 3px rgba(0,0,0,.08)}
+#tab-fam .fm-top select,#tab-fam .fm-top input[type=search]{height:34px;border:0;border-radius:999px;background:var(--chip);padding:0 13px;font:inherit;font-size:13px;font-weight:600;color:var(--txt);-webkit-appearance:none;appearance:none;min-width:0}
+#tab-fam .fm-top select{padding-right:28px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%238b95a1' stroke-width='1.6' fill='none'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 11px center}
+#tab-fam .fm-top .sp{flex:1}
+#tab-fam .fm-ic{width:34px;height:34px;border-radius:50%;border:0;background:var(--chip);display:inline-flex;align-items:center;justify-content:center;cursor:pointer;color:var(--txt2);text-decoration:none;flex:none}
+#tab-fam .fm-ic svg{width:16px;height:16px}
+#tab-fam .fm-row2{flex-basis:100%;display:flex;gap:6px;align-items:center;overflow-x:auto;scrollbar-width:none}
+#tab-fam .fm-row2::-webkit-scrollbar{display:none}
+#tab-fam .fm-chip{flex:none;height:30px;padding:0 12px;border-radius:999px;border:0;background:var(--chip);font:inherit;font-size:12px;font-weight:600;color:var(--txt2);cursor:pointer}
+#tab-fam .fm-chip.on{background:#191f28;color:#fff}
+#tab-fam .fm-row2 input[type=search]{flex:1;min-width:120px}
+#tab-fam .fm-row2 select{flex:none}
+#tab-fam .fm-tw{overflow-x:auto;margin:4px -4px 0;padding:0 4px}
+#tab-fam .fm-tbl{font-size:11px}
+#tab-fam .fm-tbl td{padding:6px 1px!important}
+#tab-fam .fm-card{background:#fff;border-radius:20px;padding:16px;margin-bottom:10px}
+#tab-fam .fm-h{display:flex;align-items:baseline;justify-content:space-between;font-size:14px;font-weight:700;color:var(--txt);margin-bottom:10px}
+#tab-fam .fm-h small{font-size:11px;font-weight:500;color:var(--txt3)}
+#tab-fam .fm-sum{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+#tab-fam .fm-sum>div{background:var(--chip);border-radius:14px;padding:10px 12px;min-width:0;cursor:pointer}
+#tab-fam .fm-sum>div.on{box-shadow:inset 0 0 0 2px #191f28}
+#tab-fam .fm-sum span{display:block;font-size:12px;color:var(--txt3)}
+#tab-fam .fm-sum b{display:block;font-size:17px;font-weight:800;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#tab-fam .fm-sum small{display:block;font-size:11px;color:var(--txt3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#tab-fam .fm-sum b.r{color:#f04452}
+#tab-fam .fm-g{margin-top:14px}
+#tab-fam .fm-gh{display:flex;justify-content:space-between;gap:8px;font-size:13px;font-weight:700;color:var(--txt);padding:10px 2px 6px;border-bottom:1px solid #b0b8c1}
+#tab-fam .fm-gh span:first-child{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#tab-fam .fm-gh em{font-style:normal;font-weight:500;color:var(--txt3);font-size:12px;flex:none}
+#tab-fam .fm-r{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 10px;padding:9px 2px;border-bottom:1px solid #f2f4f6;font-size:13px}
+#tab-fam .fm-r .t{min-width:0;color:var(--txt);word-break:keep-all}
+#tab-fam .fm-r .a{text-align:right;white-space:nowrap;font-weight:600}
+#tab-fam .fm-r .m{grid-column:1/3;font-size:11px;color:var(--txt3);display:flex;flex-wrap:wrap;gap:2px 10px}
+#tab-fam .fm-tag{display:inline-block;padding:2px 8px;border-radius:999px;background:var(--chip);font-size:12px;font-weight:700;color:var(--txt2)}
+#tab-fam .fm-tag.hy{background:rgba(49,130,246,.12);color:#3182f6}
+#tab-fam .fm-p{padding:12px 2px;border-bottom:1px solid #f2f4f6;cursor:pointer}
+#tab-fam .fm-p .l1{display:flex;justify-content:space-between;gap:10px;font-size:13px}
+#tab-fam .fm-p .l1 .t{min-width:0;font-weight:600;color:var(--txt);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#tab-fam .fm-p .l1 .a{font-weight:800;color:#f04452;white-space:nowrap}
+#tab-fam .fm-p .l2{display:flex;flex-wrap:wrap;gap:2px 10px;font-size:11px;color:var(--txt3);margin-top:3px}
+#tab-fam .fm-p .l2 .pd{color:#3182f6;font-weight:600}
+#tab-fam .fm-p .l2 .np{color:#f04452;font-weight:600}
+#tab-fam .fm-pd{display:none;margin-top:8px;padding:6px 0 0 12px;border-left:2px solid #e5e8eb}
+#tab-fam .fm-p.on .fm-pd{display:block}
+#tab-fam .fm-pd .w{font-size:12px;font-weight:700;color:var(--txt);margin:6px 0 2px;display:flex;justify-content:space-between}
+#tab-fam .fm-pd .k{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:0 10px;font-size:12px;color:var(--txt3);padding:2px 0}
+#tab-fam .fm-pd .k b{font-weight:600;color:var(--txt2);text-align:right}
+#tab-fam .fm-pd .k.f b{color:#f04452;font-weight:800}
+#tab-fam .fm-pd .rw{font-size:11px;color:var(--faint);padding:1px 0}
+#tab-fam .fm-tbl{width:100%;border-collapse:collapse;font-size:12px;margin-top:4px}
+#tab-fam .fm-tbl td{padding:6px 2px;border-bottom:1px solid #f2f4f6;text-align:right;white-space:nowrap;color:var(--txt2)}
+#tab-fam .fm-tbl td:first-child{text-align:left;color:var(--txt3)}
+#tab-fam .fm-tbl tr.f td{color:#f04452;font-weight:800;border-bottom:0}
+#tab-fam .fm-tbl tr.h td{font-weight:700;color:var(--txt);border-bottom:1px solid #b0b8c1}
+#tab-fam .fm-empty{padding:40px 0;text-align:center;color:var(--txt3);font-size:13px;background:#fff;border-radius:20px}
+#tab-fam .fm-note{font-size:11px;color:var(--txt3);line-height:1.6;margin-top:10px}
+#tab-fam .fm-links{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+#tab-fam .fm-links a{font-size:12px;font-weight:600;color:var(--txt2);background:var(--chip);border-radius:999px;padding:6px 11px;text-decoration:none}
+</style>
+<script>
+(function () {
+  var PPL = ['박종배', '박슬기', '박현아'];
+  var F = { v: 'as', who: '', q: '', y: String(new Date().getFullYear()), m: '', as: null, pay: null, links: {}, url: '', ld: {}, err: {}, open: {} };
+  window.FAM = F;
+  function W(n) { return Math.round(Number(n) || 0).toLocaleString('ko-KR'); }
+  function adm() { return typeof SESSION !== 'undefined' && SESSION && SESSION.role === 'admin'; }
+  function ls(k, v) { try { if (v === undefined) return JSON.parse(localStorage.getItem(k) || 'null'); localStorage.setItem(k, JSON.stringify(v)); } catch (e) { return null; } }
+  var SV_R = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/></svg>';
+  var SV_S = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M3 9h18M3 15h18M9 3v18"/></svg>';
+  // ── 데이터 (관리 전용) ──
+  var payCbs = [];
+  function loadPay(force) {
+    if (!adm() || F.ld.pay) return;
+    if (!F.pay) { var c = ls('pm_fam_pay'); if (c && c.items) { F.pay = c.items; F.links = c.links || {}; } }
+    F.ld.pay = 1; F.err.pay = '';
+    var acc = null, tries = 0;
+    (function req() {
+      woPost('pm_fam', { part: 'pay', fresh: force ? 1 : 0 }, function (r) {
+        if (!r || !r.ok) {
+          if (++tries < 3) { setTimeout(req, 1500 * tries); return; }
+          F.ld.pay = 0; if (!F.pay) F.err.pay = (r && r.error) || '불러오지 못했어요'; fire(); return;
+        }
+        F.links = r.links || F.links;
+        if (r.pending > 0) { F.pay = mergeKeep(r.items); F.part = r.items.length + '/' + r.total; fire(); setTimeout(req, 300); return; }
+        F.pay = r.items; F.part = ''; F.ld.pay = 0; ls('pm_fam_pay', { items: r.items, links: F.links, t: Date.now() }); fire();
+      });
+    })();
+  }
+  function mergeKeep(items) { var have = {}; items.forEach(function (o) { have[o.id] = 1; }); return items.concat((F.pay || []).filter(function (o) { return !have[o.id]; })); }
+  function fire() { var a = payCbs; payCbs = []; a.forEach(function (f) { try { f(); } catch (e) {} }); draw(); }
+  // 통계 메뉴에서 씀: 지금 있는 값을 주고, 없으면 불러온 뒤 cb
+  window.famPayData = function (cb) { if (!adm()) return null; if (!F.pay && !F.ld.pay) { var c = ls('pm_fam_pay'); if (c && c.items) { F.pay = c.items; F.links = c.links || {}; } } if (cb && (F.ld.pay || !F.pay)) payCbs.push(cb); if (!F.pay || !F.pinged) { F.pinged = 1; setTimeout(function () { loadPay(); }, 0); } return F.pay; };
+  window.famPayLoading = function () { return !!F.ld.pay; };
+  function loadAs(force) {
+    if (!adm() || F.ld.as) return;
+    if (!F.as) { var c = ls('pm_fam_as'); if (c && c.rows) { F.as = c.rows; F.url = c.url; } }
+    F.ld.as = 1; F.err.as = ''; draw();
+    woPost('pm_fam', { part: 'as' }, function (r) {
+      F.ld.as = 0;
+      if (!r || !r.ok) { if (!F.as) F.err.as = (r && r.error) || '불러오지 못했어요'; else toast('새로 불러오지 못해 저장된 내용을 보여드려요'); draw(); return; }
+      F.as = r.rows; F.url = r.url; ls('pm_fam_as', { rows: r.rows, url: r.url }); draw();
+    });
+  }
+  // ── 화면 ──
+  function ensure() {
+    if (document.getElementById('tab-fam')) return;
+    var tabs = document.querySelector('.tabs'); if (!tabs) return;
+    var t = document.createElement('div'); t.className = 'tab'; t.dataset.tab = 'fam'; t.id = 'tab-btn-fam'; t.textContent = '팸';
+    var ref = tabs.querySelector('[data-tab="pf"]') || tabs.querySelector('[data-tab="tx"]'); tabs.insertBefore(t, ref ? ref.nextSibling : null);
+    t.addEventListener('click', function () { switchTab('fam'); });
+    var ci = document.querySelector('.content .ci'); if (!ci) return;
+    var p = document.createElement('div'); p.id = 'tab-fam'; p.className = 'tab-panel';
+    p.innerHTML = '<div class="tc"><div class="fm-top" id="fm-top"></div><div id="fm-b"></div></div>';
+    ci.appendChild(p);
+  }
+  function role() { var b = document.getElementById('tab-btn-fam'); if (b) b.style.display = adm() ? '' : 'none'; return adm(); }
+  window.famSet = function (k, v) { F[k] = v; if (k === 'v') { if (v === 'as') loadAs(); else loadPay(); } draw(); };
+  window.famQ = function (el) { F.q = el.value; clearTimeout(F.qt); F.qt = setTimeout(function () { drawBody(); }, 150); };
+  window.famRe = function () { if (F.v === 'as') loadAs(true); else { F.ld.pay = 0; loadPay(true); } draw(); };
+  window.famOpen = function (id) { F.open[id] = !F.open[id]; var el = document.querySelector('#tab-fam .fm-p[data-id="' + id + '"]'); if (el) el.classList.toggle('on', !!F.open[id]); };
+  function inYM(d) { d = String(d || ''); return (!F.y || d.slice(0, 4) === F.y) && (!F.m || d.slice(5, 7) === F.m); }
+  function years(list) { var o = {}; list.forEach(function (d) { var y = String(d || '').slice(0, 4); if (/^\d{4}$/.test(y)) o[y] = 1; }); return Object.keys(o).sort().reverse(); }
+  function shortProj(s) { return String(s || '').replace(/^\s*\[PITCH\]\s*/, '').replace(/<[^>]*>.*$/, '').replace(/_/g, ' ').trim(); }
+  function wd(d) { var t = new Date(String(d).slice(0, 10) + 'T00:00:00'); return isNaN(t) ? '' : '(' + '일월화수목금토'.charAt(t.getDay()) + ')'; }
+  function dd(d) { d = String(d || ''); return /^\d{4}-\d{2}-\d{2}/.test(d) ? d.slice(2, 10).replace(/-/g, '.') + wd(d) : d; }
+  function draw() {
+    var top = document.getElementById('fm-top'); if (!top) return;
+    var src = F.v === 'as' ? (F.as || []).map(function (r) { return r[0]; }) : (F.pay || []).map(function (o) { return o.d; });
+    var ys = years(src), mo = '<option value="">전체 월</option>';
+    for (var m = 1; m <= 12; m++) { var mm = ('0' + m).slice(-2); mo += '<option value="' + mm + '"' + (F.m === mm ? ' selected' : '') + '>' + m + '월</option>'; }
+    var sheet = F.v === 'as' ? (F.url ? '<a class="fm-ic" href="' + esc(F.url) + '" target="_blank" title="작업자배정 시트 열기">' + SV_S + '</a>' : '') : '';
+    top.innerHTML = '<div class="fm-seg"><button class="' + (F.v === 'as' ? 'on' : '') + '" onclick="famSet(\'v\',\'as\')">작업자배정</button><button class="' + (F.v === 'pay' ? 'on' : '') + '" onclick="famSet(\'v\',\'pay\')">실제 정산</button></div><span class="sp"></span>' + sheet +
+      '<button class="fm-ic" type="button" title="새로 불러오기" onclick="famRe()">' + SV_R + '</button>' +
+      '<div class="fm-row2"><select onchange="famSet(\'y\',this.value)"><option value="">전체 연도</option>' + ys.map(function (y) { return '<option value="' + y + '"' + (F.y === y ? ' selected' : '') + '>' + y + '년</option>'; }).join('') + '</select>' +
+      '<select onchange="famSet(\'m\',this.value)">' + mo + '</select>' +
+      ['전체'].concat(PPL).map(function (w) { var k = w === '전체' ? '' : w; return '<button class="fm-chip' + (F.who === k ? ' on' : '') + '" onclick="famSet(\'who\',\'' + k + '\')">' + w + '</button>'; }).join('') +
+      (F.v === 'as' ? '<input type="search" placeholder="프로젝트·작업내역 검색" value="' + esc(F.q) + '" oninput="famQ(this)">' : '') + '</div>';
+    drawBody();
+  }
+  function drawBody() {
+    var box = document.getElementById('fm-b'); if (!box) return;
+    box.innerHTML = F.v === 'as' ? bodyAs() : bodyPay();
+  }
+  function bodyAs() {
+    if (F.err.as) return '<div class="fm-empty">⚠ ' + esc(F.err.as) + '</div>';
+    if (!F.as) return '<div class="fm-empty">' + (F.ld.as ? '작업자배정 시트를 불러오는 중…' : '') + '</div>';
+    var q = String(F.q || '').trim().toLowerCase();
+    var rows = F.as.filter(function (r) { return inYM(r[0]) && (!q || (r[1] + ' ' + r[2]).toLowerCase().indexOf(q) >= 0); });
+    var st = {}; PPL.forEach(function (w) { st[w] = { n: 0, c: 0, mv: 0 }; });
+    rows.forEach(function (r) { var a = r[6] || r[5]; if (st[a]) { st[a].n++; st[a].c += Number(r[4]) || 0; if (r[6] && r[5] && r[6] !== r[5]) st[a].mv++; } });
+    var h = '<div class="fm-card"><div class="fm-h">실제 작업자별<small>' + rows.length + '줄 · 누르면 그 사람만</small></div><div class="fm-sum">' + PPL.map(function (w) {
+      return '<div class="' + (F.who === w ? 'on' : '') + '" onclick="famSet(\'who\',\'' + (F.who === w ? '' : w) + '\')"><span>' + w + '</span><b>' + W(st[w].c) + '컷</b><small>' + st[w].n + '줄' + (st[w].mv ? ' · 바꾼 ' + st[w].mv + '줄' : '') + '</small></div>';
+    }).join('') + '</div></div>';
+    var show = rows.filter(function (r) { return !F.who || (r[6] || r[5]) === F.who; });
+    if (!show.length) return h + '<div class="fm-empty">해당하는 작업이 없어요</div>';
+    var G = {}, order = [];
+    show.forEach(function (r) { var k = r[0] + '|' + r[1]; if (!G[k]) { G[k] = []; order.push(k); } G[k].push(r); });
+    order.sort(function (a, b) { return b.localeCompare(a); });
+    h += '<div class="fm-card" style="padding-top:6px">' + order.map(function (k) {
+      var g = G[k], c = g.reduce(function (s, r) { return s + (Number(r[4]) || 0); }, 0);
+      return '<div class="fm-g"><div class="fm-gh"><span>' + esc(shortProj(g[0][1])) + '</span><em>' + esc(dd(g[0][0])) + ' · ' + W(c) + '컷</em></div>' + g.map(function (r) {
+        var act = r[6] || r[5], mv = r[6] && r[5] && r[6] !== r[5];
+        return '<div class="fm-r"><span class="t">' + esc(r[2]) + '</span><span class="a"><span class="fm-tag' + (act === '박현아' ? ' hy' : '') + '">' + esc(act || '-') + '</span></span><span class="m"><span>' + esc(r[3] || '') + '</span><span>' + W(r[4]) + '컷</span>' + (mv ? '<span>DB 표기 ' + esc(r[5]) + ' → 실제 ' + esc(r[6]) + '</span>' : '<span>DB 표기 ' + esc(r[5] || '-') + '</span>') + '</span></div>';
+      }).join('') + '</div>';
+    }).join('') + '<div class="fm-note">· 실제 작업자는 작업내역서 화면(박종배·박슬기 탭)이나 작업자배정 시트에서 바꿀 수 있어요.<br>· 이 화면은 관리 모드에서만 보여요.</div></div>';
+    return h;
+  }
+  function bodyPay() {
+    if (F.err.pay) return '<div class="fm-empty">⚠ ' + esc(F.err.pay) + '</div>';
+    if (!F.pay) return '<div class="fm-empty">' + (F.ld.pay ? '박종배·박슬기·박현아 정산을 모으는 중…' : '') + '</div>';
+    var list = F.pay.filter(function (o) { return inYM(o.d) && (!F.who || o.w[F.who]); });
+    var T = {}; PPL.forEach(function (w) { T[w] = { n: 0, cut: 0, sum: 0, tax: 0, net: 0, fee: 0, act: 0, due: 0 }; });
+    list.forEach(function (o) { PPL.forEach(function (w) { var x = o.w[w]; if (!x) return; var t = T[w]; t.n++; t.cut += x.cut; t.sum += x.sum; t.tax += x.tax; t.net += x.net; t.fee += x.fee; t.act += x.act; if (!o.p) t.due += x.act; }); });
+    var per = (F.y ? F.y + '년' : '전체 기간') + (F.m ? ' ' + (+F.m) + '월' : '');
+    var cols = F.who ? [F.who] : PPL;
+    var h = '<div class="fm-card"><div class="fm-h">' + per + ' 실제 작업비<small>' + (F.part ? '불러오는 중 ' + F.part : list.length + '개 프로젝트') + '</small></div>';
+    h += '<div class="fm-sum">' + PPL.map(function (w) { return '<div class="' + (F.who === w ? 'on' : '') + '" onclick="famSet(\'who\',\'' + (F.who === w ? '' : w) + '\')"><span>' + w + '</span><b class="r">' + W(T[w].act) + '</b><small>실제지급 · ' + T[w].n + '건 · ' + W(T[w].cut) + '컷</small></div>'; }).join('') + '</div>';
+    h += '<div class="fm-tw"><table class="fm-tbl"><tr class="h"><td></td>' + cols.map(function (w) { return '<td>' + w + '</td>'; }).join('') + (cols.length > 1 ? '<td>합계</td>' : '') + '</tr>';
+    [['작업 합계', 'sum'], ['원천세', 'tax'], ['핏치지급액', 'net'], ['강영순 25%', 'fee'], ['실제지급액', 'act'], ['미지급분', 'due']].forEach(function (k) {
+      var tot = PPL.reduce(function (s, w) { return s + T[w][k[1]]; }, 0);
+      h += '<tr class="' + (k[1] === 'act' ? 'f' : '') + '"><td>' + k[0] + '</td>' + cols.map(function (w) { return '<td>' + W(T[w][k[1]]) + '</td>'; }).join('') + (cols.length > 1 ? '<td>' + W(tot) + '</td>' : '') + '</tr>';
+    });
+    h += '</table></div>';
+    var ly = F.y || String(new Date().getFullYear()), lk = PPL.map(function (w) { var u = F.links[w + '_' + ly]; return u ? '<a href="' + esc(u) + '" target="_blank">' + w + '_' + ly + '년 시트</a>' : ''; }).join('');
+    if (lk) h += '<div class="fm-links">' + lk + '</div>';
+    h += '<div class="fm-note">· 원천세를 뗀 핏치지급액이 강영순 통장으로 들어온 뒤 25%를 떼고 받는 금액이 실제지급액이에요.<br>· 지급일자가 비어 있는 프로젝트는 미지급으로 셌어요.</div></div>';
+    if (!list.length) return h + '<div class="fm-empty">해당하는 정산이 없어요</div>';
+    h += '<div class="fm-card" style="padding-top:8px">' + list.map(function (o) {
+      var ws = cols.filter(function (w) { return o.w[w]; }), act = ws.reduce(function (s, w) { return s + o.w[w].act; }, 0);
+      var det = ws.map(function (w) {
+        var x = o.w[w];
+        return '<div class="w"><span>' + w + '</span><span>' + W(x.cut) + '컷</span></div>' + x.rows.map(function (r) { return '<div class="rw">' + esc(r[0]) + ' · ' + W(r[1]) + '컷 · ' + W(r[3]) + '</div>'; }).join('') +
+          '<div class="k"><span>작업 합계</span><b>' + W(x.sum) + '</b></div><div class="k"><span>원천세</span><b>' + W(x.tax) + '</b></div><div class="k"><span>핏치지급액</span><b>' + W(x.net) + '</b></div><div class="k"><span>강영순 수수료 (25%)</span><b>' + W(x.fee) + '</b></div><div class="k f"><span>실제지급액</span><b>' + W(x.act) + '</b></div>';
+      }).join('');
+      return '<div class="fm-p' + (F.open[o.id] ? ' on' : '') + '" data-id="' + esc(o.id) + '" onclick="famOpen(this.dataset.id)"><div class="l1"><span class="t">' + esc(shortProj(o.n)) + '</span><span class="a">' + W(act) + '</span></div>' +
+        '<div class="l2"><span>' + esc(dd(o.d)) + '</span>' + ws.map(function (w) { return '<span>' + w + ' ' + W(o.w[w].act) + '</span>'; }).join('') + (o.p ? '<span class="pd">지급 ' + esc(dd(o.p)) + '</span>' : '<span class="np">미지급</span>') + '</div><div class="fm-pd">' + det + '</div></div>';
+    }).join('') + '</div>';
+    return h;
+  }
+  ensure();
+  var _sw = switchTab;
+  switchTab = function (t) { _sw.apply(this, arguments); if (t === 'fam') { if (!role()) { switchTab('dash'); return; } if (F.v === 'as') loadAs(); else loadPay(); draw(); } };
+  var _ar = applyRoleUI; applyRoleUI = function () { var x = _ar.apply(this, arguments); ensure(); role(); return x; };
+  setTimeout(role, 0);
 })();
 </script>
 </body>
