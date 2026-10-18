@@ -7,7 +7,7 @@
 <meta name="theme-color" content="#f2f4f6">
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=3">
 <link rel="apple-touch-icon" href="apple-touch-icon.png?v=3">
-<meta name="pm-build" content="20261018-131726">
+<meta name="pm-build" content="20261018-131942">
 <link rel="manifest" href="manifest.webmanifest?v=3">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -7060,7 +7060,7 @@ function txIc(id) {
 <style>
 /* 2026-10-18 (현아): 매입 — 매출처럼 프로젝트 한 건씩, 누르면 전체 합산 + 작업자별 금액 */
 .pg-amt{display:flex;flex-direction:column;align-items:flex-end;gap:2px}
-.pg-tbl td.w{font-weight:500;color:var(--txt)}
+.pg-tbl td.w{font-weight:500;color:var(--txt);white-space:nowrap!important}
 /* 2026-10-18 (현아): 지급내역서 표처럼 — 머리 줄 아래만 검정 선, 나머지는 옅은 선 · 금액 농도 단계 */
 .pg-tbl td{color:var(--txt3)}
 #mo-doc .pg-tbl th,#mo-doc .pg-tbl thead tr{background:none!important}
@@ -7109,6 +7109,7 @@ function txIc(id) {
     var html = order.map(function (k, gi) {
       var g = G[k], x = g.first, ws = [];
       g.items.forEach(function (i) { var w = i.worker || i.sub || ''; if (w && !hid(w) && ws.indexOf(w) < 0) ws.push(w); });
+      pgExtra(g).forEach(function (w) { if (ws.indexOf(w) < 0) ws.push(w); });
       var t = Math.max.apply(null, g.items.map(function (i) { return i.t || 0; }));
       return '<div class="wo-item pg-item" data-k="' + esc(k) + '" onclick="pgOpen(this.dataset.k)">' + woHead(x.clientKey, x.artist || x.clientKey, x.title, x.date6, t) +
         '<div class="wo-l3"><span class="wo-wl">' + ws.map(function (w) { return '<span class="wo-w">' + esc(w) + '</span>'; }).join('') + '</span></div></div>';
@@ -7122,6 +7123,13 @@ function txIc(id) {
     var t = d.total || [], tv = function (i) { return t[i] ? t[i].v : ''; };
     var tt = get('세금구분'), vat = /10/.test(tt) || /부가/.test(tt);
     return { sub: N(get('합계') || tv(0)), tax: N(get('세금') || tv(1)), fin: N(get('지급액') || tv(2)), vat: vat, pay: get('지급일자'), rows: (d.rows || []).filter(function (r) { return r.v.some(function (v) { return String(v).trim(); }); }) };
+  }
+  // 2026-10-18 (현아): 지급내역서가 없어도 작업내역서에 있는 작업자 + 김현수는 항상 표기 (집계는 제외 규칙 그대로)
+  function pgExtra(g) {
+    var have = g.items.map(function (i) { return i.worker || i.sub || ''; }), out = [];
+    g.items.forEach(function (i) { (i._ws || []).forEach(function (w) { if (w && !hid(w) && have.indexOf(w) < 0 && out.indexOf(w) < 0) out.push(w); }); });
+    PG_INT.forEach(function (w) { if (have.indexOf(w) < 0 && out.indexOf(w) < 0) out.push(w); });
+    return out;
   }
   window.pgOpen = function (k) {
     var g = PG.groups[k]; if (!g) return;
@@ -7141,6 +7149,7 @@ function txIc(id) {
     var g = PG.cur; if (!g) return;
     var x = g.first, list = g.items.filter(function (i) { return !hid(i.worker || i.sub || ''); });
     var R = list.map(function (i) { var d = PG.cache[i.id]; return { it: i, w: i.worker || i.sub || '', d: d, v: d && !d.err ? row(d) : null }; });
+    pgExtra(g).forEach(function (w) { R.push({ it: null, w: w, d: null, v: null, none: true }); });
     var ok = R.filter(function (r) { return r.v && !isInt(r.w); });
     var sum = function (f) { return ok.reduce(function (a, r) { return a + r.v[f]; }, 0); };
     var tot = sum('fin');
@@ -7154,6 +7163,7 @@ function txIc(id) {
     if (PG.sel < 0) {
       h += '<table class="dv-tbl pg-tbl"><thead><tr><th>작업자</th><th>공급가액</th><th>세금</th><th>지급액</th></tr></thead><tbody>' +
         R.map(function (r, i) {
+          if (r.none) return '<tr class="pg-r pg-x" onclick="pgSel(' + i + ')"><td class="w">' + esc(r.w) + (isInt(r.w) ? '<span class="pg-tag">집계 제외</span>' : '') + '</td><td>-</td><td class="tx">-</td><td class="fin">미작성</td></tr>';
           if (!r.v) return '<tr><td class="w">' + esc(r.w) + '</td><td colspan="3" class="n">' + (r.d && r.d.err ? '⚠ ' + esc(r.d.err) : '불러오는 중…') + '</td></tr>';
           return '<tr class="pg-r' + (isInt(r.w) ? ' pg-x' : '') + '" onclick="pgSel(' + i + ')"><td class="w">' + esc(r.w) + (isInt(r.w) ? '<span class="pg-tag">집계 제외</span>' : '') + '</td><td>' + W(r.v.sub) + '</td><td class="tx">' + (r.v.vat ? '+' : '<i class="pf2-mn">−</i>') + W(Math.abs(r.v.tax)) + '</td><td class="fin">' + W(r.v.fin) + '</td></tr>';
         }).join('') +
@@ -7161,7 +7171,8 @@ function txIc(id) {
         '<div class="pg-hint">' + (R.some(function (r) { return isInt(r.w); }) ? PG_INT.join('·') + '은 내부 인원이라 표기만 하고 합계에서 빠져요 · ' : '') + '세금: ' + [anyWh ? '원천세 3.3% 차감(−)' : '', anyVat ? '사업자 부가세 10% 추가(+)' : ''].filter(String).join(' · ') + ' · 작업자를 누르면 그 사람 내역이 보여요</div>';
     } else {
       var r = R[PG.sel];
-      if (!r || !r.v) h += '<div class="wo-empty">' + (r && r.d && r.d.err ? '⚠ ' + esc(r.d.err) : '불러오는 중…') + '</div>';
+      if (r && r.none) h += '<div class="wo-empty">' + esc(r.w) + '의 지급내역서가 아직 없어요' + (isInt(r.w) ? ' (내부 인원 · 매입 집계 제외)' : '') + '</div>';
+      else if (!r || !r.v) h += '<div class="wo-empty">' + (r && r.d && r.d.err ? '⚠ ' + esc(r.d.err) : '불러오는 중…') + '</div>';
       else {
         h += '<table class="dv-tbl"><thead><tr><th>작업 세부내역</th><th>컷수</th><th>컷당</th><th>소계</th></tr></thead><tbody>' +
           (r.v.rows.length ? r.v.rows.map(function (q) { var v = q.v; return '<tr><td>' + esc(v[1] || '-') + '</td><td class="n">' + esc(v[2] || '') + '</td><td class="n">' + W(N(v[3])) + '</td><td>' + W(N(v[4])) + '</td></tr>'; }).join('')
