@@ -7499,7 +7499,7 @@ function txIc(id) {
     F.ld.pay = 1; F.err.pay = '';
     var acc = null, tries = 0;
     (function req() {
-      woPost('pm_fam', { part: 'pay', fresh: force ? 1 : 0 }, function (r) {
+      woPost('pm_wo_fam', { part: 'pay', fresh: force ? 1 : 0 }, function (r) {
         if (!r || !r.ok) {
           if (++tries < 3) { setTimeout(req, 1500 * tries); return; }
           F.ld.pay = 0; if (!F.pay) F.err.pay = (r && r.error) || '불러오지 못했어요'; fire(); return;
@@ -7519,7 +7519,7 @@ function txIc(id) {
     if (!adm() || F.ld.as) return;
     if (!F.as) { var c = ls('pm_fam_as'); if (c && c.rows) { F.as = c.rows; F.url = c.url; } }
     F.ld.as = 1; F.err.as = ''; draw();
-    woPost('pm_fam', { part: 'as' }, function (r) {
+    woPost('pm_wo_fam', { part: 'as' }, function (r) {
       F.ld.as = 0;
       if (!r || !r.ok) { if (!F.as) F.err.as = (r && r.error) || '불러오지 못했어요'; else toast('새로 불러오지 못해 저장된 내용을 보여드려요'); draw(); return; }
       F.as = r.rows; F.url = r.url; ls('pm_fam_as', { rows: r.rows, url: r.url }); draw();
