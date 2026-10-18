@@ -6,7 +6,7 @@
 <title>PITCH 작업내역서</title>
 <meta name="theme-color" content="#f2f4f6">
 <meta name="robots" content="noindex">
-<meta name="wo-build" content="20261018-1600">
+<meta name="wo-build" content="20261018-1615">
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=3">
 <link rel="apple-touch-icon" href="apple-touch-icon.png?v=3">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -192,8 +192,8 @@ function cardHtml(x) {
   return '<button class="card" onclick="openDoc(\'' + esc(x.id) + '\')">' +
     '<div class="c1"><span>' + esc(d6(x.date6)) + (x.folder ? ' · ' + esc(x.folder) : '') + '</span>' +
     (x.locked ? '<span class="tag lock">정산 완료</span>' : (x.lockTabs && x.lockTabs.length ? '<span class="tag lock">일부 정산</span>' : '<span class="tag">작성 가능</span>')) + '</div>' +
-    '<div class="c2">' + esc(String(x.title || '').split(' · ')[0] || '-') + '</div>' +
-    '<div class="c3">' + esc([x.clientKey, x.artist].filter(Boolean).join(' · ')) + '</div>' +
+    '<div class="c2">' + esc([x.artist, String(x.title || '').split(' · ')[0]].filter(Boolean).join(' ') || '-') + '</div>' +
+    '<div class="c3">' + esc([x.clientKey].concat(String(x.title || '').split(' · ').slice(1)).filter(Boolean).join(' · ')) + '</div>' +
     (fam && x.workers && x.workers.length ? '<div class="wl">' + x.workers.map(function (w) { return '<span>' + esc(w) + '</span>'; }).join('') + '</div>' : '') +
     '</button>';
 }
@@ -242,15 +242,15 @@ function rowCuts(r) { var n = 0; for (var j = 1; j <= 11; j++) n += num(r.v[j]);
 function renderDoc() {
   var d = S.cur, it = (d && d.item) || S.items.filter(function (x) { return d && x.id === d.id; })[0] || {};
   var h = '<div class="hd"><button class="back" onclick="backList()" aria-label="목록"><svg viewBox="0 0 24 24" fill="none" stroke="#191f28" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button><h1 style="flex:1;font-size:17px">작업내역</h1><button class="ib" onclick="openDoc(\'' + esc(d.id) + '\')">새로고침</button></div>';
-  h += '<div class="info"><div class="t">' + esc(String(it.title || '').split(' · ')[0] || (d.info && d.info['프로젝트명']) || '-') + '</div><div class="s">' +
-    esc([it.clientKey || d.clientKey, it.artist, d6(it.date6)].filter(Boolean).join(' · ')) + '</div>' +
+  h += '<div class="info"><div class="t">' + esc([it.artist, String(it.title || '').split(' · ')[0] || (d.info && d.info['프로젝트명'])].filter(Boolean).join(' ') || '-') + '</div><div class="s">' +
+    esc([it.clientKey || d.clientKey, d6(it.date6)].concat(String(it.title || '').split(' · ').slice(1)).filter(Boolean).join(' · ')) + '</div>' +
     (d.link ? '<a class="lnk" href="' + esc(d.link) + '" target="_blank" rel="noopener">작업 폴더 열기 ›</a>' : '') + '</div>';
   if (d.loading) { $('main').innerHTML = h + '<span class="spin"></span>'; return; }
   if (d.err) { $('main').innerHTML = h + '<div class="empty">' + esc(d.err) + '</div>'; return; }
   h += '<div class="tabs">' + d.tabs.map(function (t, i) {
     var n = 0; t.rows.forEach(function (r) { n += rowCuts(r); });
     return '<button class="chip' + (i === S.tab ? ' on' : '') + '" onclick="S.tab=' + i + ';renderDoc()">' + esc(t.name) + '<b>' + n + '</b></button>';
-  }).join('') + (d.canAdd || []).map(function (w) { return '<button class="chip add" onclick="addTab(\'' + esc(w) + '\')">+ ' + esc(w) + '</button>'; }).join('') + '</div>';
+  }).join('') + (d.canAdd || []).filter(function (w) { return !(it.lockTabs || []).some(function (x) { return x === w; }); }).map(function (w) { return '<button class="chip add" onclick="addTab(\'' + esc(w) + '\')">+ ' + esc(w) + '</button>'; }).join('') + '</div>';
   var t = d.tabs[S.tab];
   if (!t) { $('main').innerHTML = h + '<div class="empty">' + ((d.canAdd || []).length ? '위에서 작업자를 추가해주세요' : '내 탭이 없어요. 현아님께 말씀해주세요.') + '</div>'; return; }
   var rows = t.rows.map(function (r, i) { return { r: r, i: i }; }).filter(function (x) { return filled(x.r); }), tot = 0;
