@@ -7,7 +7,7 @@
 <meta name="theme-color" content="#f2f4f6">
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=3">
 <link rel="apple-touch-icon" href="apple-touch-icon.png?v=3">
-<meta name="pm-build" content="20261018-113006">
+<meta name="pm-build" content="20261018-131602">
 <link rel="manifest" href="manifest.webmanifest?v=3">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -7060,7 +7060,13 @@ function txIc(id) {
 <style>
 /* 2026-10-18 (현아): 매입 — 매출처럼 프로젝트 한 건씩, 누르면 전체 합산 + 작업자별 금액 */
 .pg-amt{display:flex;flex-direction:column;align-items:flex-end;gap:2px}
-.pg-tbl td.w{font-weight:700}
+.pg-tbl td.w{font-weight:500;color:var(--txt)}
+/* 2026-10-18 (현아): 지급내역서 표처럼 — 머리 줄 아래만 검정 선, 나머지는 옅은 선 · 금액 농도 단계 */
+.pg-tbl td{color:var(--txt3)}
+.pg-tbl td.fin{color:var(--txt)!important;font-weight:600!important}
+.pg-tbl td.tx{color:#b0b8c1!important}
+.pg-tbl tr.pg-t td{border-top:1px solid #e5e8eb!important;color:var(--txt);font-weight:700}
+.pg-tbl tr.pg-t td.fin{color:#f04452!important;font-weight:800!important}
 .pg-tbl tr.pg-r{cursor:pointer}
 .pg-tbl tr.pg-r:active td{background:#f9fafb}
 .pg-tbl tr.pg-t td{border-top:2px solid var(--txt);border-bottom:0;font-weight:800;padding-top:10px}
