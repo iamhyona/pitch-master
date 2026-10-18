@@ -7,7 +7,7 @@
 <meta name="theme-color" content="#f2f4f6">
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=3">
 <link rel="apple-touch-icon" href="apple-touch-icon.png?v=3">
-<meta name="pm-build" content="20261018093059">
+<meta name="pm-build" content="20261018-104244">
 <link rel="manifest" href="manifest.webmanifest?v=3">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -6784,7 +6784,7 @@ document.addEventListener('click', function (e) {
       var it = grp[k], dv = P.bv === 'date', live = it.filter(function (b) { return b.bucket !== 'void'; });
       var tt = dv || k === 'fix' || k === 'etc' ? sum(it.filter(isCost), costAmt) : sum(live);
       var lab = dv ? (k.slice(2).replace(/-/g, '.') + '(' + WD[new Date(k + 'T00:00:00').getDay()] + ')') : GN[k];
-      h += '<div class="pf2-grp g-' + (dv ? 'd' : k) + '"><span>' + esc(lab) + ' <em>' + it.length + '건</em></span><span>' + (dv ? (tt ? '지출 ' + W(tt) + '원' : '') : W(tt) + '원') + '</span></div>';
+      h += '<div class="pf2-grp g-' + (dv ? 'd' : k) + '"><span>' + esc(lab) + ' <em>' + it.length + '건</em></span><span>' + (dv ? (tt ? W(tt) + '원' : '') : W(tt) + '원') + '</span></div>';
       h += it.map(function (b) {
         var vd = b.bucket === 'void', g = gOf(b);
         var tip = [b.d + (b.tm ? ' ' + b.tm : ''), b.sub && b.sub !== b.cat2 ? b.sub : '', vd ? '승인취소와 짝 — 비용에서 빠짐' : ''].filter(function (x) { return x; }).join(' · ');
