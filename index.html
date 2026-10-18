@@ -7,7 +7,7 @@
 <meta name="theme-color" content="#f2f4f6">
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=3">
 <link rel="apple-touch-icon" href="apple-touch-icon.png?v=3">
-<meta name="pm-build" content="20261018-111429">
+<meta name="pm-build" content="20261018-111532">
 <link rel="manifest" href="manifest.webmanifest?v=3">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -6675,7 +6675,8 @@ document.addEventListener('click', function (e) {
     items = items.filter(function (x) { return x[1] > 0; }).sort(function (a, b) { return b[1] - a[1]; });
     var tot = items.reduce(function (a, x) { return a + x[1]; }, 0); if (!tot) return '';
     var top = items.slice(0, 6); if (items.length > 6) top.push(['기타', items.slice(6).reduce(function (a, x) { return a + x[1]; }, 0)]);
-    var PAL = ['#3182f6', '#5a9cf8', '#84b6fa', '#aecffc', '#4e5968', '#8b95a1', '#d1d6db'];
+    var PAL = ['#3182f6', '#ffb331', '#15c47e', '#8a5cf5', '#00bcd4', '#f78fb3', '#d1d6db']; // 2026-10-18: 구분 잘 되게 다채롭게 (마지막=기타 회색)
+    if (top.length && top[top.length - 1][0] === '기타') PAL = PAL.slice(0, top.length - 1).concat(['#d1d6db']);
     var R = 15.915, a0 = 0, g = '<svg class="pf2-dn" viewBox="0 0 42 42" role="img" aria-label="' + title + '"><circle cx="21" cy="21" r="' + R + '" fill="none" stroke="#f2f4f6" stroke-width="6"/>';
     top.forEach(function (x, i) { var p = x[1] / tot * 100; g += '<circle cx="21" cy="21" r="' + R + '" fill="none" stroke="' + PAL[i] + '" stroke-width="6" stroke-dasharray="' + Math.max(p - 0.6, 0.1).toFixed(2) + ' ' + (100 - Math.max(p - 0.6, 0.1)).toFixed(2) + '" stroke-dashoffset="' + (25 - a0).toFixed(2) + '"/>'; a0 += p; });
     g += '<text x="21" y="20" text-anchor="middle" font-size="3.2" fill="#8b95a1">' + title + '</text><text x="21" y="25" text-anchor="middle" font-size="4.6" font-weight="800" fill="#191f28">' + Wk(tot) + '</text></svg>';
