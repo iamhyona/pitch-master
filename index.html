@@ -7,7 +7,7 @@
 <meta name="theme-color" content="#f2f4f6">
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=3">
 <link rel="apple-touch-icon" href="apple-touch-icon.png?v=3">
-<meta name="pm-build" content="20261018-1805">
+<meta name="pm-build" content="20261018-1830">
 <link rel="manifest" href="manifest.webmanifest?v=3">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -7304,55 +7304,54 @@ function txIc(id) {
 })();
 </script>
 <style>
-/* 2026-10-18 (현아): 박현아 작업 귀속 (박종배/박슬기) */
-.wd-own{display:inline-block;margin-top:3px;font-size:11px;font-weight:600;color:#3182f6;background:#e8f3ff;padding:1px 7px;border-radius:6px}
-.wd-own.no{color:#f04452;background:#fff0f1}
+/* 2026-10-18 (현아): 실제 작업자 (박종배/박슬기 탭 → 박종배·박슬기·박현아) — 관리 모드에서만, 저장은 PITCH_FAM 배정 시트 */
+.wd-own{display:inline-block;margin-left:6px;font-size:11px;font-weight:600;color:#3182f6;background:#e8f3ff;padding:1px 7px;border-radius:6px;vertical-align:1px}
 .wd-ownsel{display:flex;align-items:center;gap:6px;margin:8px 0 2px;font-size:13px;color:var(--txt2)}
 .wd-ownsel span{flex:none;font-weight:600}
 .wd-ownsel button{flex:1;height:36px;border-radius:10px;border:0;background:var(--chip);color:var(--txt2);font-weight:600;font-family:inherit}
 .wd-ownsel button.on{background:var(--txt);color:#fff}
 </style>
 <script>
-/* ═══ 2026-10-18 (현아): 박현아 작업 귀속 — 박현아 탭 작업 줄마다 박종배·박슬기 중 누구 몫인지 보기·고치기 (관리 모드)
-   - 서버: 박현아 탭 P열 '귀속' (작업자 웹앱 wo.html 과 같은 칸) ═══ */
+/* ═══ 2026-10-18 (현아): 실제 작업자 — 작업내역서 박종배·박슬기 탭 줄마다 실제로 누가 했는지(박종배·박슬기·박현아)
+   - 서버가 관리 모드에서만 t.act/t.actOpts 를 보냄 (핏치 모드·PITCH_DB 시트에는 안 나옴)
+   - 저장 위치: PITCH_FAM/[PITCH_FAM]00_작업자배정 '실제 작업자' 칸 ═══ */
 (function () {
-  function ownOf(t, i) { if (!t.ownE) t.ownE = (t.own || []).slice(); return t.ownE[i] || ''; }
-  function ownDiff(t, i) { return t.ownOpts && ownOf(t, i) !== ((t.own || [])[i] || ''); }
+  function actOf(t, i) { if (!t.actE) t.actE = (t.act || []).slice(); return t.actE[i] || (t.act || [])[i] || t.name; }
+  function actDiff(t, i) { return t.actOpts && t.actE && t.actE[i] && t.actE[i] !== ((t.act || [])[i] || t.name); }
   var _view = woRowView;
   woRowView = function (t, ti, r, i, who) {
-    var h = _view(t, ti, r, i, who); if (!t.ownOpts) return h;
-    var o = ownOf(t, i), tag = o ? '<span class="wd-own">' + esc(o) + ' 작업</span>' : '<span class="wd-own no">귀속 미지정</span>';
-    if (ownDiff(t, i) && h.indexOf('ch-dot') < 0) tag += '<span class="ch-dot"></span>';
-    return h.replace('</span><span class="wd-its">', tag + '</span><span class="wd-its">');
+    var h = _view(t, ti, r, i, who); if (!t.actOpts) return h;
+    var a = actOf(t, i), tag = a !== t.name ? '<span class="wd-own">실제 ' + esc(a) + '</span>' : '';
+    if (actDiff(t, i) && h.indexOf('ch-dot') < 0) tag += '<span class="ch-dot"></span>';
+    return tag ? h.replace('</span><span class="wd-its">', tag + '</span><span class="wd-its">') : h;
   };
   var _ed = woRowEditor;
   woRowEditor = function (t, ti, r, i) {
-    var h = _ed(t, ti, r, i); if (!t.ownOpts) return h;
-    var o = ownOf(t, i), sel = '<div class="wd-ownsel"><span>누구 작업?</span>' + t.ownOpts.map(function (x) { return '<button class="' + (o === x ? 'on' : '') + '" onclick="woOwnPick(' + ti + ',' + i + ',\'' + x + '\')">' + esc(x) + '</button>'; }).join('') + '</div>';
+    var h = _ed(t, ti, r, i); if (!t.actOpts) return h;
+    var a = actOf(t, i), sel = '<div class="wd-ownsel"><span>실제 작업자</span>' + t.actOpts.map(function (x) { return '<button class="' + (a === x ? 'on' : '') + '" onclick="woActPick(' + ti + ',' + i + ',\'' + x + '\')">' + esc(x) + '</button>'; }).join('') + '</div>';
     return h.replace('<button class="wd-done"', sel + '<button class="wd-done"');
   };
-  window.woOwnPick = function (ti, i, v) { var t = WO.cur.tabs[ti]; ownOf(t, i); t.ownE[i] = t.ownE[i] === v ? '' : v; woDetail(); };
+  window.woActPick = function (ti, i, v) { var t = WO.cur.tabs[ti]; actOf(t, i); t.actE[i] = v; woDetail(); };
   var _ch = woChanged;
-  woChanged = function () { var n = _ch(); (WO.cur && WO.cur.tabs || []).forEach(function (t) { if (t.ownOpts) t.rows.forEach(function (r, i) { if (ownDiff(t, i)) n++; }); }); return n; };
+  woChanged = function () { var n = _ch(); (WO.cur && WO.cur.tabs || []).forEach(function (t) { if (t.actOpts) t.rows.forEach(function (r, i) { if (actDiff(t, i)) n++; }); }); return n; };
   var _save = woSave;
   woSave = function () {
     var d = WO.cur, extra = [];
     (d && d.tabs || []).forEach(function (t) {
-      if (!t.ownOpts) return;
-      var rows = [];
-      t.rows.forEach(function (r, i) { if (ownDiff(t, i) || (r.e.some(function (x, j) { return String(x).trim() !== String(r.v[j] || '').trim(); }))) rows.push({ i: i, old: r.v, val: r.e, own: ownOf(t, i) }); });
-      if (rows.length) extra.push({ tab: t.name, rows: rows });
-      // 이 탭은 아래에서 따로 저장하므로 기본 저장에서는 빼둠
-      t._skip = true; t._rowsBak = t.rows; t.rows = t.rows.map(function (r) { return { v: r.v, e: r.v.slice(), f: r.f }; });
+      if (!t.actOpts) return;
+      var rows = [], dirty = function (r) { return r.e.some(function (x, j) { return String(x).trim() !== String(r.v[j] || '').trim(); }); };
+      t.rows.forEach(function (r, i) { if (actDiff(t, i) || dirty(r)) { var o = { i: i, old: r.v, val: r.e }; if (actDiff(t, i)) o.act = actOf(t, i); rows.push(o); } });
+      if (!rows.length) return;
+      extra.push({ tab: t.name, rows: rows });
+      t.rows = t.rows.map(function (r) { return { v: r.v, e: r.v.slice(), f: r.f }; }); // 이 탭은 아래에서 따로 저장
     });
-    if (!extra.length) { (d && d.tabs || []).forEach(function (t) { if (t._skip) { t.rows = t._rowsBak; delete t._skip; delete t._rowsBak; } }); return _save(); }
-    var hasOther = (d.tabs || []).some(function (t) { return !t._skip && t.rows.some(function (r) { return r.e.some(function (x, j) { return String(x).trim() !== String(r.v[j] || '').trim(); }); }); });
+    if (!extra.length) return _save();
+    var hasOther = (d.tabs || []).some(function (t) { return t.rows.some(function (r) { return r.e.some(function (x, j) { return String(x).trim() !== String(r.v[j] || '').trim(); }); }); });
     var left = extra.length, errs = [];
     extra.forEach(function (j) {
       woPost('pm_wo_save', { id: d.id, tab: j.tab, rows: j.rows }, function (res) {
         if (!res.ok) errs.push(j.tab + ': ' + (res.error || ''));
         if (--left) return;
-        (d.tabs || []).forEach(function (t) { if (t._skip) { delete t._skip; delete t._rowsBak; } });
         if (hasOther) _save();
         else { toast(errs.length ? '저장 실패: ' + errs.join(' / ') : '저장했어요 · 시트에 반영됨'); var id = d.id; WO.cur = null; woOpen(id); WO.loaded = false; woLoad(true); }
       });
