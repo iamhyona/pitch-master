@@ -7,7 +7,7 @@
 <meta name="theme-color" content="#f2f4f6">
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=3">
 <link rel="apple-touch-icon" href="apple-touch-icon.png?v=3">
-<meta name="pm-build" content="20261018-140339">
+<meta name="pm-build" content="20261018-151652">
 <link rel="manifest" href="manifest.webmanifest?v=3">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -7244,6 +7244,24 @@ function txIc(id) {
 <style>/* 2026-10-18 (현아): 매입·매출 제목줄 — 아티스트·프로젝트명과 금액 아래 기준선 맞춤 */#mo-doc .dv-hd{align-items:flex-end!important;padding-bottom:12px!important}#mo-doc .dv-hd h3{line-height:1.15!important;margin:0!important}#mo-doc .dv-hd .amt b{display:block;line-height:1.15!important}#mo-doc .dv-hd>div:first-child{padding-bottom:0!important}</style>
 <style>/* 2026-10-18 (현아): 법인 통장 줄 — 개별 금액 조금 흐리게·작게, 내역 글자도 조금 작게 */#tab-pf .pf2-it1 .a{font-size:12px!important;color:#4e5968!important;font-weight:600}#tab-pf .pf2-it1.gi-in .a{color:#3182f6!important}#tab-pf .pf2-it1 .t{font-size:12px!important}</style>
 <style>/* 2026-10-18 (현아): 신고 — 겹친 구분선 하나로, 실지급액 우측정렬 */#dc-tx .tx-dt .dc-row+.dc-row::before{display:none!important}#dc-tx .tx-card .g>div:nth-child(3),#dc-tx .tx-card .g>div:nth-child(3) *{text-align:right!important}</style>
+<script>
+// 2026-10-18 (현아): 작업내역서 목록이 늦게 와도(20초+) 매입 카드·상세에 작업자 명단(미작성 포함)이 붙도록 — 작업내역서 목록을 받으면 매입을 다시 그림
+(function () {
+  if (typeof woRender !== 'function') return;
+  var _wr = woRender, n0 = -1;
+  woRender = function () {
+    var r = _wr.apply(this, arguments);
+    try {
+      var n = (WO && WO.items) ? WO.items.length : 0;
+      if (n && n !== n0 && !WO.loading) { n0 = n; if (DC.pay && DC.pay.items && DC.pay.items.length) { dcList('pay'); if (window.pgDraw && document.getElementById('mo-doc') && document.getElementById('mo-doc').classList.contains('open')) try { pgDraw(); } catch (e) {} } }
+    } catch (e) {}
+    return r;
+  };
+  // 매입 탭을 열 때 작업내역서 목록이 없으면 바로 불러오기
+  var _sw = switchTab;
+  switchTab = function (t) { var r = _sw.apply(this, arguments); try { if (t === 'py' && PM_K && !(WO.items && WO.items.length) && !WO.loading) woLoad(false); } catch (e) {} return r; };
+})();
+</script>
 </body>
 
 </html>
