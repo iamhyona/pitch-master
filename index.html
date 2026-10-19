@@ -6708,7 +6708,7 @@ document.addEventListener('click', function (e) {
     if (!adm()) return '';
     if (!fs) return '<span class="pf2-fb"><span class="e">' + (typeof famPayData === 'function' && famPayLoading() ? '박종배·박슬기·박현아 나눈 값 불러오는 중…' : '나눈 값이 없어요') + '</span></span>';
     var a = FPPL.filter(function (w) { return fs[w]; }), tot = a.reduce(function (s0, w) { return s0 + fs[w].sum; }, 0) || 1;
-    return '<span class="pf2-fb"><span class="h">강영순을 3명으로 나누면 <small>· 관리 모드에서만 보여요</small></span>' + a.map(function (w) { var x = fs[w]; return '<span class="i"><span class="n">' + w + '</span><span class="v">' + W(x.sum) + '</span><span class="m">' + x.n + '건 · 핏치지급 ' + W(x.net) + ' · 실제지급 <b>' + W(x.act) + '</b> · ' + Math.round(x.sum / tot * 100) + '%</span></span>'; }).join('') + '</span>';
+    return '<span class="pf2-fb">' + a.map(function (w) { var x = fs[w]; return '<span class="i"><span class="n">' + w + '</span><span class="v">' + W(x.sum) + '</span><span class="m">' + x.n + '건 · 핏치지급 ' + W(x.net) + ' · 실제지급 <b>' + W(x.act) + '</b> · ' + Math.round(x.sum / tot * 100) + '%</span></span>'; }).join('') + '</span>';
   }
   function crList(o) {
     var it = function (x, t) { return '<span class="i"><span class="d">' + esc(String(x.d).slice(2).replace(/-/g, '.')) + '</span><span class="t">' + esc(x.job) + (t === 'b' && x.who ? ' <em>' + esc(x.who) + '</em>' : '') + '</span><span class="a' + (t === 'b' ? ' b' : '') + '">' + (t === 'b' ? '−' : '+') + W(x.amt) + '</span></span>'; };
@@ -6838,7 +6838,7 @@ document.addEventListener('click', function (e) {
       P.open = P.open || {};
       var ks = Object.keys(g).sort(function (a, b) { return (g[b].s - g[b].b) - (g[a].s - g[a].b); }), mx = Math.max.apply(null, ks.map(function (k) { return g[k].s; }).concat([1]));
       h += donut(ks.map(function (k) { return [k, g[k].s]; }), '매출 비중');
-      h += ks.map(function (k) { var o = g[k], p = o.s - o.b, kn = famNorm(k), kn2 = famNorm(String(k).replace(/\(.*$/, '')), fs = kn ? famSplit(function (x) { var c = famNorm(pfClAlias(x.c)); return c && (c === kn || c === kn2); }) : null; return '<div class="pf2-row pf2-cr' + (P.open[k] ? ' on' : '') + '" data-k="' + esc(k) + '" onclick="pf2Open(this)"><span class="n">' + esc(k) + '</span><span class="v' + (p < 0 ? ' neg' : '') + '">' + W(p) + '</span><span class="m"><span>매출 ' + W(o.s) + ' (' + o.n + '건)</span><span>매입 ' + W(o.b) + ' (' + o.BL.length + '건)</span>' + (o.s ? '<span>이익률 ' + Math.round(p / o.s * 100) + '%</span>' : '') + '</span>' + famLine(fs) + crList(o) + '<span class="bar"><i style="width:' + (o.s / mx * 100) + '%;background:' + C.sale + '"></i></span></div>'; }).join('') || '<div class="pf2-empty">내역이 없어요</div>';
+      h += ks.map(function (k) { var o = g[k], p = o.s - o.b, kn = famNorm(k), kn2 = famNorm(String(k).replace(/\(.*$/, '')), fs = kn ? famSplit(function (x) { var c = famNorm(pfClAlias(x.c)); return c && (c === kn || c === kn2); }) : null; return '<div class="pf2-row pf2-cr' + (P.open[k] ? ' on' : '') + '" data-k="' + esc(k) + '" onclick="pf2Open(this)"><span class="n">' + esc(k) + '</span><span class="v' + (p < 0 ? ' neg' : '') + '">' + W(p) + '</span><span class="m"><span>매출 ' + W(o.s) + ' (' + o.n + '건)</span><span>매입 ' + W(o.b) + ' (' + o.BL.length + '건)</span>' + (o.s ? '<span>이익률 ' + Math.round(p / o.s * 100) + '%</span>' : '') + '</span>' + crList(o) + '<span class="bar"><i style="width:' + (o.s / mx * 100) + '%;background:' + C.sale + '"></i></span></div>'; }).join('') || '<div class="pf2-empty">내역이 없어요</div>';
       h += '<div class="pf2-note">· 소속사별 이익 = 매출 − 그 소속사 작업의 매입 (부대비용은 전체에서만 뺌). 줄을 누르면 매출·매입 내역이 펼쳐져요.<br>· 매입의 소속사: 내역에 소속사 이름(YGP 등)이나 담당자 이름(카톡 청구 기록 기준: 문창윤=YG PLUS, 최인영·오승원·정재식=YG 등)이 있으면 그 소속사 → 없으면 거래처 마스터의 아티스트 소속사 → 소속사가 둘이면(트레저 등) 내역이 가장 비슷한 매출의 소속사.<br>· 소속사 미확인 = 매입 내역에서 아티스트를 찾지 못한 건 (예: 지급계산오류 정정, 거래처 마스터에 없는 아티스트).</div>';
     } else {
       var w = {};
@@ -7468,7 +7468,7 @@ function txIc(id) {
 #tab-pf .pf2-cl .a.b{color:#4e5968}
 #tab-pf .pf2-fs{grid-column:1/3;font-size:11px;color:var(--txt3)}
 #tab-pf .pf2-fs b{color:var(--txt2);font-weight:600}
-#tab-pf .pf2-fb{grid-column:1/3;display:flex;flex-direction:column;margin:8px 0 4px;padding:4px 0 0 12px;border-left:2px solid #3182f6}
+#tab-pf .pf2-fb{grid-column:1/3;display:flex;flex-direction:column;margin:6px 0 4px;padding:0 0 0 14px}
 #tab-pf .pf2-fb .h{font-size:11px;font-weight:700;color:#3182f6;margin-bottom:2px}
 #tab-pf .pf2-fb .h small{font-weight:500;color:var(--txt3)}
 #tab-pf .pf2-fb .e{font-size:11px;color:var(--txt3)}
