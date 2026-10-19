@@ -7,7 +7,7 @@
 <meta name="theme-color" content="#f2f4f6">
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=3">
 <link rel="apple-touch-icon" href="apple-touch-icon.png?v=3">
-<meta name="pm-build" content="20261019-1500">
+<meta name="pm-build" content="20261019-1700">
 <link rel="manifest" href="manifest.webmanifest?v=3">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -7679,6 +7679,26 @@ function txIc(id) {
   switchTab = function (t) { _sw.apply(this, arguments); if (t === 'fam') { if (!role()) { switchTab('dash'); return; } if (F.v === 'as') loadAs(); else loadPay(); draw(); } };
   var _ar = applyRoleUI; applyRoleUI = function () { var x = _ar.apply(this, arguments); ensure(); role(); return x; };
   setTimeout(role, 0);
+})();
+</script>
+<script>
+// 2026-10-19 (현아): 소속사가 아닌 거래처(사운드컨텐츠·mmdd·모티브프러덕션 등)는 새 작업내역서에서 아티스트를 직접 입력
+(function () {
+  var FREE = /^(SOUND\s*CONTENTS|사운드|MMDD|MOTIVE|모티브)/i;
+  var _nc = woNewClient;
+  woNewClient = function () {
+    var a0 = document.getElementById('won-a');
+    if (a0 && a0.tagName === 'INPUT') { var s = document.createElement('select'); s.className = a0.getAttribute('data-cls') || 'fi sm'; s.id = 'won-a'; if (a0.getAttribute('data-oc')) s.setAttribute('onchange', a0.getAttribute('data-oc')); s.innerHTML = '<option value="">선택</option>'; a0.parentNode.replaceChild(s, a0); }
+    _nc.apply(this, arguments);
+    var c = document.getElementById('won-c'), a = document.getElementById('won-a'); if (!c || !a || a.tagName !== 'SELECT') return;
+    var cv = c.value || '', n = [].filter.call(a.options, function (o) { return o.value; }).length;
+    if (cv && (FREE.test(cv) || !n)) {
+      var inp = document.createElement('input'); inp.type = 'text'; inp.id = 'won-a';
+      inp.className = String(a.className || 'fi sm').replace(/\bph\b/, '').trim(); inp.placeholder = '아티스트명 직접 입력 (예: 아이유)';
+      inp.setAttribute('data-cls', a.className); if (a.getAttribute('onchange')) inp.setAttribute('data-oc', a.getAttribute('onchange'));
+      a.parentNode.replaceChild(inp, a);
+    }
+  };
 })();
 </script>
 </body>
