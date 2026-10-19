@@ -7,7 +7,7 @@
 <meta name="theme-color" content="#f2f4f6">
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=3">
 <link rel="apple-touch-icon" href="apple-touch-icon.png?v=3">
-<meta name="pm-build" content="202610200900">
+<meta name="pm-build" content="202610200915">
 <link rel="manifest" href="manifest.webmanifest?v=3">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -7600,6 +7600,8 @@ function txIc(id) {
 /* 2026-10-20 (현아): DB 표기(귀속) 작업자 = 실제 작업자 옆 회색 한 글자 단추 (종·슬·현) */
 #tab-fam .fm-r2 .wk{display:inline-flex;align-items:center;gap:4px;grid-row:auto;align-self:center;padding-top:0}
 #tab-fam .fm-db{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:var(--chip);color:var(--txt3);font-size:11px;font-weight:700;flex:none}
+#tab-fam .fm-ck{display:flex;align-items:center;min-height:18px;margin-bottom:2px}
+#tab-fam .fm-ck .wo-ck{padding:2px 8px!important;font-size:10px!important}
 </style>
 <script>
 (function () {
@@ -7674,7 +7676,10 @@ function txIc(id) {
   var FM_CAL = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/></svg>';
   function fmDw(id, v, ph) { var t = v ? v + '(' + '일월화수목금토'.charAt(new Date(v + 'T00:00:00').getDay()) + ')' : ph; return '<label class="dc-dw' + (v ? '' : ' e') + '"><span>' + t + '</span>' + FM_CAL + '<input type="date" id="' + id + '" value="' + (v || '') + '" onclick="try{this.showPicker()}catch(e){}" onchange="famRange()"></label>'; }
   function years(list) { var o = {}; list.forEach(function (d) { var y = String(d || '').slice(0, 4); if (/^\d{4}$/.test(y)) o[y] = 1; }); return Object.keys(o).sort().reverse(); }
-  function shortProj(s) { return String(s || '').replace(/^\s*\[PITCH\]\s*/, '').replace(/<[^>]*>.*$/, '').replace(/_/g, ' ').trim(); }
+  // 2026-10-20 (현아): 프로젝트명 앞 [거래처]는 떼고, 거래처는 위에 단추(작업내역서·매출과 같은 색 단추)로
+  function cliOf(s) { var m = String(s || '').replace(/^\s*\[PITCH\]\s*/, '').match(/^\s*\[([^\]]+)\]/); if (!m) return ''; var t = m[1].replace(/\s*\(.*\)\s*$/, '').replace(/\s*ENTERTAINMENT\s*/i, ' ').trim(); return t || m[1]; }
+  function ckHtml(s) { var c = cliOf(s); return c && typeof woCK === 'function' ? '<span class="fm-ck">' + woCK(c) + '</span>' : ''; }
+  function shortProj(s) { return String(s || '').replace(/^\s*\[PITCH\]\s*/, '').replace(/^\s*\[[^\]]*\]\s*/, '').replace(/<[^>]*>.*$/, '').replace(/_/g, ' ').trim(); }
   function wd(d) { var t = new Date(String(d).slice(0, 10) + 'T00:00:00'); return isNaN(t) ? '' : '(' + '일월화수목금토'.charAt(t.getDay()) + ')'; }
   function dd(d) { d = String(d || ''); return /^\d{4}-\d{2}-\d{2}/.test(d) ? d.slice(2, 10).replace(/-/g, '.') + wd(d) : d; }
   function draw() {
@@ -7720,7 +7725,7 @@ function txIc(id) {
     h += order.map(function (k) {
       var g = G[k], c = g.reduce(function (s, r) { return s + (Number(r[4]) || 0); }, 0);
       var ws = {}; g.forEach(function (r) { var a = r[6] || r[5]; if (a) ws[a] = 1; });
-      return '<div class="fm-card fm-g' + (F.gopen[k] ? ' open' : '') + '" data-k="' + esc(k) + '"><div class="fm-gh" onclick="famG(this)"><div class="gt"><span>' + esc(shortProj(g[0][1])) + '</span><em>' + esc(dd(g[0][0])) + ' · ' + g.length + '줄 · ' + W(c) + '컷 · ' + Object.keys(ws).map(esc).join('·') + '</em></div><i class="chev"></i></div><div class="fm-gb">' + g.map(function (r) {
+      return '<div class="fm-card fm-g' + (F.gopen[k] ? ' open' : '') + '" data-k="' + esc(k) + '"><div class="fm-gh" onclick="famG(this)"><div class="gt">' + ckHtml(g[0][1]) + '<span>' + esc(shortProj(g[0][1])) + '</span><em>' + esc(dd(g[0][0])) + ' · ' + g.length + '줄 · ' + W(c) + '컷 · ' + Object.keys(ws).map(esc).join('·') + '</em></div><i class="chev"></i></div><div class="fm-gb">' + g.map(function (r) {
         var act = r[6] || r[5], mv = r[6] && r[5] && r[6] !== r[5];
         return '<div class="fm-r fm-r2"><span class="wk"><span class="fm-tag w' + PPL.indexOf(act) + '">' + esc(act || '-') + '</span>' + (r[5] ? '<span class="fm-db" title="DB 표기 ' + esc(r[5]) + '">' + esc(String(r[5]).charAt(1) || r[5]) + '</span>' : '') + '</span><span class="t">' + esc(r[2]) + '</span><span class="a"><small>' + esc(r[3] || '') + '</small> <b>' + W(r[4]) + '컷</b></span></div>';
       }).join('') + '</div></div>';
@@ -7756,7 +7761,7 @@ function txIc(id) {
         return '<div class="w"><span>' + w + '</span><span>' + W(x.cut) + '컷</span></div>' + x.rows.map(function (r) { return '<div class="rw">' + esc(r[0]) + ' · ' + W(r[1]) + '컷 · ' + W(r[3]) + '</div>'; }).join('') +
           '<div class="k"><span>작업 합계</span><b>' + W(x.sum) + '</b></div><div class="k"><span>원천세</span><b>' + W(x.tax) + '</b></div><div class="k b"><span>핏치지급액</span><b>' + W(x.net) + '</b></div><div class="k lt"><span>강영순 수수료 (25%)</span><b>' + W(x.fee) + '</b></div><div class="k f"><span>실제지급액</span><b>' + W(x.act) + '</b></div>';
       }).join('');
-      return '<div class="fm-p' + (F.open[o.id] ? ' on' : '') + '" data-id="' + esc(o.id) + '" onclick="famOpen(this.dataset.id)"><div class="l1"><span class="t">' + esc(shortProj(o.n)) + '</span><span class="a">' + W(act) + '</span></div>' +
+      return '<div class="fm-p' + (F.open[o.id] ? ' on' : '') + '" data-id="' + esc(o.id) + '" onclick="famOpen(this.dataset.id)">' + ckHtml(o.n) + '<div class="l1"><span class="t">' + esc(shortProj(o.n)) + '</span><span class="a">' + W(act) + '</span></div>' +
         '<div class="l2"><span>' + esc(dd(o.d)) + '</span>' + ws.map(function (w) { return '<span>' + w + ' ' + W(o.w[w].act) + '</span>'; }).join('') + (o.p ? '<span class="pd">지급 ' + esc(dd(o.p)) + '</span>' : '<span class="np">미지급</span>') + '</div><div class="fm-pd">' + det + '</div></div>';
     }).join('') + '</div>';
     return h;
