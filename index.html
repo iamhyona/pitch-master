@@ -6444,6 +6444,10 @@ document.addEventListener('click', function (e) {
 /* 2026-10-17 (현아): 매입·매출 — 검색필터 아래(구분선 위) 소속사 드롭다운 */
 .dc-box.has-ag .tc-h{border-bottom:0!important;padding-bottom:6px!important}
 .dc-agr{padding:0 18px 12px;border-bottom:1px solid var(--line);background:#fff}
+/* 2026-10-20 (현아): 기간 열면 소속사 칸과 날짜칸 사이 구분선 없이, 소속사 칸 위 여백(6px)과 같은 간격으로 날짜칸 */
+.dc-box.dc-box .tc-h.per~.dc-agr{border-bottom:0!important;padding-bottom:0!important}
+.dc-box.dc-box .tc-h.per~.wo-bar{padding-top:6px!important}
+.dc-box.dc-box .tc-h.per~.wo-bar .dc-per2{margin:0 -18px 2px!important;padding:0 18px 12px!important}
 .dc-agr .dc-sel{width:100%;height:34px;background-color:var(--chip)!important;border-radius:999px!important;border:0!important;background-position:right 13px center;padding:0 30px 0 14px}
 </style>
 <script>
