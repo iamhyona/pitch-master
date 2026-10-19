@@ -7490,6 +7490,10 @@ function txIc(id) {
 #tab-fam .fm-top .sp{flex:1}
 #tab-fam .fm-ic{width:34px;height:34px;border-radius:50%;border:0;background:var(--chip);display:inline-flex;align-items:center;justify-content:center;cursor:pointer;color:var(--txt2);text-decoration:none;flex:none}
 #tab-fam .fm-ic svg{width:16px;height:16px}
+#tab-fam .fm-rg{flex-basis:100%;display:flex;align-items:center;gap:6px}
+#tab-fam .fm-rg>i{font-style:normal;color:var(--txt3);font-size:12px;flex:none}
+#tab-fam .fm-rg .dc-dw{height:34px}
+#tab-fam .fm-rx{flex:none;width:30px;height:30px;border-radius:50%;border:0;background:var(--chip);color:var(--txt2);display:inline-flex;align-items:center;justify-content:center;padding:0;cursor:pointer}
 #tab-fam .fm-row2{flex-basis:100%;display:flex;gap:6px;align-items:center;overflow-x:auto;scrollbar-width:none}
 #tab-fam .fm-row2::-webkit-scrollbar{display:none}
 #tab-fam .fm-chip{flex:none;height:30px;padding:0 12px;border-radius:999px;border:0;background:var(--chip);font:inherit;font-size:12px;font-weight:600;color:var(--txt2);cursor:pointer}
@@ -7551,7 +7555,7 @@ function txIc(id) {
 <script>
 (function () {
   var PPL = ['박종배', '박슬기', '박현아'];
-  var F = { v: 'as', who: '', q: '', y: String(new Date().getFullYear()), m: '', as: null, pay: null, links: {}, url: '', ld: {}, err: {}, open: {} };
+  var F = { v: 'as', who: '', q: '', y: '', m: '', from: new Date().getFullYear() + '-01-01', to: new Date().getFullYear() + '-12-31', as: null, pay: null, links: {}, url: '', ld: {}, err: {}, open: {} };
   window.FAM = F;
   function W(n) { return Math.round(Number(n) || 0).toLocaleString('ko-KR'); }
   function adm() { return typeof SESSION !== 'undefined' && SESSION && SESSION.role === 'admin'; }
@@ -7609,7 +7613,12 @@ function txIc(id) {
   window.famQ = function (el) { F.q = el.value; clearTimeout(F.qt); F.qt = setTimeout(function () { drawBody(); }, 150); };
   window.famRe = function () { if (F.v === 'as') loadAs(true); else { F.ld.pay = 0; loadPay(true); } draw(); };
   window.famOpen = function (id) { F.open[id] = !F.open[id]; var el = document.querySelector('#tab-fam .fm-p[data-id="' + id + '"]'); if (el) el.classList.toggle('on', !!F.open[id]); };
-  function inYM(d) { d = String(d || ''); return (!F.y || d.slice(0, 4) === F.y) && (!F.m || d.slice(5, 7) === F.m); }
+  // 2026-10-20 (현아): 연·월 대신 기간(시작일~종료일)
+  function inYM(d) { d = String(d || '').slice(0, 10); return (!F.from || d >= F.from) && (!F.to || d <= F.to); }
+  window.famRange = function () { var a = document.getElementById('fm-from'), b = document.getElementById('fm-to'); F.from = a ? a.value : ''; F.to = b ? b.value : ''; if (F.from && F.to && F.from > F.to) { var t = F.from; F.from = F.to; F.to = t; } draw(); };
+  window.famClr = function () { F.from = ''; F.to = ''; draw(); };
+  var FM_CAL = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/></svg>';
+  function fmDw(id, v, ph) { var t = v ? v + '(' + '일월화수목금토'.charAt(new Date(v + 'T00:00:00').getDay()) + ')' : ph; return '<label class="dc-dw' + (v ? '' : ' e') + '"><span>' + t + '</span>' + FM_CAL + '<input type="date" id="' + id + '" value="' + (v || '') + '" onclick="try{this.showPicker()}catch(e){}" onchange="famRange()"></label>'; }
   function years(list) { var o = {}; list.forEach(function (d) { var y = String(d || '').slice(0, 4); if (/^\d{4}$/.test(y)) o[y] = 1; }); return Object.keys(o).sort().reverse(); }
   function shortProj(s) { return String(s || '').replace(/^\s*\[PITCH\]\s*/, '').replace(/<[^>]*>.*$/, '').replace(/_/g, ' ').trim(); }
   function wd(d) { var t = new Date(String(d).slice(0, 10) + 'T00:00:00'); return isNaN(t) ? '' : '(' + '일월화수목금토'.charAt(t.getDay()) + ')'; }
@@ -7622,8 +7631,8 @@ function txIc(id) {
     var sheet = F.v === 'as' ? (F.url ? '<a class="fm-ic" href="' + esc(F.url) + '" target="_blank" title="작업자배정 시트 열기">' + SV_S + '</a>' : '') : '';
     top.innerHTML = '<div class="fm-seg"><button class="' + (F.v === 'as' ? 'on' : '') + '" onclick="famSet(\'v\',\'as\')">작업자배정</button><button class="' + (F.v === 'pay' ? 'on' : '') + '" onclick="famSet(\'v\',\'pay\')">실제 정산</button></div><span class="sp"></span>' + sheet +
       '<button class="fm-ic" type="button" title="새로 불러오기" onclick="famRe()">' + SV_R + '</button>' +
-      '<div class="fm-row2"><select onchange="famSet(\'y\',this.value)"><option value="">전체 연도</option>' + ys.map(function (y) { return '<option value="' + y + '"' + (F.y === y ? ' selected' : '') + '>' + y + '년</option>'; }).join('') + '</select>' +
-      '<select onchange="famSet(\'m\',this.value)">' + mo + '</select>' +
+      '<div class="fm-rg">' + fmDw('fm-from', F.from, '시작일') + '<i>~</i>' + fmDw('fm-to', F.to, '종료일') + (F.from || F.to ? '<button type="button" class="fm-rx" title="기간 지우기 (전체)" onclick="famClr()"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" style="display:block"><path d="M6 6l12 12M18 6L6 18"/></svg></button>' : '') + '</div>' +
+      '<div class="fm-row2">' +
       ['전체'].concat(PPL).map(function (w) { var k = w === '전체' ? '' : w; return '<button class="fm-chip' + (F.who === k ? ' on' : '') + '" onclick="famSet(\'who\',\'' + k + '\')">' + w + '</button>'; }).join('') +
       (F.v === 'as' ? '<input type="search" placeholder="프로젝트·작업내역 검색" value="' + esc(F.q) + '" oninput="famQ(this)">' : '') + '</div>';
     drawBody();
@@ -7662,7 +7671,7 @@ function txIc(id) {
     var list = F.pay.filter(function (o) { return inYM(o.d) && (!F.who || o.w[F.who]); });
     var T = {}; PPL.forEach(function (w) { T[w] = { n: 0, cut: 0, sum: 0, tax: 0, net: 0, fee: 0, act: 0, due: 0 }; });
     list.forEach(function (o) { PPL.forEach(function (w) { var x = o.w[w]; if (!x) return; var t = T[w]; t.n++; t.cut += x.cut; t.sum += x.sum; t.tax += x.tax; t.net += x.net; t.fee += x.fee; t.act += x.act; if (!o.p) t.due += x.act; }); });
-    var per = (F.y ? F.y + '년' : '전체 기간') + (F.m ? ' ' + (+F.m) + '월' : '');
+    var per = (F.from || F.to) ? ((F.from ? F.from.slice(2).replace(/-/g, '.') : '처음') + ' ~ ' + (F.to ? F.to.slice(2).replace(/-/g, '.') : '지금')) : '전체 기간';
     var cols = F.who ? [F.who] : PPL;
     var h = '<div class="fm-card"><div class="fm-h">' + per + ' 실제 작업비<small>' + (F.part ? '불러오는 중 ' + F.part : list.length + '개 프로젝트') + '</small></div>';
     h += '<div class="fm-sum">' + PPL.map(function (w) { return '<div class="' + (F.who === w ? 'on' : '') + '" onclick="famSet(\'who\',\'' + (F.who === w ? '' : w) + '\')"><span>' + w + '</span><b class="r">' + W(T[w].act) + '</b><small>실제지급 · ' + T[w].n + '건 · ' + W(T[w].cut) + '컷</small></div>'; }).join('') + '</div>';
@@ -7672,7 +7681,7 @@ function txIc(id) {
       h += '<tr class="' + (k[1] === 'act' ? 'f' : '') + '"><td>' + k[0] + '</td>' + cols.map(function (w) { return '<td>' + W(T[w][k[1]]) + '</td>'; }).join('') + (cols.length > 1 ? '<td>' + W(tot) + '</td>' : '') + '</tr>';
     });
     h += '</table></div>';
-    var ly = F.y || String(new Date().getFullYear()), lk = PPL.map(function (w) { var u = F.links[w + '_' + ly]; return u ? '<a href="' + esc(u) + '" target="_blank">' + w + '_' + ly + '년 시트</a>' : ''; }).join('');
+    var ly = (F.to || F.from || String(new Date().getFullYear())).slice(0, 4), lk = PPL.map(function (w) { var u = F.links[w + '_' + ly]; return u ? '<a href="' + esc(u) + '" target="_blank">' + w + '_' + ly + '년 시트</a>' : ''; }).join('');
     if (lk) h += '<div class="fm-links">' + lk + '</div>';
     h += '<div class="fm-note">· 원천세를 뗀 핏치지급액이 강영순 통장으로 들어온 뒤 25%를 떼고 받는 금액이 실제지급액이에요.<br>· 지급일자가 비어 있는 프로젝트는 미지급으로 셌어요.</div></div>';
     if (!list.length) return h + '<div class="fm-empty">해당하는 정산이 없어요</div>';
