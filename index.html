@@ -7549,6 +7549,21 @@ function txIc(id) {
 #tab-fam .fm-tbl tr.h td{font-weight:700;color:var(--txt);border-bottom:1px solid #b0b8c1}
 #tab-fam .fm-empty{padding:40px 0;text-align:center;color:var(--txt3);font-size:13px;background:#fff;border-radius:20px}
 #tab-fam .fm-note{font-size:11px;color:var(--txt3);line-height:1.6;margin-top:10px}
+/* 2026-10-20 (현아): 실제 정산 — 글자 검정, 핏치지급액 진하게, 수수료 흐리게, 전체 카드 */
+#tab-fam .fm-sum.fm-sum4{grid-template-columns:repeat(2,minmax(0,1fr))}
+#tab-fam .fm-sum b, #tab-fam .fm-sum b.r{color:var(--txt)!important}
+#tab-fam .fm-tbl td{color:var(--txt)!important}
+#tab-fam .fm-tbl tr.f td{color:var(--txt)!important;font-weight:800}
+#tab-fam .fm-tbl tr.b td{font-weight:800}
+#tab-fam .fm-tbl tr.lt td{color:#b0b8c1!important}
+#tab-fam .fm-p .l1 .a{color:var(--txt)!important}
+#tab-fam .fm-p .l2 .np, #tab-fam .fm-p .l2 .pd{color:var(--txt)!important}
+#tab-fam .fm-pd .k b{color:var(--txt)}
+#tab-fam .fm-pd .k.f b{color:var(--txt)!important}
+#tab-fam .fm-pd .k.b span, #tab-fam .fm-pd .k.b b{font-weight:800;color:var(--txt)}
+#tab-fam .fm-pd .k.lt span, #tab-fam .fm-pd .k.lt b{color:#b0b8c1!important;font-weight:500}
+#tab-fam .fm-links a{display:inline-flex;align-items:center;gap:6px;color:var(--txt)}
+#tab-fam .fm-links a svg{width:14px;height:14px;flex:none}
 #tab-fam .fm-links{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
 #tab-fam .fm-links a{font-size:12px;font-weight:600;color:var(--txt2);background:var(--chip);border-radius:999px;padding:6px 11px;text-decoration:none}
 #tab-pf .pf2-top{flex-wrap:wrap}
@@ -7683,14 +7698,16 @@ function txIc(id) {
     var per = (F.from || F.to) ? ((F.from ? F.from.slice(2).replace(/-/g, '.') : '처음') + ' ~ ' + (F.to ? F.to.slice(2).replace(/-/g, '.') : '지금')) : '전체 기간';
     var cols = F.who ? [F.who] : PPL;
     var h = '<div class="fm-card"><div class="fm-h">' + per + ' 실제 작업비<small>' + (F.part ? '불러오는 중 ' + F.part : list.length + '개 프로젝트') + '</small></div>';
-    h += '<div class="fm-sum">' + PPL.map(function (w) { return '<div class="' + (F.who === w ? 'on' : '') + '" onclick="famSet(\'who\',\'' + (F.who === w ? '' : w) + '\')"><span>' + w + '</span><b class="r">' + W(T[w].act) + '</b><small>실제지급 · ' + T[w].n + '건 · ' + W(T[w].cut) + '컷</small></div>'; }).join('') + '</div>';
+    // 2026-10-20 (현아): 전체 카드 추가 → 4개 (2×2), 글자는 검정
+    var TA = PPL.reduce(function (a, w) { a.act += T[w].act; a.cut += T[w].cut; return a; }, { act: 0, cut: 0 });
+    h += '<div class="fm-sum fm-sum4"><div class="' + (F.who ? '' : 'on') + '" onclick="famSet(\'who\',\'\')"><span>전체</span><b>' + W(TA.act) + '</b><small>실제지급 · ' + list.length + '건 · ' + W(TA.cut) + '컷</small></div>' + PPL.map(function (w) { return '<div class="' + (F.who === w ? 'on' : '') + '" onclick="famSet(\'who\',\'' + (F.who === w ? '' : w) + '\')"><span>' + w + '</span><b>' + W(T[w].act) + '</b><small>실제지급 · ' + T[w].n + '건 · ' + W(T[w].cut) + '컷</small></div>'; }).join('') + '</div>';
     h += '<div class="fm-tw"><table class="fm-tbl"><tr class="h"><td></td>' + cols.map(function (w) { return '<td>' + w + '</td>'; }).join('') + (cols.length > 1 ? '<td>합계</td>' : '') + '</tr>';
     [['작업 합계', 'sum'], ['원천세', 'tax'], ['핏치지급액', 'net'], ['강영순 25%', 'fee'], ['실제지급액', 'act'], ['미지급분', 'due']].forEach(function (k) {
       var tot = PPL.reduce(function (s, w) { return s + T[w][k[1]]; }, 0);
-      h += '<tr class="' + (k[1] === 'act' ? 'f' : '') + '"><td>' + k[0] + '</td>' + cols.map(function (w) { return '<td>' + W(T[w][k[1]]) + '</td>'; }).join('') + (cols.length > 1 ? '<td>' + W(tot) + '</td>' : '') + '</tr>';
+      h += '<tr class="' + (k[1] === 'act' ? 'f' : k[1] === 'net' ? 'b' : k[1] === 'fee' ? 'lt' : '') + '"><td>' + k[0] + '</td>' + cols.map(function (w) { return '<td>' + W(T[w][k[1]]) + '</td>'; }).join('') + (cols.length > 1 ? '<td>' + W(tot) + '</td>' : '') + '</tr>';
     });
     h += '</table></div>';
-    var ly = (F.to || F.from || String(new Date().getFullYear())).slice(0, 4), lk = PPL.map(function (w) { var u = F.links[w + '_' + ly]; return u ? '<a href="' + esc(u) + '" target="_blank">' + w + '_' + ly + '년 시트</a>' : ''; }).join('');
+    var ly = (F.to || F.from || String(new Date().getFullYear())).slice(0, 4), lk = PPL.map(function (w) { var u = F.links[w + '_' + ly]; return u ? '<a href="' + esc(u) + '" target="_blank" title="' + w + '_' + ly + '년 시트">' + SV_S + w + '</a>' : ''; }).join('');
     if (lk) h += '<div class="fm-links">' + lk + '</div>';
     h += '<div class="fm-note">· 원천세를 뗀 핏치지급액이 강영순 통장으로 들어온 뒤 25%를 떼고 받는 금액이 실제지급액이에요.<br>· 지급일자가 비어 있는 프로젝트는 미지급으로 셌어요.</div></div>';
     if (!list.length) return h + '<div class="fm-empty">해당하는 정산이 없어요</div>';
@@ -7699,7 +7716,7 @@ function txIc(id) {
       var det = ws.map(function (w) {
         var x = o.w[w];
         return '<div class="w"><span>' + w + '</span><span>' + W(x.cut) + '컷</span></div>' + x.rows.map(function (r) { return '<div class="rw">' + esc(r[0]) + ' · ' + W(r[1]) + '컷 · ' + W(r[3]) + '</div>'; }).join('') +
-          '<div class="k"><span>작업 합계</span><b>' + W(x.sum) + '</b></div><div class="k"><span>원천세</span><b>' + W(x.tax) + '</b></div><div class="k"><span>핏치지급액</span><b>' + W(x.net) + '</b></div><div class="k"><span>강영순 수수료 (25%)</span><b>' + W(x.fee) + '</b></div><div class="k f"><span>실제지급액</span><b>' + W(x.act) + '</b></div>';
+          '<div class="k"><span>작업 합계</span><b>' + W(x.sum) + '</b></div><div class="k"><span>원천세</span><b>' + W(x.tax) + '</b></div><div class="k b"><span>핏치지급액</span><b>' + W(x.net) + '</b></div><div class="k lt"><span>강영순 수수료 (25%)</span><b>' + W(x.fee) + '</b></div><div class="k f"><span>실제지급액</span><b>' + W(x.act) + '</b></div>';
       }).join('');
       return '<div class="fm-p' + (F.open[o.id] ? ' on' : '') + '" data-id="' + esc(o.id) + '" onclick="famOpen(this.dataset.id)"><div class="l1"><span class="t">' + esc(shortProj(o.n)) + '</span><span class="a">' + W(act) + '</span></div>' +
         '<div class="l2"><span>' + esc(dd(o.d)) + '</span>' + ws.map(function (w) { return '<span>' + w + ' ' + W(o.w[w].act) + '</span>'; }).join('') + (o.p ? '<span class="pd">지급 ' + esc(dd(o.p)) + '</span>' : '<span class="np">미지급</span>') + '</div><div class="fm-pd">' + det + '</div></div>';
