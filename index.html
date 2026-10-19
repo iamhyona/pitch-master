@@ -7583,6 +7583,20 @@ function txIc(id) {
 #tab-fam .fm-tag.w2{background:rgba(49,130,246,.12);color:#3182f6}
 #tab-fam .fm-tbl tr.f td{color:#f04452!important}
 #tab-fam .fm-pd .k.f span, #tab-fam .fm-pd .k.f b{color:#f04452!important;font-weight:800}
+/* 2026-10-20 (현아): 팸 — 탭은 박스 밖 위로 · 필터 줄 오른쪽에 아이콘 · 세부 줄 = 작업자 | 내역 | 1인 N컷 */
+#tab-fam .fm-segw{margin:0 0 10px}
+#tab-fam .fm-segw .fm-seg{background:#e9ecef}
+#tab-fam .fm-per{gap:5px;flex-wrap:nowrap}
+#tab-fam .fm-per select{flex:0 1 auto;min-width:0;padding:0 24px 0 11px!important;background-position:right 9px center!important}
+#tab-fam .fm-per .dc-pb{padding:0 11px}
+#tab-fam .fm-per .sp{flex:1;min-width:2px}
+#tab-fam .fm-per .fm-ic{width:32px;height:32px}
+#tab-fam .fm-r2{grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:2px 10px}
+#tab-fam .fm-r2 .wk{grid-row:1/3;align-self:start;padding-top:1px}
+#tab-fam .fm-r2 .a{font-weight:400}
+#tab-fam .fm-r2 .a small{font-size:12px;color:var(--txt3);font-weight:500}
+#tab-fam .fm-r2 .a b{font-size:13px;color:var(--txt);font-weight:800}
+#tab-fam .fm-r2 .m{grid-column:2/4}
 </style>
 <script>
 (function () {
@@ -7639,7 +7653,7 @@ function txIc(id) {
     t.addEventListener('click', function () { switchTab('fam'); });
     var ci = document.querySelector('.content .ci'); if (!ci) return;
     var p = document.createElement('div'); p.id = 'tab-fam'; p.className = 'tab-panel';
-    p.innerHTML = '<div class="tc"><div class="fm-top" id="fm-top"></div><div id="fm-b"></div></div>';
+    p.innerHTML = '<div class="tc"><div class="fm-segw" id="fm-segw"></div><div class="fm-top" id="fm-top"></div><div id="fm-b"></div></div>';
     ci.appendChild(p);
   }
   function role() { var b = document.getElementById('tab-btn-fam'); if (b) b.style.display = adm() ? '' : 'none'; return adm(); }
@@ -7669,12 +7683,12 @@ function txIc(id) {
     var rg = !!(F.from || F.to), po = F.perOpen || rg;
     var sheet = F.v === 'as' ? (F.url ? '<a class="fm-ic" href="' + esc(F.url) + '" target="_blank" title="작업자배정 시트 열기">' + SV_S + '</a>' : '') : '';
     // 2026-10-20 (현아): 연·월·기간 (기간 누르면 아래에 시작일~종료일) · 검색은 돋보기 아이콘 → 아래에 검색칸 · 새로고침 대신 동기화 아이콘
-    top.innerHTML = '<div class="fm-seg"><button class="' + (F.v === 'as' ? 'on' : '') + '" onclick="famSet(\'v\',\'as\')">작업자배정</button><button class="' + (F.v === 'pay' ? 'on' : '') + '" onclick="famSet(\'v\',\'pay\')">실제 정산</button></div><span class="sp"></span>' + sheet +
-      '<button class="fm-ic' + (F.sOpen || F.q ? ' on' : '') + '" type="button" title="검색" onclick="famS()">' + SV_Q + '</button>' +
-      '<button class="fm-ic" type="button" title="동기화" onclick="famRe()">' + SV_SY + '</button>' +
-      '<div class="fm-per' + (rg ? ' rg-on' : '') + '"><select onchange="famSet(\'y\',this.value)"><option value="">전체 연도</option>' + ys.map(function (y) { return '<option value="' + y + '"' + (y === F.y ? ' selected' : '') + '>' + y + '년</option>'; }).join('') + '</select>' +
+    var sw = document.getElementById('fm-segw'); if (sw) sw.innerHTML = '<div class="fm-seg"><button class="' + (F.v === 'as' ? 'on' : '') + '" onclick="famSet(\'v\',\'as\')">작업자배정</button><button class="' + (F.v === 'pay' ? 'on' : '') + '" onclick="famSet(\'v\',\'pay\')">실제 정산</button></div>';
+    var ics = sheet + '<button class="fm-ic' + (F.sOpen || F.q ? ' on' : '') + '" type="button" title="검색" onclick="famS()">' + SV_Q + '</button>' +
+      '<button class="fm-ic" type="button" title="동기화" onclick="famRe()">' + SV_SY + '</button>';
+    top.innerHTML = '<div class="fm-per' + (rg ? ' rg-on' : '') + '"><select onchange="famSet(\'y\',this.value)"><option value="">전체 연도</option>' + ys.map(function (y) { return '<option value="' + y + '"' + (y === F.y ? ' selected' : '') + '>' + y + '년</option>'; }).join('') + '</select>' +
       '<select onchange="famSet(\'m\',this.value)">' + mo + '</select>' +
-      '<button type="button" class="dc-pb' + (po ? ' on' : '') + '" onclick="famPer()">' + (rg ? (F.from ? F.from.slice(5).replace('-', '.') : '') + '~' + (F.to ? F.to.slice(5).replace('-', '.') : '') : '기간') + '</button></div>' +
+      '<button type="button" class="dc-pb' + (po ? ' on' : '') + '" onclick="famPer()">' + (rg ? (F.from ? F.from.slice(5).replace('-', '.') : '') + '~' + (F.to ? F.to.slice(5).replace('-', '.') : '') : '기간') + '</button><span class="sp"></span>' + ics + '</div>' +
       (po ? '<div class="fm-rg">' + fmDw('fm-from', F.from, '시작일') + '<i>~</i>' + fmDw('fm-to', F.to, '종료일') + (rg ? '<button type="button" class="fm-rx" title="기간 지우기" onclick="famClr()"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" style="display:block"><path d="M6 6l12 12M18 6L6 18"/></svg></button>' : '') + '</div>' : '') +
       '<div class="fm-row2">' +
       ['전체'].concat(PPL).map(function (w) { var k = w === '전체' ? '' : w; return '<button class="fm-chip' + (F.who === k ? ' on' : '') + '" onclick="famSet(\'who\',\'' + k + '\')">' + w + '</button>'; }).join('') + '</div>' +
@@ -7705,7 +7719,7 @@ function txIc(id) {
       var ws = {}; g.forEach(function (r) { var a = r[6] || r[5]; if (a) ws[a] = 1; });
       return '<div class="fm-card fm-g' + (F.gopen[k] ? ' open' : '') + '" data-k="' + esc(k) + '"><div class="fm-gh" onclick="famG(this)"><div class="gt"><span>' + esc(shortProj(g[0][1])) + '</span><em>' + esc(dd(g[0][0])) + ' · ' + g.length + '줄 · ' + W(c) + '컷 · ' + Object.keys(ws).map(esc).join('·') + '</em></div><i class="chev"></i></div><div class="fm-gb">' + g.map(function (r) {
         var act = r[6] || r[5], mv = r[6] && r[5] && r[6] !== r[5];
-        return '<div class="fm-r"><span class="t">' + esc(r[2]) + '</span><span class="a"><span class="fm-tag w' + PPL.indexOf(act) + '">' + esc(act || '-') + '</span></span><span class="m"><span>' + esc(r[3] || '') + '</span><span>' + W(r[4]) + '컷</span>' + (mv ? '<span>DB 표기 ' + esc(r[5]) + ' → 실제 ' + esc(r[6]) + '</span>' : '<span>DB 표기 ' + esc(r[5] || '-') + '</span>') + '</span></div>';
+        return '<div class="fm-r fm-r2"><span class="wk"><span class="fm-tag w' + PPL.indexOf(act) + '">' + esc(act || '-') + '</span></span><span class="t">' + esc(r[2]) + '</span><span class="a"><small>' + esc(r[3] || '') + '</small> <b>' + W(r[4]) + '컷</b></span><span class="m">' + (mv ? '<span>DB 표기 ' + esc(r[5]) + ' → 실제 ' + esc(r[6]) + '</span>' : '<span>DB 표기 ' + esc(r[5] || '-') + '</span>') + '</span></div>';
       }).join('') + '</div></div>';
     }).join('') + '<div class="fm-note" style="padding:0 6px 10px">· 실제 작업자는 작업내역서 화면(박종배·박슬기 탭)이나 작업자배정 시트에서 바꿀 수 있어요.<br>· 이 화면은 관리 모드에서만 보여요.</div>';
     return h;
