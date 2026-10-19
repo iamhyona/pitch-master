@@ -7571,11 +7571,25 @@ function txIc(id) {
 #tab-pf .pf2-rg2{flex-basis:100%;display:flex;align-items:center;gap:6px;margin-top:4px}
 #tab-pf .pf2-rg2>i{font-style:normal;color:var(--txt3);font-size:12px;flex:none}
 #tab-pf .pf2-rg2 .dc-dw{height:36px}
+/* 2026-10-20 (현아): 팸 — 연·월·기간 / 돋보기 검색 / 작업자 색 / 실제지급액 빨강 */
+#tab-fam .fm-per{flex-basis:100%;display:flex;align-items:center;gap:6px}
+#tab-fam .fm-per .dc-pb{height:34px;font-weight:600}
+#tab-fam .fm-per.rg-on select{opacity:.4}
+#tab-fam .fm-qrow{flex-basis:100%;display:flex}
+#tab-fam .fm-qrow input[type=search]{flex:1;width:100%}
+#tab-fam .fm-ic.on{background:#191f28;color:#fff}
+#tab-fam .fm-tag.w0{background:rgba(240,68,82,.1);color:#f04452}
+#tab-fam .fm-tag.w1{background:rgba(3,166,104,.12);color:#05a46b}
+#tab-fam .fm-tag.w2{background:rgba(49,130,246,.12);color:#3182f6}
+#tab-fam .fm-tbl tr.f td{color:#f04452!important}
+#tab-fam .fm-pd .k.f span, #tab-fam .fm-pd .k.f b{color:#f04452!important;font-weight:800}
 </style>
 <script>
 (function () {
   var PPL = ['박종배', '박슬기', '박현아'];
-  var F = { v: 'as', who: '', q: '', y: '', m: '', from: new Date().getFullYear() + '-01-01', to: new Date().getFullYear() + '-12-31', as: null, pay: null, links: {}, url: '', ld: {}, err: {}, open: {} };
+  var SV_Q = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>';
+  var SV_SY = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M16 3l4 4-4 4"/><path d="M20 17H4M8 13l-4 4 4 4"/></svg>';
+  var F = { v: 'as', who: '', q: '', y: String(new Date().getFullYear()), m: '', from: '', to: '', perOpen: 0, sOpen: 0, as: null, pay: null, links: {}, url: '', ld: {}, err: {}, open: {} };
   window.FAM = F;
   function W(n) { return Math.round(Number(n) || 0).toLocaleString('ko-KR'); }
   function adm() { return typeof SESSION !== 'undefined' && SESSION && SESSION.role === 'admin'; }
@@ -7635,9 +7649,11 @@ function txIc(id) {
   window.famRe = function () { if (F.v === 'as') loadAs(true); else { F.ld.pay = 0; loadPay(true); } draw(); };
   window.famOpen = function (id) { F.open[id] = !F.open[id]; var el = document.querySelector('#tab-fam .fm-p[data-id="' + id + '"]'); if (el) el.classList.toggle('on', !!F.open[id]); };
   // 2026-10-20 (현아): 연·월 대신 기간(시작일~종료일)
-  function inYM(d) { d = String(d || '').slice(0, 10); return (!F.from || d >= F.from) && (!F.to || d <= F.to); }
+  function inYM(d) { d = String(d || '').slice(0, 10); if (F.from || F.to) return (!F.from || d >= F.from) && (!F.to || d <= F.to); return (!F.y || d.slice(0, 4) === F.y) && (!F.m || d.slice(5, 7) === F.m); }
+  window.famPer = function () { F.perOpen = !(F.perOpen || F.from || F.to); if (!F.perOpen) { F.from = ''; F.to = ''; } draw(); };
+  window.famS = function () { F.sOpen = !F.sOpen; if (!F.sOpen && F.q) { F.q = ''; } draw(); if (F.sOpen) { var i = document.getElementById('fm-q'); if (i) i.focus(); } };
   window.famRange = function () { var a = document.getElementById('fm-from'), b = document.getElementById('fm-to'); F.from = a ? a.value : ''; F.to = b ? b.value : ''; if (F.from && F.to && F.from > F.to) { var t = F.from; F.from = F.to; F.to = t; } draw(); };
-  window.famClr = function () { F.from = ''; F.to = ''; draw(); };
+  window.famClr = function () { F.from = ''; F.to = ''; F.perOpen = 0; draw(); };
   var FM_CAL = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/></svg>';
   function fmDw(id, v, ph) { var t = v ? v + '(' + '일월화수목금토'.charAt(new Date(v + 'T00:00:00').getDay()) + ')' : ph; return '<label class="dc-dw' + (v ? '' : ' e') + '"><span>' + t + '</span>' + FM_CAL + '<input type="date" id="' + id + '" value="' + (v || '') + '" onclick="try{this.showPicker()}catch(e){}" onchange="famRange()"></label>'; }
   function years(list) { var o = {}; list.forEach(function (d) { var y = String(d || '').slice(0, 4); if (/^\d{4}$/.test(y)) o[y] = 1; }); return Object.keys(o).sort().reverse(); }
@@ -7647,15 +7663,22 @@ function txIc(id) {
   function draw() {
     var top = document.getElementById('fm-top'); if (!top) return;
     var src = F.v === 'as' ? (F.as || []).map(function (r) { return r[0]; }) : (F.pay || []).map(function (o) { return o.d; });
-    var ys = years(src), mo = '<option value="">전체 월</option>';
+    var ys = years(src), cy = String(new Date().getFullYear()); if (ys.indexOf(cy) < 0) ys.unshift(cy); if (F.y && ys.indexOf(F.y) < 0) ys.push(F.y); ys.sort().reverse();
+    var mo = '<option value="">전체 월</option>';
     for (var m = 1; m <= 12; m++) { var mm = ('0' + m).slice(-2); mo += '<option value="' + mm + '"' + (F.m === mm ? ' selected' : '') + '>' + m + '월</option>'; }
+    var rg = !!(F.from || F.to), po = F.perOpen || rg;
     var sheet = F.v === 'as' ? (F.url ? '<a class="fm-ic" href="' + esc(F.url) + '" target="_blank" title="작업자배정 시트 열기">' + SV_S + '</a>' : '') : '';
+    // 2026-10-20 (현아): 연·월·기간 (기간 누르면 아래에 시작일~종료일) · 검색은 돋보기 아이콘 → 아래에 검색칸 · 새로고침 대신 동기화 아이콘
     top.innerHTML = '<div class="fm-seg"><button class="' + (F.v === 'as' ? 'on' : '') + '" onclick="famSet(\'v\',\'as\')">작업자배정</button><button class="' + (F.v === 'pay' ? 'on' : '') + '" onclick="famSet(\'v\',\'pay\')">실제 정산</button></div><span class="sp"></span>' + sheet +
-      '<button class="fm-ic" type="button" title="새로 불러오기" onclick="famRe()">' + SV_R + '</button>' +
-      '<div class="fm-rg">' + fmDw('fm-from', F.from, '시작일') + '<i>~</i>' + fmDw('fm-to', F.to, '종료일') + (F.from || F.to ? '<button type="button" class="fm-rx" title="기간 지우기 (전체)" onclick="famClr()"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" style="display:block"><path d="M6 6l12 12M18 6L6 18"/></svg></button>' : '') + '</div>' +
+      '<button class="fm-ic' + (F.sOpen || F.q ? ' on' : '') + '" type="button" title="검색" onclick="famS()">' + SV_Q + '</button>' +
+      '<button class="fm-ic" type="button" title="동기화" onclick="famRe()">' + SV_SY + '</button>' +
+      '<div class="fm-per' + (rg ? ' rg-on' : '') + '"><select onchange="famSet(\'y\',this.value)"><option value="">전체 연도</option>' + ys.map(function (y) { return '<option value="' + y + '"' + (y === F.y ? ' selected' : '') + '>' + y + '년</option>'; }).join('') + '</select>' +
+      '<select onchange="famSet(\'m\',this.value)">' + mo + '</select>' +
+      '<button type="button" class="dc-pb' + (po ? ' on' : '') + '" onclick="famPer()">' + (rg ? (F.from ? F.from.slice(5).replace('-', '.') : '') + '~' + (F.to ? F.to.slice(5).replace('-', '.') : '') : '기간') + '</button></div>' +
+      (po ? '<div class="fm-rg">' + fmDw('fm-from', F.from, '시작일') + '<i>~</i>' + fmDw('fm-to', F.to, '종료일') + (rg ? '<button type="button" class="fm-rx" title="기간 지우기" onclick="famClr()"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" style="display:block"><path d="M6 6l12 12M18 6L6 18"/></svg></button>' : '') + '</div>' : '') +
       '<div class="fm-row2">' +
-      ['전체'].concat(PPL).map(function (w) { var k = w === '전체' ? '' : w; return '<button class="fm-chip' + (F.who === k ? ' on' : '') + '" onclick="famSet(\'who\',\'' + k + '\')">' + w + '</button>'; }).join('') +
-      (F.v === 'as' ? '<input type="search" placeholder="프로젝트·작업내역 검색" value="' + esc(F.q) + '" oninput="famQ(this)">' : '') + '</div>';
+      ['전체'].concat(PPL).map(function (w) { var k = w === '전체' ? '' : w; return '<button class="fm-chip' + (F.who === k ? ' on' : '') + '" onclick="famSet(\'who\',\'' + k + '\')">' + w + '</button>'; }).join('') + '</div>' +
+      (F.sOpen || F.q ? '<div class="fm-qrow"><input type="search" id="fm-q" placeholder="' + (F.v === 'as' ? '프로젝트·작업내역 검색' : '프로젝트 검색') + '" value="' + esc(F.q) + '" oninput="famQ(this)"></div>' : '');
     drawBody();
   }
   function drawBody() {
@@ -7669,9 +7692,7 @@ function txIc(id) {
     var rows = F.as.filter(function (r) { return inYM(r[0]) && (!q || (r[1] + ' ' + r[2]).toLowerCase().indexOf(q) >= 0); });
     var st = {}; PPL.forEach(function (w) { st[w] = { n: 0, c: 0, mv: 0 }; });
     rows.forEach(function (r) { var a = r[6] || r[5]; if (st[a]) { st[a].n++; st[a].c += Number(r[4]) || 0; if (r[6] && r[5] && r[6] !== r[5]) st[a].mv++; } });
-    var h = '<div class="fm-card"><div class="fm-h">실제 작업자별<small>' + rows.length + '줄 · 누르면 그 사람만</small></div><div class="fm-sum">' + PPL.map(function (w) {
-      return '<div class="' + (F.who === w ? 'on' : '') + '" onclick="famSet(\'who\',\'' + (F.who === w ? '' : w) + '\')"><span>' + w + '</span><b>' + W(st[w].c) + '컷</b><small>' + st[w].n + '줄' + (st[w].mv ? ' · 바꾼 ' + st[w].mv + '줄' : '') + '</small></div>';
-    }).join('') + '</div></div>';
+    var h = '';
     var show = rows.filter(function (r) { return !F.who || (r[6] || r[5]) === F.who; });
     if (!show.length) return h + '<div class="fm-empty">해당하는 작업이 없어요</div>';
     var G = {}, order = [];
@@ -7684,7 +7705,7 @@ function txIc(id) {
       var ws = {}; g.forEach(function (r) { var a = r[6] || r[5]; if (a) ws[a] = 1; });
       return '<div class="fm-card fm-g' + (F.gopen[k] ? ' open' : '') + '" data-k="' + esc(k) + '"><div class="fm-gh" onclick="famG(this)"><div class="gt"><span>' + esc(shortProj(g[0][1])) + '</span><em>' + esc(dd(g[0][0])) + ' · ' + g.length + '줄 · ' + W(c) + '컷 · ' + Object.keys(ws).map(esc).join('·') + '</em></div><i class="chev"></i></div><div class="fm-gb">' + g.map(function (r) {
         var act = r[6] || r[5], mv = r[6] && r[5] && r[6] !== r[5];
-        return '<div class="fm-r"><span class="t">' + esc(r[2]) + '</span><span class="a"><span class="fm-tag' + (act === '박현아' ? ' hy' : '') + '">' + esc(act || '-') + '</span></span><span class="m"><span>' + esc(r[3] || '') + '</span><span>' + W(r[4]) + '컷</span>' + (mv ? '<span>DB 표기 ' + esc(r[5]) + ' → 실제 ' + esc(r[6]) + '</span>' : '<span>DB 표기 ' + esc(r[5] || '-') + '</span>') + '</span></div>';
+        return '<div class="fm-r"><span class="t">' + esc(r[2]) + '</span><span class="a"><span class="fm-tag w' + PPL.indexOf(act) + '">' + esc(act || '-') + '</span></span><span class="m"><span>' + esc(r[3] || '') + '</span><span>' + W(r[4]) + '컷</span>' + (mv ? '<span>DB 표기 ' + esc(r[5]) + ' → 실제 ' + esc(r[6]) + '</span>' : '<span>DB 표기 ' + esc(r[5] || '-') + '</span>') + '</span></div>';
       }).join('') + '</div></div>';
     }).join('') + '<div class="fm-note" style="padding:0 6px 10px">· 실제 작업자는 작업내역서 화면(박종배·박슬기 탭)이나 작업자배정 시트에서 바꿀 수 있어요.<br>· 이 화면은 관리 모드에서만 보여요.</div>';
     return h;
@@ -7692,10 +7713,10 @@ function txIc(id) {
   function bodyPay() {
     if (F.err.pay) return '<div class="fm-empty">⚠ ' + esc(F.err.pay) + '</div>';
     if (!F.pay) return '<div class="fm-empty">' + (F.ld.pay ? '박종배·박슬기·박현아 정산을 모으는 중…' : '') + '</div>';
-    var list = F.pay.filter(function (o) { return inYM(o.d) && (!F.who || o.w[F.who]); });
+    var pq = String(F.q || '').trim().toLowerCase(); var list = F.pay.filter(function (o) { return inYM(o.d) && (!F.who || o.w[F.who]) && (!pq || String(o.n || '').toLowerCase().indexOf(pq) >= 0); });
     var T = {}; PPL.forEach(function (w) { T[w] = { n: 0, cut: 0, sum: 0, tax: 0, net: 0, fee: 0, act: 0, due: 0 }; });
     list.forEach(function (o) { PPL.forEach(function (w) { var x = o.w[w]; if (!x) return; var t = T[w]; t.n++; t.cut += x.cut; t.sum += x.sum; t.tax += x.tax; t.net += x.net; t.fee += x.fee; t.act += x.act; if (!o.p) t.due += x.act; }); });
-    var per = (F.from || F.to) ? ((F.from ? F.from.slice(2).replace(/-/g, '.') : '처음') + ' ~ ' + (F.to ? F.to.slice(2).replace(/-/g, '.') : '지금')) : '전체 기간';
+    var per = (F.from || F.to) ? ((F.from ? F.from.slice(2).replace(/-/g, '.') : '처음') + ' ~ ' + (F.to ? F.to.slice(2).replace(/-/g, '.') : '지금')) : F.y ? F.y + '년' + (F.m ? ' ' + (+F.m) + '월' : '') : (F.m ? (+F.m) + '월' : '전체 기간');
     var cols = F.who ? [F.who] : PPL;
     var h = '<div class="fm-card"><div class="fm-h">' + per + ' 실제 작업비<small>' + (F.part ? '불러오는 중 ' + F.part : list.length + '개 프로젝트') + '</small></div>';
     // 2026-10-20 (현아): 전체 카드 추가 → 4개 (2×2), 글자는 검정
@@ -7707,7 +7728,7 @@ function txIc(id) {
       h += '<tr class="' + (k[1] === 'act' ? 'f' : k[1] === 'net' ? 'b' : k[1] === 'fee' ? 'lt' : '') + '"><td>' + k[0] + '</td>' + cols.map(function (w) { return '<td>' + W(T[w][k[1]]) + '</td>'; }).join('') + (cols.length > 1 ? '<td>' + W(tot) + '</td>' : '') + '</tr>';
     });
     h += '</table></div>';
-    var ly = (F.to || F.from || String(new Date().getFullYear())).slice(0, 4), lk = PPL.map(function (w) { var u = F.links[w + '_' + ly]; return u ? '<a href="' + esc(u) + '" target="_blank" title="' + w + '_' + ly + '년 시트">' + SV_S + w + '</a>' : ''; }).join('');
+    var ly = (F.to || F.from || F.y || String(new Date().getFullYear())).slice(0, 4), lk = PPL.map(function (w) { var u = F.links[w + '_' + ly]; return u ? '<a href="' + esc(u) + '" target="_blank" title="' + w + '_' + ly + '년 시트">' + SV_S + w + '</a>' : ''; }).join('');
     if (lk) h += '<div class="fm-links">' + lk + '</div>';
     h += '<div class="fm-note">· 원천세를 뗀 핏치지급액이 강영순 통장으로 들어온 뒤 25%를 떼고 받는 금액이 실제지급액이에요.<br>· 지급일자가 비어 있는 프로젝트는 미지급으로 셌어요.</div></div>';
     if (!list.length) return h + '<div class="fm-empty">해당하는 정산이 없어요</div>';
