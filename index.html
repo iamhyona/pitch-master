@@ -7,7 +7,7 @@
 <meta name="theme-color" content="#f2f4f6">
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=3">
 <link rel="apple-touch-icon" href="apple-touch-icon.png?v=3">
-<meta name="pm-build" content="202610201250">
+<meta name="pm-build" content="202610201300">
 <link rel="manifest" href="manifest.webmanifest?v=3">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -2221,7 +2221,7 @@ function woPost(action, data, cb) {
     .then(function (r) { return r.json(); }).catch(function () { return null; })
     .then(function (d) { if (pmAuthFail(d)) return; cb(d || { ok: false, error: '연결 실패 — 잠시 후 다시 시도해주세요' }); });
 }
-function woDateW(d6) { if (!/^\d{6}$/.test(d6 || '')) return '-'; var d = new Date(2000 + +d6.slice(0, 2), +d6.slice(2, 4) - 1, +d6.slice(4)); return woDate(d6) + ' <small>' + '일월화수목금토'.charAt(d.getDay()) + '</small>'; }
+function woDateW(d6) { if (!/^\d{6}$/.test(d6 || '')) return '-'; var d = new Date(2000 + +d6.slice(0, 2), +d6.slice(2, 4) - 1, +d6.slice(4)); return woDate(d6) + '<small>' + '일월화수목금토'.charAt(d.getDay()) + '</small>'; }
 function woDate(d6) { return /^\d{6}$/.test(d6 || '') ? d6.slice(0, 2) + '.' + d6.slice(2, 4) + '.' + d6.slice(4) : '-'; }
 function woAgo(t) {
   var m = Math.round((Date.now() - t) / 60000);
@@ -2561,7 +2561,7 @@ td{overflow-wrap:anywhere}
 .wo-l1{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
 .wo-l1 b{font-size:16px;font-weight:700;min-width:0;overflow-wrap:anywhere}
 .wo-dt{flex:none;display:flex;flex-direction:column;align-items:flex-end;gap:2px;font-size:14px;font-weight:600;color:var(--txt2)}
-.wo-dt small{font-size:11px;font-weight:500;color:var(--txt3);margin-left:2px}
+.wo-dt small{font-size:11px;font-weight:500;color:var(--txt3);margin-left:3px}
 .wo-l2{font-size:13px;color:var(--txt3);margin-top:2px;overflow-wrap:anywhere}
 .wo-l3{display:flex;align-items:flex-end;justify-content:space-between;gap:10px;margin-top:8px}
 .wo-l3:has(.wo-wl:empty){display:none}
