@@ -7,7 +7,7 @@
 <meta name="theme-color" content="#f2f4f6">
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=3">
 <link rel="apple-touch-icon" href="apple-touch-icon.png?v=3">
-<meta name="pm-build" content="202610201220">
+<meta name="pm-build" content="202610201230">
 <link rel="manifest" href="manifest.webmanifest?v=3">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -7893,13 +7893,13 @@ function txIc(id) {
 #wo-list .wo-item{padding-right:40px}
 #wo-list .wo-chev{position:absolute;right:18px;top:22px;width:8px;height:8px;border-right:2px solid #c9ced4;border-bottom:2px solid #c9ced4;transform:rotate(45deg);transition:transform .15s}
 #wo-list .wo-item.xo .wo-chev{transform:rotate(-135deg);top:26px}
-#wo-list .wo-x{display:none;cursor:default;margin:12px -22px 0 0;border-top:1px solid var(--line)}
+#wo-list .wo-x{display:none;cursor:default;margin:16px -22px 0 0;border-top:1px solid var(--line)}
 #wo-list .wo-item.xo .wo-x{display:block}
 .wo-x .wx-lk{display:flex;gap:6px;flex-wrap:wrap;padding:12px 0 2px}
 .wo-x .wx-lk a,.wo-x .wx-lk button{display:inline-flex;align-items:center;gap:5px;height:30px;padding:0 12px;border-radius:999px;border:0;background:var(--chip);color:var(--txt2);font-family:inherit;font-size:12px;font-weight:600;text-decoration:none;cursor:pointer}
 .wo-x .wx-lk svg{width:14px;height:14px}
 .wo-x .wx-ld{padding:10px 2px;font-size:12px;color:var(--txt3)}
-.wo-x .wx-cat{margin:12px 0 2px}
+.wo-x .wx-cat{margin:12px 0 2px;border-top:1px solid #b0b8c1}
 .wo-x .wx-cat>div{display:flex;justify-content:space-between;align-items:center;padding:7px 2px;border-bottom:1px solid #f2f4f6;font-size:13px;color:var(--txt)}
 .wo-x .wx-cat>div b{font-weight:700}
 .wo-x .wx-cat>.hd{font-size:12px;font-weight:700;border-bottom:1px solid #b0b8c1;padding-top:0}
@@ -7909,7 +7909,7 @@ function txIc(id) {
 .wo-x .wx-cat>.t b{font-weight:800}
 .wo-x .wx-sp{height:14px}
 .wo-x .wx-dh{display:flex;justify-content:space-between;margin-top:22px;padding:0 2px 7px;font-size:12px;font-weight:700;color:var(--txt);border-bottom:1px solid #b0b8c1}
-.wo-x .wx-wc{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding:12px 0 6px}
+.wo-x .wx-wc{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding:16px 0 6px}
 .wo-x .wx-wc::-webkit-scrollbar{display:none}
 .wo-x .wx-wc button{flex:none;height:30px;padding:0 12px;border-radius:999px;border:0;background:var(--chip);font-family:inherit;font-size:12px;font-weight:600;color:var(--txt2);cursor:pointer}
 .wo-x .wx-wc button.on{background:#191f28;color:#fff}
@@ -8008,7 +8008,7 @@ function txIc(id) {
     L.forEach(function (x) { if (!(x.w in wc)) { wc[x.w] = 0; ws.push(x.w); } wc[x.w] += x.c; });
     var sel = WO.xw[id] || '', h = lk, col = colors(ws);
     h += '<div class="wx-wc">' + [''].concat(ws).map(function (w) { return '<button type="button" class="' + (sel === w ? 'on' : '') + '" data-id="' + esc(id) + '" data-w="' + esc(w) + '" onclick="woXW(this)">' + (w ? '<i style="background:' + col[w][1] + '"></i>' + esc(w) : '전체') + ' <b>' + (w ? wc[w] : C.tot) + '</b></button>'; }).join('') + '</div>';
-    if (C.ks.length) h += '<div class="wx-cat"><div class="hd"><span>작업 요약</span><span>컷수</span></div>' + C.ks.map(function (q) { return '<div class="' + (q === '긴급' ? 'u' : '') + '"><span>' + esc(q) + (q === '긴급' ? ' <small>(중복 포함)</small>' : '') + '</span><b>' + C.m[q] + '컷</b></div>'; }).join('') + '<div class="t"><span>합계</span><b>' + C.tot + '컷</b></div></div>';
+    if (C.ks.length) h += '<div class="wx-cat">' + C.ks.map(function (q) { return '<div class="' + (q === '긴급' ? 'u' : '') + '"><span>' + esc(q) + (q === '긴급' ? ' <small>(중복 포함)</small>' : '') + '</span><b>' + C.m[q] + '컷</b></div>'; }).join('') + '<div class="t"><span>합계</span><b>' + C.tot + '컷</b></div></div>';
     var show = L.filter(function (x) { return !sel || x.w === sel; });
     h += '<div class="wx-sp"></div>';
     h += show.map(function (x) { return '<div class="wx-r"><span class="wx-tag" style="background:' + col[x.w][0] + ';color:' + col[x.w][1] + '">' + esc(x.w) + '</span><span class="t">' + esc(x.n) + '</span><span class="a"><small>' + esc(x.lb) + '</small> <b>' + x.c + '컷</b></span></div>'; }).join('') || '<div class="wx-ld">작업 내역이 없어요</div>';
