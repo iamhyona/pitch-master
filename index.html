@@ -7,7 +7,7 @@
 <meta name="theme-color" content="#f2f4f6">
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=3">
 <link rel="apple-touch-icon" href="apple-touch-icon.png?v=3">
-<meta name="pm-build" content="202610201320">
+<meta name="pm-build" content="202610201330">
 <link rel="manifest" href="manifest.webmanifest?v=3">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -7294,6 +7294,13 @@ function txIc(id) {
     var wi = pgWo(g), wd = wi && PG.woc[wi.id];
     if (wi && !wd && !PG.woc[wi.id + ':l']) { PG.woc[wi.id + ':l'] = 1; woGet('&wo=' + encodeURIComponent(wi.id), function (r) { if (r && r.ok) { PG.woc[wi.id] = r; if (PG.cur === g) pgDraw(); } }); }
     var I = (wd && wd.info) || {}, kv = function (k, v) { var e = !String(v || '').trim(); return '<div class="r"><span>' + esc(k) + '</span><b' + (e ? ' class="e"' : '') + '>' + (e ? '-' : esc(v)) + '</b></div>'; };
+    // 2026-10-20 (현아): 강영순 합산 작업자(박슬기·박종배 등)도 작업내역서 탭 내용으로 미리보기
+    var pgPrev = function (name) {
+      var t = wd && (wd.tabs || []).filter(function (x) { return x.name === name; })[0]; if (!t) return wi && !wd ? '<tr class="pg-x"><td colspan="4" class="n" style="text-align:left">작업내역서 불러오는 중…</td></tr>' : '';
+      var head = wd.head || [], out = '';
+      (t.rows || []).forEach(function (q) { var v = q.v || [], nm = String(v[0] || '').trim(); if (!nm) return; for (var c = 1; c <= 11; c++) { var n = woNum(v[c]); if (n) out += '<tr class="pg-pv"><td>' + esc(nm) + '</td><td class="n">' + n + '</td><td class="n">-</td><td class="n">-</td></tr>'; } });
+      return out;
+    };
     var d0 = ok.length ? ok[0].d : null, g0 = function (k) { var y = d0 && (d0.info || []).filter(function (i) { return i.k === k; })[0]; return y ? y.v : ''; };
     var req = I['요청일'] || (/^\d{6}$/.test(x.date6 || '') ? '20' + x.date6.slice(0, 2) + '-' + x.date6.slice(2, 4) + '-' + x.date6.slice(4) : '');
     var mgr = I['담당자'] || (String(x.title || '').split(' · ')[1] || '');
@@ -7307,7 +7314,7 @@ function txIc(id) {
     if (PG.sel === -2) {
       h += '<table class="dv-tbl pg-all"><thead><tr><th>작업 세부내역</th><th>컷수</th><th>컷당</th><th>소계</th></tr></thead><tbody>' + R.map(function (r, i) {
         var hd = '<tr class="pg-wh' + (isInt(r.w) ? ' pg-x' : '') + '" onclick="pgSel(' + i + ')"><td colspan="3">' + esc(r.w) + (isInt(r.w) ? '<span class="pg-tag">집계 제외</span>' : '') + '</td><td>' + (r.v ? W(r.v.sub) : '') + '</td></tr>';
-        if (r.none) return hd + '<tr class="pg-x"><td colspan="4" class="n" style="text-align:left">' + (pgFam(r.w, R) ? '강영순 지급내역서에 합산' : '지급내역서 미작성') + '</td></tr>';
+        if (r.none) return hd + '<tr class="pg-x"><td colspan="4" class="n" style="text-align:left">' + (pgFam(r.w, R) ? '강영순 지급내역서에 합산' : '지급내역서 미작성') + '</td></tr>' + pgPrev(r.w);
         if (!r.v) return hd + '<tr><td colspan="4" class="n" style="text-align:left">' + (r.d && r.d.err ? '⚠ ' + esc(r.d.err) : '불러오는 중…') + '</td></tr>';
         return hd + (r.v.rows.length ? r.v.rows.map(function (q) { var v = q.v; return '<tr' + (isInt(r.w) ? ' class="pg-x"' : '') + '><td>' + esc(v[1] || '-') + '</td><td class="n">' + esc(v[2] || '') + '</td><td class="n">' + W(N(v[3])) + '</td><td>' + W(N(v[4])) + '</td></tr>'; }).join('') : '<tr><td colspan="4" class="n" style="text-align:left">작업이 없어요</td></tr>');
       }).join('') + '<tr class="pg-t"><td colspan="3">합계 (공급가액)</td><td>' + W(sum('sub')) + '</td></tr></tbody></table>' +
@@ -7323,7 +7330,7 @@ function txIc(id) {
         '<div class="pg-hint">' + (R.some(function (r) { return isInt(r.w); }) ? PG_INT.join('·') + '은 내부 인원이라 표기만 하고 합계에서 빠져요 · ' : '') + '세금: ' + [anyWh ? '원천세 3.3% 차감(−)' : '', anyVat ? '사업자 부가세 10% 추가(+)' : ''].filter(String).join(' · ') + ' · 작업자를 누르면 그 사람 내역이 보여요</div>';
     } else {
       var r = R[PG.sel];
-      if (r && r.none) h += '<div class="wo-empty">' + esc(r.w) + (pgFam(r.w, R) ? '의 작업은 강영순 지급내역서에 합쳐져 있어요' : '의 지급내역서가 아직 없어요') + (isInt(r.w) ? ' (내부 인원 · 매입 집계 제외)' : '') + '</div>';
+      if (r && r.none) { h += '<div class="wo-empty">' + esc(r.w) + (pgFam(r.w, R) ? '의 작업은 강영순 지급내역서에 합쳐져 있어요' : '의 지급내역서가 아직 없어요') + (isInt(r.w) ? ' (내부 인원 · 매입 집계 제외)' : '') + '</div>'; var pv = pgPrev(r.w); if (pv) h += '<table class="dv-tbl pg-all"><thead><tr><th>작업 세부내역 (미리보기)</th><th>컷수</th><th>컷당</th><th>소계</th></tr></thead><tbody>' + pv + '</tbody></table>'; }
       else if (!r || !r.v) h += '<div class="wo-empty">' + (r && r.d && r.d.err ? '⚠ ' + esc(r.d.err) : '불러오는 중…') + '</div>';
       else {
         h += '<table class="dv-tbl"><thead><tr><th>작업 세부내역</th><th>컷수</th><th>컷당</th><th>소계</th></tr></thead><tbody>' +
@@ -8084,6 +8091,9 @@ function txIc(id) {
 #mo-doc .pg-all tr.pg-x td{color:#b0b8c1!important}
 #mo-doc .pg-all .pg-t td{font-weight:800;border-top:1px solid #b0b8c1}
 #mo-doc .pg-all .pg-t td:last-child{text-align:right}
+
+#mo-doc .pg-all tr.pg-pv td{color:var(--txt2)}
+#mo-doc .pg-all tr.pg-pv td.n{color:var(--txt3)}
 </style>
 </body>
 
