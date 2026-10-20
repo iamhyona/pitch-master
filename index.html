@@ -7,7 +7,7 @@
 <meta name="theme-color" content="#f2f4f6">
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=3">
 <link rel="apple-touch-icon" href="apple-touch-icon.png?v=3">
-<meta name="pm-build" content="202610201120">
+<meta name="pm-build" content="202610201130">
 <link rel="manifest" href="manifest.webmanifest?v=3">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -7875,9 +7875,14 @@ function txIc(id) {
 </script>
 <style>
 /* 2026-10-20 (현아): 매입·매출 프로젝트 칸 — 아티스트·프로젝트명·담당자 같은 크기, 아티스트·프로젝트명은 검정 */
-.dc-box .wo-t b,.dc-box .wo-t .wo-pj,.dc-box .wo-t .wo-mg{font-size:14px!important}
+.dc-box .wo-t b,.dc-box .wo-t .wo-pj{font-size:14px!important}
 .dc-box .wo-t b,.dc-box .wo-t .wo-pj{color:var(--txt)!important}
 .dc-box .wo-t{column-gap:.28em!important}
+.dc-box .wo-t .wo-mg{font-size:12px!important;line-height:1}
+.dc-box .wo-t{align-items:center!important}
+.dc-box .wo-wl{gap:0!important}
+.dc-box .wo-wl .wo-w{background:none!important;padding:0!important;margin:0!important;border-radius:0!important;font-size:12px!important;color:var(--txt3)!important;font-weight:400!important}
+.dc-box .wo-wl .wo-w:not(:last-child)::after{content:',\00a0'}
 .dc-box .wo-t .wo-pj{font-weight:700!important}
 </style>
 <style>
