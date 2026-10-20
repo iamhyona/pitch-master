@@ -7,7 +7,7 @@
 <meta name="theme-color" content="#f2f4f6">
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=3">
 <link rel="apple-touch-icon" href="apple-touch-icon.png?v=3">
-<meta name="pm-build" content="202610201410">
+<meta name="pm-build" content="202610201420">
 <link rel="manifest" href="manifest.webmanifest?v=3">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -323,6 +323,7 @@ select.fi option{background:var(--sur2)}
           <div class="rate-litter-label">
             <span>외주처</span>
             <button class="btn btn-g" id="btn-edit-rate" style="display:none;height:24px;font-size:10px;padding:0 10px" onclick="openRateEditMo()">수수료 편집</button>
+            <button type="button" class="rt-feeb" id="rt-fee" onclick="rtFeeToggle()">수수료 적용</button>
           </div>
           <div class="rate-litter-wrap">
             <button class="rate-litter-btn" data-litter="all" onclick="switchLitter('all',this)">전체</button>
@@ -1775,18 +1776,29 @@ function pmLitterBtns() {
 }
 function switchLitter(litter) {
   rtPayP = 0; var cols = pmCols();
-  if (litter === 'all') selLitters = new Set(ALL_COLS);
-  else { if (selLitters.has(litter)) { selLitters.delete(litter); if (!cols.some(function (c) { return selLitters.has(c); })) selLitters = new Set(ALL_COLS); } else selLitters.add(litter); }
+  // 2026-10-20 (현아): '전체'를 한 번 더 누르면 해제 · 하나씩 빼다 다 빠져도 그대로(빈 상태)
+  if (litter === 'all') selLitters = cols.every(function (c) { return selLitters.has(c); }) ? new Set() : new Set(ALL_COLS);
+  else { if (selLitters.has(litter)) selLitters.delete(litter); else selLitters.add(litter); }
   pmLitterBtns(); renderPay();
 }
+// 2026-10-20 (현아): 수수료 적용 보기 — 단가표 금액은 그대로 두고, 화면에서만 수수료를 뺀 실제 컷당 금액을 보여줌
+// 수수료 기준 = 지급내역서 자동 생성 규칙과 동일: 김현수·박현아·이유나·이혜선 0% · 강영순 15% · 김슬기(THEBLACKLABEL) 0% · 그 외 25%
+var RT_FEE_ON = false;
+function rtFeeOf(w, tab) {
+  if (/^(김현수|박현아|이유나|이혜선)$/.test(w)) return 0;
+  if (w === '강영순') return 0.15;
+  if (w === '김슬기' && /BLACKLABEL/i.test(String(tab || '').replace(/\s/g, ''))) return 0;
+  return 0.25;
+}
+function rtFeeToggle() { RT_FEE_ON = !RT_FEE_ON; var b = document.getElementById('rt-fee'); if (b) b.classList.toggle('on', RT_FEE_ON); renderPay(); }
 function renderPay() {
   var rows = RATES_RAW[rtF] || [];
   var activeCols = pmCols().filter(function (nm) { return selLitters.has(nm); });
   var html = '<div class="rate-table-box"><table><thead><tr><th>항목</th><th style="text-align:right">기본단가</th>' +
-    activeCols.map(function (nm) { return '<th style="text-align:right">' + esc(nm) + '</th>'; }).join('') + '</tr></thead><tbody>';
+    activeCols.map(function (nm) { var f = rtFeeOf(nm, rtF); return '<th style="text-align:right">' + esc(nm) + (RT_FEE_ON ? '<small class="rt-fp">' + (f ? '−' + Math.round(f * 100) + '%' : '0%') + '</small>' : '') + '</th>'; }).join('') + '</tr></thead><tbody>';
   rows.forEach(function (r) {
     html += '<tr><td class="proj-nm">' + esc(r[0]) + '</td><td class="base-val">' + wn(r[1]) + '</td>' +
-      activeCols.map(function (nm) { return '<td class="rate-val">' + wn(r[ALL_COLS.indexOf(nm) + 2]) + '</td>'; }).join('') + '</tr>';
+      activeCols.map(function (nm) { var v = r[ALL_COLS.indexOf(nm) + 2], f = rtFeeOf(nm, rtF); return '<td class="rate-val' + (RT_FEE_ON && f ? ' rt-net' : '') + '">' + wn(RT_FEE_ON ? Math.round((Number(v) || 0) * (1 - f)) : v) + '</td>'; }).join('') + '</tr>';
   });
   html += '</tbody></table></div>';
   document.getElementById('mc-pay').innerHTML = rows.length ? html : '<div style="padding:24px;text-align:center;color:var(--txt3);font-size:12px">데이터 없음</div>';
@@ -8103,6 +8115,12 @@ function txIc(id) {
 #mo-doc .pg-all tr.pg-pv td{color:var(--txt2)}
 #mo-doc .pg-all tr.pg-fee td{color:var(--txt3);font-size:12px}
 #mo-doc .pg-all thead{display:none}
+/* 2026-10-20 (현아): 지급단가 '수수료 적용' 보기 */
+.rate-litter-label{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.rt-feeb{height:30px;padding:0 12px;border:0;border-radius:999px;background:var(--chip);color:var(--txt2);font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;margin-left:auto}
+.rt-feeb.on{background:#191f28;color:#fff}
+.rt-fp{display:block;font-size:10px;font-weight:600;color:#f04452;margin-top:1px}
+td.rate-val.rt-net{color:#f04452!important}
 #mo-doc .pg-all tbody tr.pg-wh:first-child td{padding-top:6px!important}
 #mo-doc .pg-all tr.pg-fee td:last-child{text-align:right}
 #mo-doc .pg-all tr.pg-pv td.n{color:var(--txt3)}
