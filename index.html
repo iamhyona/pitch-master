@@ -7,7 +7,7 @@
 <meta name="theme-color" content="#f2f4f6">
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=3">
 <link rel="apple-touch-icon" href="apple-touch-icon.png?v=3">
-<meta name="pm-build" content="202610201440">
+<meta name="pm-build" content="202610201450">
 <link rel="manifest" href="manifest.webmanifest?v=3">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -7331,8 +7331,8 @@ function txIc(id) {
     if (PG.sel === -2) {
       h += '<table class="dv-tbl pg-all"><thead><tr><th>작업 세부내역</th><th>컷수</th><th>단가</th><th>소계</th></tr></thead><tbody>' + R.map(function (r, i) {
         var dim = isInt(r.w) || (r.none && pgFam(r.w, R)) || /^(박종배|박슬기|박현아)$/.test(r.w);
-        var hd = '<tr class="pg-wh' + (dim ? ' pg-x' : '') + '" onclick="pgSel(' + i + ')"><td colspan="3">' + esc(r.w) + (isInt(r.w) ? '<span class="pg-tag">집계 제외</span>' : '') + '</td><td>' + (r.v ? W(r.v.sub) : '') + '</td></tr>';
-        if (r.none) return '<tbody class="' + (dim ? 'pg-dim' : '') + '">' + hd + '<tr class="pg-x"><td colspan="4" class="n" style="text-align:left">' + (pgFam(r.w, R) ? '강영순 지급내역서에 합산' : '지급내역서 미작성') + '</td></tr>' + pgPrev(r.w) + '</tbody>';
+        var hd = '<tr class="pg-wh' + (dim ? ' pg-x' : '') + '" onclick="pgSel(' + i + ')"><td colspan="3">' + esc(r.w) + (isInt(r.w) ? '<span class="pg-tag">집계 제외</span>' : '') + (r.none && pgFam(r.w, R) ? '<span class="pg-tag">강영순 합산</span>' : '') + '</td><td>' + (r.v ? W(r.v.sub) : '') + '</td></tr>';
+        if (r.none) return '<tbody class="' + (dim ? 'pg-dim' : '') + '">' + hd + (pgFam(r.w, R) ? '' : '<tr class="pg-x"><td colspan="4" class="n" style="text-align:left">지급내역서 미작성</td></tr>') + pgPrev(r.w) + '</tbody>';
         if (!r.v) return hd + '<tr><td colspan="4" class="n" style="text-align:left">' + (r.d && r.d.err ? '⚠ ' + esc(r.d.err) : '불러오는 중…') + '</td></tr>';
         return hd + (r.v.rows.length ? r.v.rows.map(function (q) { var v = q.v; return '<tr' + (isInt(r.w) ? ' class="pg-x"' : '') + '><td>' + esc(v[1] || '-') + '</td><td class="n">' + esc(v[2] || '') + '</td><td class="n">' + W(q.u) + '</td><td>' + W(q.g) + '</td></tr>'; }).join('') : '<tr><td colspan="4" class="n" style="text-align:left">작업이 없어요</td></tr>') +
           (r.v.fee ? '<tr class="pg-fee"><td colspan="3">수수료' + (r.v.feeP ? ' (' + esc(r.v.feeP) + ')' : '') + '</td><td><i class="pf2-mn">−</i>' + W(r.v.fee) + '</td></tr>' : '');
