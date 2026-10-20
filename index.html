@@ -7,7 +7,7 @@
 <meta name="theme-color" content="#f2f4f6">
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=3">
 <link rel="apple-touch-icon" href="apple-touch-icon.png?v=3">
-<meta name="pm-build" content="202610201310">
+<meta name="pm-build" content="202610201320">
 <link rel="manifest" href="manifest.webmanifest?v=3">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -7301,9 +7301,18 @@ function txIc(id) {
       '<details class="dv-more"' + (window.DV_MORE ? ' open' : '') + ' ontoggle="window.DV_MORE=this.open"><summary><span>세부정보</span></summary><div class="dv-grid">' +
       kv('거래처', String(I['거래처'] || x.clientKey || '').replace(/\s*\(.*\)\s*$/, '')) + kv('아티스트', I['아티스트명'] || x.artist) + kv('프로젝트명', I['프로젝트명'] || proj(x.title)) +
       kv('프로젝트 의뢰일자', req) + kv('지급내역 작성일자', g0('작성일자')) + kv('지급일자', g0('지급일자')) + '</div></details>';
-    h += '<div class="wd-tabs"><button class="wo-chip' + (PG.sel < 0 ? ' on' : '') + '" onclick="pgSel(-1)">전체</button>' +
+    // 2026-10-20 (현아): '요약' = 작업자별 합계표, '전체' = 모든 작업자의 작업 세부내역
+    h += '<div class="wd-tabs"><button class="wo-chip' + (PG.sel === -1 ? ' on' : '') + '" onclick="pgSel(-1)">요약</button><button class="wo-chip' + (PG.sel === -2 ? ' on' : '') + '" onclick="pgSel(-2)">전체</button>' +
       R.map(function (r, i) { return '<button class="wo-chip' + (PG.sel === i ? ' on' : '') + (isInt(r.w) ? ' pg-xc' : '') + '" onclick="pgSel(' + i + ')">' + esc(r.w) + '</button>'; }).join('') + '</div>';
-    if (PG.sel < 0) {
+    if (PG.sel === -2) {
+      h += '<table class="dv-tbl pg-all"><thead><tr><th>작업 세부내역</th><th>컷수</th><th>컷당</th><th>소계</th></tr></thead><tbody>' + R.map(function (r, i) {
+        var hd = '<tr class="pg-wh' + (isInt(r.w) ? ' pg-x' : '') + '" onclick="pgSel(' + i + ')"><td colspan="3">' + esc(r.w) + (isInt(r.w) ? '<span class="pg-tag">집계 제외</span>' : '') + '</td><td>' + (r.v ? W(r.v.sub) : '') + '</td></tr>';
+        if (r.none) return hd + '<tr class="pg-x"><td colspan="4" class="n" style="text-align:left">' + (pgFam(r.w, R) ? '강영순 지급내역서에 합산' : '지급내역서 미작성') + '</td></tr>';
+        if (!r.v) return hd + '<tr><td colspan="4" class="n" style="text-align:left">' + (r.d && r.d.err ? '⚠ ' + esc(r.d.err) : '불러오는 중…') + '</td></tr>';
+        return hd + (r.v.rows.length ? r.v.rows.map(function (q) { var v = q.v; return '<tr' + (isInt(r.w) ? ' class="pg-x"' : '') + '><td>' + esc(v[1] || '-') + '</td><td class="n">' + esc(v[2] || '') + '</td><td class="n">' + W(N(v[3])) + '</td><td>' + W(N(v[4])) + '</td></tr>'; }).join('') : '<tr><td colspan="4" class="n" style="text-align:left">작업이 없어요</td></tr>');
+      }).join('') + '<tr class="pg-t"><td colspan="3">합계 (공급가액)</td><td>' + W(sum('sub')) + '</td></tr></tbody></table>' +
+        '<div class="pg-hint">' + (R.some(function (r) { return isInt(r.w); }) ? PG_INT.join('·') + '은 내부 인원이라 합계에서 빠져요 · ' : '') + '작업자 이름을 누르면 그 사람 지급내역이 보여요</div>';
+    } else if (PG.sel === -1) {
       h += '<table class="dv-tbl pg-tbl"><thead><tr><th>작업자</th><th>공급가액</th><th>세금</th><th>지급액</th></tr></thead><tbody>' +
         R.map(function (r, i) {
           if (r.none) return '<tr class="pg-r pg-x" onclick="pgSel(' + i + ')"><td class="w">' + esc(r.w) + (isInt(r.w) ? '<span class="pg-tag">집계 제외</span>' : '') + '</td><td>-</td><td class="tx">-</td><td class="fin">' + (pgFam(r.w, R) ? '강영순 합산' : '미작성') + '</td></tr>';
@@ -8068,6 +8077,14 @@ function txIc(id) {
   if (typeof woSave === 'function') { var os = woSave; woSave = function () { var id = WO.cur && WO.cur.id, r = os.apply(this, arguments); if (id) setTimeout(function () { load(id, true); }, 2500); return r; }; }
 })();
 </script>
+<style>
+/* 2026-10-20 (현아): 매입 상세 '전체' — 작업자별 머리줄 + 세부내역 */
+#mo-doc .pg-all .pg-wh td{font-weight:700;color:var(--txt);padding-top:14px!important;border-bottom:1px solid #b0b8c1;cursor:pointer}
+#mo-doc .pg-all .pg-wh td:last-child{text-align:right}
+#mo-doc .pg-all tr.pg-x td{color:#b0b8c1!important}
+#mo-doc .pg-all .pg-t td{font-weight:800;border-top:1px solid #b0b8c1}
+#mo-doc .pg-all .pg-t td:last-child{text-align:right}
+</style>
 </body>
 
 </html>
