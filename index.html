@@ -7,7 +7,7 @@
 <meta name="theme-color" content="#f2f4f6">
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=3">
 <link rel="apple-touch-icon" href="apple-touch-icon.png?v=3">
-<meta name="pm-build" content="202610201350">
+<meta name="pm-build" content="202610201400">
 <link rel="manifest" href="manifest.webmanifest?v=3">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -5976,12 +5976,12 @@ window.schSty = function (t, r, D) {
 .dv-hd .amt b{font-size:22px;font-weight:800;color:#3182f6;white-space:nowrap}
 .dv-sec{font-size:12px;font-weight:700;color:var(--txt3);margin:4px 2px -6px;letter-spacing:.02em}
 .dv-grid{display:grid;grid-template-columns:1fr 1fr;gap:0 18px;background:var(--chip);border-radius:14px;padding:4px 16px}
-.dv-grid .r{display:flex;justify-content:space-between;gap:10px;padding:6px 0;border-bottom:1px solid #e5e8eb;font-size:14px;min-width:0}
+.dv-grid .r{display:flex;justify-content:space-between;gap:10px;padding:6px 0;border-bottom:1px solid var(--line);font-size:14px;min-width:0}
 .dv-grid .r:nth-last-child(-n+2){border-bottom:0}
 .dv-grid .r span{color:var(--txt3);flex:none;font-size:13px}
 .dv-grid .r b{font-weight:600;color:var(--txt);text-align:right;word-break:break-all}
 .dv-grid .r b.e{color:var(--faint);font-weight:500}
-@media(max-width:560px){.dv-grid{grid-template-columns:1fr}.dv-grid .r:nth-last-child(2){border-bottom:1px solid #e5e8eb}}
+@media(max-width:560px){.dv-grid{grid-template-columns:1fr}.dv-grid .r:nth-last-child(2){border-bottom:1px solid var(--line)}}
 .dv-links{display:flex;flex-wrap:wrap;gap:6px}
 .dv-links a,.dv-links>span{display:inline-flex;align-items:center;gap:4px;height:34px;padding:0 12px;border-radius:10px;background:var(--chip);color:var(--txt);font-size:13px;font-weight:600;text-decoration:none}
 .dv-links>span{color:var(--faint);font-weight:500}
@@ -6094,7 +6094,7 @@ document.addEventListener('click', function (e) {
 .mml-g summary:after{content:'';width:7px;height:7px;border-right:2px solid var(--txt3);border-bottom:2px solid var(--txt3);transform:rotate(45deg);margin:-4px 4px 0 2px;flex:none;transition:transform .15s}
 .mml-g[open] summary:after{transform:rotate(-135deg);margin-top:4px}
 .mml-t{width:100%;border-collapse:collapse;font-size:13px;margin:0 0 10px}
-.mml-t th{font-size:11px;font-weight:600;color:var(--txt3);text-align:right;padding:6px 4px;border-bottom:1px solid #e5e8eb;white-space:nowrap}
+.mml-t th{font-size:11px;font-weight:600;color:var(--txt3);text-align:right;padding:6px 4px;border-bottom:1px solid var(--line);white-space:nowrap}
 .mml-t th:nth-child(-n+2),.mml-t td:nth-child(-n+2){text-align:left}
 .mml-t td{padding:8px 4px;border-bottom:1px solid #f7f8fa;text-align:right;white-space:nowrap;color:var(--txt2)}
 .mml-t td:nth-child(2){white-space:normal;word-break:keep-all;color:var(--txt)}
@@ -6314,8 +6314,8 @@ document.addEventListener('click', function (e) {
 /* 2026-10-17 (현아): 작업내역 목록 — 구분 · 컷수 열 분리 */
 #mo-wo .wv-th{display:grid!important;grid-template-columns:1fr 64px 56px;gap:0}
 #mo-wo .wv-th span{padding:0 4px}
-#mo-wo .wv-th span:nth-child(2){text-align:center;border-left:1px solid #e5e8eb}
-#mo-wo .wv-th span:nth-child(3){text-align:right;border-left:1px solid #e5e8eb}
+#mo-wo .wv-th span:nth-child(2){text-align:center;border-left:1px solid var(--line)}
+#mo-wo .wv-th span:nth-child(3){text-align:right;border-left:1px solid var(--line)}
 #mo-wo .wd-sec .wd-li.wv-sp{display:grid!important;grid-template-columns:1fr 64px 56px;align-items:center;gap:0!important;padding:0 6px!important}
 #mo-wo .wd-li.wv-sp>.wd-f{padding:7px 4px 7px 0;min-width:0}
 #mo-wo .wd-li.wv-sp>.wv-c,#mo-wo .wd-li.wv-sp>.wv-n{align-self:stretch;display:flex;flex-direction:column;justify-content:center;gap:2px;padding:7px 4px;border-left:1px solid #f2f4f6;font-size:13px}
@@ -6373,8 +6373,8 @@ document.addEventListener('click', function (e) {
 </style>
 <style>
 /* 2026-10-17 (현아): 머리줄 아래·합계 위 선은 반쯤 흐리게 (내용 구분선보다는 진하게) */
-#mo-wo .wv-th{border-bottom:1px solid #b0b8c1!important}
-#mo-wo .wv-sr.t{border-top:1px solid #b0b8c1!important}
+#mo-wo .wv-th{border-bottom:1px solid var(--line)!important}
+#mo-wo .wv-sr.t{border-top:1px solid var(--line)!important}
 </style>
 <style>
 /* 2026-10-17 (현아): 마감일 — 정보 줄과 같은 레벨(회색 이름 · 검정 값)로, 저장 단추 없이 자동 저장 */
@@ -6974,7 +6974,7 @@ header .hr .ib[aria-label="로그아웃"]{display:none!important}
 .tx-dt .dc-row.tx-w .t b{display:inline-flex;align-items:center;gap:4px}
 .tx-wchv{width:14px;height:14px;color:var(--txt3);transition:transform .2s;flex:none}
 .tx-dt .dc-row.tx-w.on .tx-wchv{transform:rotate(180deg)}
-.tx-wd{display:none;margin:8px 0 2px;padding:2px 0 0;border-top:1px solid #e5e8eb}
+.tx-wd{display:none;margin:8px 0 2px;padding:2px 0 0;border-top:1px solid var(--line)}
 .tx-dt .dc-row.tx-w.on .tx-wd{display:block}
 .tx-wd .i{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:1px 10px;padding:7px 0;border-bottom:1px solid #f2f4f6;font-size:12px}
 .tx-wd .i:last-child{border-bottom:0}
@@ -7136,7 +7136,7 @@ function txIc(id) {
 </style>
 <style>
 /* 2026-10-18 (현아): 분류 머리줄 회색 박스 없앰 */
-#tab-pf .pf2-grp{background:none!important;border-radius:0!important;padding:18px 2px 8px!important;margin:4px 0 0!important;border-bottom:1px solid #b0b8c1;font-size:14px!important}
+#tab-pf .pf2-grp{background:none!important;border-radius:0!important;padding:18px 2px 8px!important;margin:4px 0 0!important;border-bottom:1px solid var(--line);font-size:14px!important}
 #tab-pf .pf2-grp.chk{background:none!important}
 #tab-pf .pf2-it1{padding-left:2px!important}
 </style>
@@ -7150,7 +7150,7 @@ function txIc(id) {
 #mo-doc .pg-tbl th,#mo-doc .pg-tbl thead tr{background:none!important}
 .pg-tbl td.fin{color:var(--txt)!important;font-weight:600!important}
 .pg-tbl td.tx{color:#b0b8c1!important}
-.pg-tbl tr.pg-t td{border-top:1px solid #e5e8eb!important;color:var(--txt);font-weight:700}
+.pg-tbl tr.pg-t td{border-top:1px solid var(--line)!important;color:var(--txt);font-weight:700}
 .pg-tbl tr.pg-t td.fin{color:#f04452!important;font-weight:800!important}
 .pg-tbl tr.pg-r{cursor:pointer}
 .pg-tbl tr.pg-r:active td{background:#f9fafb}
@@ -7363,17 +7363,17 @@ function txIc(id) {
 
 <style>
 /* 2026-10-18 (현아): 매입·매출 상세 — 맨 위 굵은 구분선만 검정, 나머지 선은 작업내역서처럼 1px #b0b8c1 · 머리줄 배경 없음 · 머리글 검정 */
-#mo-doc .dv-tbl th,#mo-doc .dv-tbl thead tr{background:none!important;color:var(--txt)!important;border-bottom:1px solid #b0b8c1!important}
-#mo-doc .dv-tot .r.t{border-top:1px solid #b0b8c1!important}
-#mo-doc .pg-tbl tr.pg-t td{border-top:1px solid #b0b8c1!important}
+#mo-doc .dv-tbl th,#mo-doc .dv-tbl thead tr{background:none!important;color:var(--txt)!important;border-bottom:1px solid var(--line)!important}
+#mo-doc .dv-tot .r.t{border-top:1px solid var(--line)!important}
+#mo-doc .pg-tbl tr.pg-t td{border-top:1px solid var(--line)!important}
 </style>
 <style>
 /* 2026-10-18 (현아): 매입·매출 표 — 머리글 검정·굵게, 머리줄 아래선 = 합계 위선 (#b0b8c1, 행 사이 선보다 진하게) */
-#mo-doc table.dv-tbl thead th{color:#191f28!important;font-weight:700!important;background:none!important;border-bottom:1px solid #b0b8c1!important}
+#mo-doc table.dv-tbl thead th{color:#191f28!important;font-weight:700!important;background:none!important;border-bottom:1px solid var(--line)!important}
 #mo-doc table.dv-tbl tbody td{border-bottom:1px solid #f2f4f6}
 #mo-doc table.pg-tbl tbody tr.pg-t td{border-top:0!important;border-bottom:0!important;box-shadow:inset 0 1px 0 #b0b8c1}
 #mo-doc table.pg-tbl tbody tr:nth-last-child(2) td{border-bottom:0!important}
-#mo-doc .dv-tot .r.t{border-top:1px solid #b0b8c1!important}
+#mo-doc .dv-tot .r.t{border-top:1px solid var(--line)!important}
 </style>
 <style>
 /* 2026-10-18 (현아): 공급가액 = 진한 회색(#4e5968) · 개별 지급액 = 검정 · 합산 = 매입 빨강 / 매출 파랑 */
@@ -7568,7 +7568,7 @@ function txIc(id) {
 #tab-fam .fm-tbl td{padding:6px 2px;border-bottom:1px solid #f2f4f6;text-align:right;white-space:nowrap;color:var(--txt2)}
 #tab-fam .fm-tbl td:first-child{text-align:left;color:var(--txt3)}
 #tab-fam .fm-tbl tr.f td{color:#f04452;font-weight:800;border-bottom:0}
-#tab-fam .fm-tbl tr.h td{font-weight:700;color:var(--txt);border-bottom:1px solid #b0b8c1}
+#tab-fam .fm-tbl tr.h td{font-weight:700;color:var(--txt);border-bottom:1px solid var(--line)}
 #tab-fam .fm-empty{padding:40px 0;text-align:center;color:var(--txt3);font-size:13px;background:#fff;border-radius:20px}
 #tab-fam .fm-note{font-size:11px;color:var(--txt3);line-height:1.6;margin-top:10px}
 /* 2026-10-20 (현아): 실제 정산 — 글자 검정, 핏치지급액 진하게, 수수료 흐리게, 전체 카드 */
@@ -7641,10 +7641,10 @@ function txIc(id) {
 #tab-fam .fm-cat{margin:12px 0 2px}
 #tab-fam .fm-cat>div{display:flex;justify-content:space-between;align-items:center;padding:7px 2px;border-bottom:1px solid #f2f4f6;font-size:13px;color:var(--txt)}
 #tab-fam .fm-cat>div b{font-weight:700}
-#tab-fam .fm-cat>.hd{font-size:12px;font-weight:700;border-bottom:1px solid #b0b8c1;padding-top:0}
+#tab-fam .fm-cat>.hd{font-size:12px;font-weight:700;border-bottom:1px solid var(--line);padding-top:0}
 #tab-fam .fm-cat>.u b{color:#f04452}
 #tab-fam .fm-cat>.u small{font-size:11px;color:var(--faint,#b0b8c1)}
-#tab-fam .fm-cat>.t{border-top:1px solid #b0b8c1;border-bottom:0;font-weight:800}
+#tab-fam .fm-cat>.t{border-top:1px solid var(--line);border-bottom:0;font-weight:800}
 #tab-fam .fm-cat>.t b{font-weight:800}
 #tab-fam .fm-wc{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding:12px 0 6px}
 #tab-fam .fm-wc::-webkit-scrollbar{display:none}
@@ -7941,16 +7941,18 @@ function txIc(id) {
 .wo-x .wx-lk a,.wo-x .wx-lk button{display:inline-flex;align-items:center;gap:5px;height:30px;padding:0 12px;border-radius:999px;border:0;background:var(--chip);color:var(--txt2);font-family:inherit;font-size:12px;font-weight:600;text-decoration:none;cursor:pointer}
 .wo-x .wx-lk svg{width:14px;height:14px}
 .wo-x .wx-ld{padding:10px 2px;font-size:12px;color:var(--txt3)}
-.wo-x .wx-cat{margin:12px 0 2px;border-top:1px solid #e0e4e8}
+.wo-x .wx-cat{margin:12px 0 2px;border-top:1px solid var(--line)}
 .wo-x .wx-cat>div{display:flex;justify-content:space-between;align-items:center;padding:7px 2px;border-bottom:1px solid #f2f4f6;font-size:13px;color:var(--txt)}
 .wo-x .wx-cat>div b{font-weight:700}
-.wo-x .wx-cat>.hd{font-size:12px;font-weight:700;border-bottom:1px solid #b0b8c1;padding-top:0}
+.wo-x .wx-cat>.hd{font-size:12px;font-weight:700;border-bottom:1px solid var(--line);padding-top:0}
 .wo-x .wx-cat>.u b{color:#f04452}
+.wo-x .wx-cat>div:has(+ .t){border-bottom:0!important}
+#mo-doc .pg-all tr:has(+ .pg-t) td,#mo-doc .pg-all tr:has(+ .pg-wh) td{border-bottom:0!important}
 .wo-x .wx-cat>.u small{font-size:11px;color:#b0b8c1}
-.wo-x .wx-cat>.t{border-top:1px solid #e0e4e8;border-bottom:0;font-weight:800}
+.wo-x .wx-cat>.t{border-top:1px solid var(--line);border-bottom:0;font-weight:800}
 .wo-x .wx-cat>.t b{font-weight:800}
 .wo-x .wx-sp{height:14px}
-.wo-x .wx-dh{display:flex;justify-content:space-between;margin-top:22px;padding:0 2px 7px;font-size:12px;font-weight:700;color:var(--txt);border-bottom:1px solid #b0b8c1}
+.wo-x .wx-dh{display:flex;justify-content:space-between;margin-top:22px;padding:0 2px 7px;font-size:12px;font-weight:700;color:var(--txt);border-bottom:1px solid var(--line)}
 .wo-x .wx-wc{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding:16px 0 6px}
 .wo-x .wx-wc::-webkit-scrollbar{display:none}
 .wo-x .wx-wc button{flex:none;height:30px;padding:0 12px;border-radius:999px;border:0;background:var(--chip);font-family:inherit;font-size:12px;font-weight:600;color:var(--txt2);cursor:pointer}
@@ -8092,10 +8094,10 @@ function txIc(id) {
 </script>
 <style>
 /* 2026-10-20 (현아): 매입 상세 '전체' — 작업자별 머리줄 + 세부내역 */
-#mo-doc .pg-all .pg-wh td{font-weight:700;color:var(--txt);padding-top:14px!important;border-bottom:1px solid #e0e4e8!important;cursor:pointer}
+#mo-doc .pg-all .pg-wh td{font-weight:700;color:var(--txt);padding-top:14px!important;border-bottom:1px solid var(--line)!important;cursor:pointer}
 #mo-doc .pg-all .pg-wh td:last-child{text-align:right}
 #mo-doc .pg-all tr.pg-x td{color:#b0b8c1!important}
-#mo-doc .pg-all .pg-t td{font-weight:800;border-top:1px solid #b0b8c1}
+#mo-doc .pg-all .pg-t td{font-weight:800;border-top:1px solid var(--line)}
 #mo-doc .pg-all .pg-t td:last-child{text-align:right}
 
 #mo-doc .pg-all tr.pg-pv td{color:var(--txt2)}
