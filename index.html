@@ -7,7 +7,7 @@
 <meta name="theme-color" content="#f2f4f6">
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=3">
 <link rel="apple-touch-icon" href="apple-touch-icon.png?v=3">
-<meta name="pm-build" content="202610201130">
+<meta name="pm-build" content="202610201140">
 <link rel="manifest" href="manifest.webmanifest?v=3">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -7904,6 +7904,7 @@ function txIc(id) {
 .wo-x .wx-cat>.u small{font-size:11px;color:#b0b8c1}
 .wo-x .wx-cat>.t{border-top:1px solid #b0b8c1;border-bottom:0;font-weight:800}
 .wo-x .wx-cat>.t b{font-weight:800}
+.wo-x .wx-sp{height:14px}
 .wo-x .wx-dh{display:flex;justify-content:space-between;margin-top:22px;padding:0 2px 7px;font-size:12px;font-weight:700;color:var(--txt);border-bottom:1px solid #b0b8c1}
 .wo-x .wx-wc{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding:12px 0 6px}
 .wo-x .wx-wc::-webkit-scrollbar{display:none}
@@ -7996,7 +7997,7 @@ function txIc(id) {
     h += '<div class="wx-wc">' + [''].concat(ws).map(function (w) { return '<button type="button" class="' + (sel === w ? 'on' : '') + '" data-id="' + esc(id) + '" data-w="' + esc(w) + '" onclick="woXW(this)">' + (w ? '<i style="background:' + col[w][1] + '"></i>' + esc(w) : '전체') + ' <b>' + (w ? wc[w] : C.tot) + '</b></button>'; }).join('') + '</div>';
     if (C.ks.length) h += '<div class="wx-cat"><div class="hd"><span>작업 요약</span><span>컷수</span></div>' + C.ks.map(function (q) { return '<div class="' + (q === '긴급' ? 'u' : '') + '"><span>' + esc(q) + (q === '긴급' ? ' <small>(중복 포함)</small>' : '') + '</span><b>' + C.m[q] + '컷</b></div>'; }).join('') + '<div class="t"><span>합계</span><b>' + C.tot + '컷</b></div></div>';
     var show = L.filter(function (x) { return !sel || x.w === sel; });
-    h += '<div class="wx-dh"><span>작업내역</span><span>컷수</span></div>';
+    h += '<div class="wx-sp"></div>';
     h += show.map(function (x) { return '<div class="wx-r"><span class="wx-tag" style="background:' + col[x.w][0] + ';color:' + col[x.w][1] + '">' + esc(x.w) + '</span><span class="t">' + esc(x.n) + '</span><span class="a"><small>' + esc(x.lb) + '</small> <b>' + x.c + '컷</b></span></div>'; }).join('') || '<div class="wx-ld">작업 내역이 없어요</div>';
     return h;
   }
