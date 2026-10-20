@@ -7,7 +7,7 @@
 <meta name="theme-color" content="#f2f4f6">
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=3">
 <link rel="apple-touch-icon" href="apple-touch-icon.png?v=3">
-<meta name="pm-build" content="202610201450">
+<meta name="pm-build" content="202610202145">
 <link rel="manifest" href="manifest.webmanifest?v=3">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -8133,6 +8133,101 @@ td.rate-val{white-space:nowrap}
 #mo-doc .pg-all tr.pg-fee td:last-child{text-align:right}
 #mo-doc .pg-all tr.pg-pv td.n{color:var(--txt3)}
 </style>
+<script>
+/* 2026-10-20 (현아): 파일명에 날짜(YYMMDD)가 없는 작업내역서는 시트의 요청일로 날짜 표시 */
+(function () {
+  var REQ = {}; try { REQ = JSON.parse(localStorage.getItem('pm_wo_req') || '{}') || {}; } catch (e) {}
+  var Q = {}, busy = 0, tm = null;
+  function d6of(v) { var m = String(v || '').match(/(\d{4})[-.\/](\d{1,2})[-.\/](\d{1,2})/); return m ? m[1].slice(2) + ('0' + m[2]).slice(-2) + ('0' + m[3]).slice(-2) : ''; }
+  function redraw() {
+    clearTimeout(tm); tm = setTimeout(function () {
+      try { localStorage.setItem('pm_wo_req', JSON.stringify(REQ)); } catch (e) {}
+      try { if (typeof WO !== 'undefined' && WO.items) woRenderList(); } catch (e) {}
+      try { if (typeof DC !== 'undefined') { if (DC.pay && DC.pay.items) dcList('pay'); if (DC.invoice && DC.invoice.items) dcList('invoice'); } } catch (e) {}
+    }, 250);
+  }
+  function want(x) {
+    if (!x || !x.id || Q[x.id]) return; Q[x.id] = 1; busy++;
+    woGet('&wo=' + encodeURIComponent(x.id), function (r) {
+      busy--; var v = r && r.ok && r.info ? d6of(r.info['요청일']) : '';
+      REQ[x.id] = v || '-'; if (v) redraw();
+    });
+  }
+  function find(ck, title) {
+    var L = (typeof WO !== 'undefined' && WO.items) || [];
+    return L.filter(function (i) { return i.clientKey === ck && String(i.title || '') === String(title || '') && !/^\d{6}$/.test(i.date6 || ''); })[0];
+  }
+  var keep = woHead;
+  woHead = function (ck, artist, title, d6, t, dl) {
+    if (!/^\d{6}$/.test(d6 || '')) {
+      var x = find(ck, title);
+      if (x) { var v = REQ[x.id]; if (/^\d{6}$/.test(v || '')) d6 = v; else if (!v) want(x); }
+    }
+    return keep.apply(this, [ck, artist, title, d6, t, dl]);
+  };
+})();
+</script>
+<style>
+/* 2026-10-20 (현아): 작업내역서 이름 바꾸기 */
+#mo-wo .wv-hd h3 .wv-rn{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border:0;border-radius:50%;background:var(--chip);color:var(--txt2);margin-left:6px;vertical-align:3px;cursor:pointer;padding:0}
+#mo-wo .wv-hd h3 .wv-rn svg{width:13px;height:13px;display:block}
+.rn-dim{position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:9998;display:flex;align-items:flex-end;justify-content:center}
+.rn-bs{background:#fff;width:100%;max-width:560px;border-radius:22px 22px 0 0;padding:22px 20px calc(20px + env(safe-area-inset-bottom));box-sizing:border-box}
+.rn-bs h4{margin:0 0 4px;font-size:18px;font-weight:800}
+.rn-bs p{margin:0 0 14px;font-size:12px;color:var(--txt3);line-height:1.5}
+.rn-bs label{display:block;font-size:12px;font-weight:700;color:var(--txt3);margin:12px 0 6px 2px}
+.rn-bs textarea{width:100%;box-sizing:border-box;border:0;border-radius:12px;background:var(--chip);padding:12px;font-family:inherit;font-size:14px;line-height:1.45;color:var(--txt);resize:none;outline:0}
+.rn-bs textarea:disabled{color:var(--faint)}
+.rn-acts{display:flex;gap:8px;margin-top:18px}
+.rn-acts button{flex:1;height:50px;border:0;border-radius:14px;font-family:inherit;font-weight:800;font-size:15px;cursor:pointer}
+.rn-acts .no{flex:.5;background:var(--chip);color:var(--txt2)} .rn-acts .ok{background:var(--txt);color:#fff}
+.rn-acts .ok:disabled{opacity:.4}
+</style>
+<script>
+(function () {
+  var IC = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>';
+  if (typeof woDetail !== 'function') return;
+  var _wd = woDetail;
+  woDetail = function () {
+    var r = _wd.apply(this, arguments);
+    try { var h = document.querySelector('#mo-wo .wv-hd h3'); if (h && WO.cur && WO.cur.id && !h.querySelector('.wv-rn')) h.insertAdjacentHTML('beforeend', '<button type="button" class="wv-rn" aria-label="이름 바꾸기" onclick="woRename()">' + IC + '</button>'); } catch (e) {}
+    return r;
+  };
+  function close() { var x = document.getElementById('rn-dim'); if (x) x.remove(); }
+  window.woRename = function () {
+    var d = WO.cur; if (!d || !d.id) return;
+    close();
+    var el = document.createElement('div'); el.className = 'rn-dim'; el.id = 'rn-dim';
+    el.innerHTML = '<div class="rn-bs" onclick="event.stopPropagation()"><h4>이름 바꾸기</h4><p>작업내역서 파일 이름과 시트에 연결된 작업 폴더 이름을 바꿔요. 날짜는 요청일(YYMMDD) 형식으로 넣으면 목록에 날짜가 나와요.</p>' +
+      '<label>작업내역서 파일 이름</label><textarea id="rn-f" rows="3" disabled>불러오는 중…</textarea>' +
+      '<label>작업 폴더 이름</label><textarea id="rn-d" rows="2" disabled>불러오는 중…</textarea>' +
+      '<div class="rn-acts"><button type="button" class="no" id="rn-x">닫기</button><button type="button" class="ok" id="rn-go" disabled>저장</button></div></div>';
+    el.onclick = close; document.body.appendChild(el);
+    document.getElementById('rn-x').onclick = close;
+    var cur = null;
+    woPost('pm_wo_rename', { id: d.id, folderUrl: d.link || '', peek: 1 }, function (r) {
+      var f = document.getElementById('rn-f'), g = document.getElementById('rn-d'); if (!f) return;
+      if (!r || !r.ok) { f.value = (r && r.error) || '불러오지 못했어요'; g.value = ''; return; }
+      cur = r; f.value = r.name || ''; f.disabled = false;
+      if (r.folderName) { g.value = r.folderName; g.disabled = false; } else { g.value = '연결된 작업 폴더가 없어요'; }
+      document.getElementById('rn-go').disabled = false;
+    });
+    document.getElementById('rn-go').onclick = function () {
+      if (!cur) return;
+      var nf = document.getElementById('rn-f').value.replace(/\s*\n\s*/g, ' ').trim(), g = document.getElementById('rn-d'), nd = g.disabled ? '' : g.value.replace(/\s*\n\s*/g, ' ').trim();
+      if (!nf) return toast('파일 이름을 적어 주세요');
+      if (nf === cur.name && (!nd || nd === cur.folderName)) return close();
+      var b = this; b.disabled = true; b.textContent = '바꾸는 중…';
+      woPost('pm_wo_rename', { id: d.id, folderUrl: d.link || '', name: nf, folderName: nd }, function (r) {
+        if (!r || !r.ok) { b.disabled = false; b.textContent = '저장'; return toast((r && r.error) || '바꾸지 못했어요'); }
+        close(); toast('이름을 바꿨어요');
+        try { localStorage.removeItem('pm_wo_req'); } catch (e) {}
+        try { if (typeof woLoad === 'function') woLoad(true); else if (typeof woRenderList === 'function') woRenderList(); } catch (e) {}
+      });
+    };
+  };
+})();
+</script>
 </body>
 
 </html>
