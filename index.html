@@ -7,7 +7,7 @@
 <meta name="theme-color" content="#f2f4f6">
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=3">
 <link rel="apple-touch-icon" href="apple-touch-icon.png?v=3">
-<meta name="pm-build" content="202610201420">
+<meta name="pm-build" content="202610201430">
 <link rel="manifest" href="manifest.webmanifest?v=3">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -7330,8 +7330,9 @@ function txIc(id) {
       R.map(function (r, i) { return '<button class="wo-chip' + (PG.sel === i ? ' on' : '') + (isInt(r.w) ? ' pg-xc' : '') + '" onclick="pgSel(' + i + ')">' + esc(r.w) + '</button>'; }).join('') + '</div>';
     if (PG.sel === -2) {
       h += '<table class="dv-tbl pg-all"><thead><tr><th>작업 세부내역</th><th>컷수</th><th>단가</th><th>소계</th></tr></thead><tbody>' + R.map(function (r, i) {
-        var hd = '<tr class="pg-wh' + (isInt(r.w) ? ' pg-x' : '') + '" onclick="pgSel(' + i + ')"><td colspan="3">' + esc(r.w) + (isInt(r.w) ? '<span class="pg-tag">집계 제외</span>' : '') + '</td><td>' + (r.v ? W(r.v.sub) : '') + '</td></tr>';
-        if (r.none) return hd + '<tr class="pg-x"><td colspan="4" class="n" style="text-align:left">' + (pgFam(r.w, R) ? '강영순 지급내역서에 합산' : '지급내역서 미작성') + '</td></tr>' + pgPrev(r.w);
+        var dim = isInt(r.w) || (r.none && pgFam(r.w, R)) || /^(박종배|박슬기|박현아)$/.test(r.w);
+        var hd = '<tr class="pg-wh' + (dim ? ' pg-x' : '') + '" onclick="pgSel(' + i + ')"><td colspan="3">' + esc(r.w) + (isInt(r.w) ? '<span class="pg-tag">집계 제외</span>' : '') + '</td><td>' + (r.v ? W(r.v.sub) : '') + '</td></tr>';
+        if (r.none) return '<tbody class="' + (dim ? 'pg-dim' : '') + '">' + hd + '<tr class="pg-x"><td colspan="4" class="n" style="text-align:left">' + (pgFam(r.w, R) ? '강영순 지급내역서에 합산' : '지급내역서 미작성') + '</td></tr>' + pgPrev(r.w) + '</tbody>';
         if (!r.v) return hd + '<tr><td colspan="4" class="n" style="text-align:left">' + (r.d && r.d.err ? '⚠ ' + esc(r.d.err) : '불러오는 중…') + '</td></tr>';
         return hd + (r.v.rows.length ? r.v.rows.map(function (q) { var v = q.v; return '<tr' + (isInt(r.w) ? ' class="pg-x"' : '') + '><td>' + esc(v[1] || '-') + '</td><td class="n">' + esc(v[2] || '') + '</td><td class="n">' + W(q.u) + '</td><td>' + W(q.g) + '</td></tr>'; }).join('') : '<tr><td colspan="4" class="n" style="text-align:left">작업이 없어요</td></tr>') +
           (r.v.fee ? '<tr class="pg-fee"><td colspan="3">수수료' + (r.v.feeP ? ' (' + esc(r.v.feeP) + ')' : '') + '</td><td><i class="pf2-mn">−</i>' + W(r.v.fee) + '</td></tr>' : '');
@@ -8115,6 +8116,9 @@ function txIc(id) {
 #mo-doc .pg-all tr.pg-pv td{color:var(--txt2)}
 #mo-doc .pg-all tr.pg-fee td{color:var(--txt3);font-size:12px}
 #mo-doc .pg-all thead{display:none}
+/* 김현수(집계 제외)·강영순 합산(박종배·박슬기·박현아)은 흐리게 */
+#mo-doc .pg-all tr.pg-x td,#mo-doc .pg-all tbody.pg-dim td,#mo-doc .pg-all tbody.pg-dim td.n{color:#b0b8c1!important}
+#mo-doc .pg-all tr.pg-wh.pg-x td{color:#b0b8c1!important}
 /* 2026-10-20 (현아): 지급단가 '수수료 적용' 보기 */
 .rate-litter-label{display:flex;align-items:center;justify-content:space-between;gap:8px}
 .rt-feeb{height:30px;padding:0 12px;border:0;border-radius:999px;background:var(--chip);color:var(--txt2);font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;margin-left:auto}
