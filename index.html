@@ -7,7 +7,7 @@
 <meta name="theme-color" content="#f2f4f6">
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=3">
 <link rel="apple-touch-icon" href="apple-touch-icon.png?v=3">
-<meta name="pm-build" content="202610201230">
+<meta name="pm-build" content="202610201240">
 <link rel="manifest" href="manifest.webmanifest?v=3">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -7602,6 +7602,12 @@ function txIc(id) {
 #tab-fam .fm-db{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:var(--chip);color:var(--txt3);font-size:11px;font-weight:700;flex:none}
 #tab-fam .fm-gb .fm-r:last-child{border-bottom:0}
 #tab-fam .fm-gb{padding-bottom:4px}
+#tab-fam .fm-p .l1{align-items:center}
+#tab-fam .fm-p .l1 .t{white-space:normal}
+#tab-fam .fm-tt{display:flex;flex-wrap:wrap;align-items:center;column-gap:.28em;row-gap:2px;min-width:0}
+#tab-fam .fm-tt b{font-size:14px;font-weight:700;color:var(--txt)}
+#tab-fam .fm-tt small{font-size:12px;font-weight:400;color:var(--txt3);line-height:1}
+#tab-fam .fm-ck{margin-left:-4px}
 #tab-fam .fm-ck{display:flex;align-items:center;min-height:18px;margin-bottom:2px}
 #tab-fam .fm-ck .wo-ck{padding:2px 8px!important;font-size:10px!important}
 /* 2026-10-20 (현아): 펼친 프로젝트 — 바로가기 · 작업 요약 · 작업자별 */
@@ -7697,6 +7703,20 @@ function txIc(id) {
   function years(list) { var o = {}; list.forEach(function (d) { var y = String(d || '').slice(0, 4); if (/^\d{4}$/.test(y)) o[y] = 1; }); return Object.keys(o).sort().reverse(); }
   // 2026-10-20 (현아): 프로젝트명 앞 [거래처]는 떼고, 거래처는 위에 단추(작업내역서·매출과 같은 색 단추)로
   function cliOf(s) { var m = String(s || '').replace(/^\s*\[PITCH\]\s*/, '').match(/^\s*\[([^\]]+)\]/); if (!m) return ''; var t = m[1].replace(/\s*\(.*\)\s*$/, '').replace(/\s*ENTERTAINMENT\s*/i, ' ').trim(); return t || m[1]; }
+  // 2026-10-20 (현아): 프로젝트 표기 기본 — 위에 거래처 단추, 아래 아티스트·프로젝트명(진하게)·담당자(작게)
+  function pjParts(s) {
+    s = String(s || '').replace(/^\s*\[PITCH\]\s*/, '').replace(/<[^>]*>.*$/, '').trim();
+    var ck = '', m = s.match(/^\[([^\]]+)\]\s*(.*)$/), t;
+    if (m) { ck = m[1].replace(/\s*\(.*\)\s*$/, '').replace(/\s*ENTERTAINMENT\s*/i, ' ').trim(); t = m[2].split('_'); }
+    else { t = s.split('_'); if (t.length >= 3 && /^\d{6}$/.test(t[2])) { ck = t.shift(); t.splice(1, 1); } }
+    t = t.map(function (x) { return x.trim(); }).filter(Boolean);
+    var a = t.shift() || '', mg = t.length >= 2 ? t.pop() : '';
+    return { ck: ck, a: a, p: t.join(' '), m: mg };
+  }
+  function pjHtml(s) {
+    var o = pjParts(s);
+    return (o.ck && typeof woCK === 'function' ? '<span class="fm-ck">' + woCK(o.ck) + '</span>' : '') + '<span class="fm-tt"><b>' + esc(o.a) + '</b>' + (o.p ? '<b>' + esc(o.p) + '</b>' : '') + (o.m ? '<small>' + esc(o.m) + '</small>' : '') + '</span>';
+  }
   function ckHtml(s) { var c = cliOf(s); return c && typeof woCK === 'function' ? '<span class="fm-ck">' + woCK(c) + '</span>' : ''; }
   function shortProj(s) { return String(s || '').replace(/^\s*\[PITCH\]\s*/, '').replace(/^\s*\[[^\]]*\]\s*/, '').replace(/<[^>]*>.*$/, '').replace(/_/g, ' ').trim(); }
   function wd(d) { var t = new Date(String(d).slice(0, 10) + 'T00:00:00'); return isNaN(t) ? '' : '(' + '일월화수목금토'.charAt(t.getDay()) + ')'; }
@@ -7808,7 +7828,7 @@ function txIc(id) {
     h += order.map(function (k) {
       var g = G[k], c = g.reduce(function (s, r) { return s + (Number(r[4]) || 0); }, 0);
       var ws = {}; g.forEach(function (r) { var a = r[6] || r[5]; if (a) ws[a] = 1; });
-      return '<div class="fm-card fm-g' + (F.gopen[k] ? ' open' : '') + '" data-k="' + esc(k) + '"><div class="fm-gh" onclick="famG(this)"><div class="gt">' + ckHtml(g[0][1]) + '<span>' + esc(shortProj(g[0][1])) + '</span><em>' + esc(dd(g[0][0])) + ' · ' + g.length + '줄 · ' + W(c) + '컷 · ' + Object.keys(ws).map(esc).join('·') + '</em></div><i class="chev"></i></div><div class="fm-gb">' + gBody(k, g) + '</div></div>';
+      return '<div class="fm-card fm-g' + (F.gopen[k] ? ' open' : '') + '" data-k="' + esc(k) + '"><div class="fm-gh" onclick="famG(this)"><div class="gt">' + pjHtml(g[0][1]) + '<em>' + esc(dd(g[0][0])) + ' · ' + g.length + '줄 · ' + W(c) + '컷 · ' + Object.keys(ws).map(esc).join('·') + '</em></div><i class="chev"></i></div><div class="fm-gb">' + gBody(k, g) + '</div></div>';
     }).join('') + '<div class="fm-note" style="padding:0 6px 10px">· 실제 작업자는 작업내역서 화면(박종배·박슬기 탭)이나 작업자배정 시트에서 바꿀 수 있어요.<br>· 이 화면은 관리 모드에서만 보여요.</div>';
     return h;
   }
@@ -7841,7 +7861,7 @@ function txIc(id) {
         return '<div class="w"><span>' + w + '</span><span>' + W(x.cut) + '컷</span></div>' + x.rows.map(function (r) { return '<div class="rw">' + esc(r[0]) + ' · ' + W(r[1]) + '컷 · ' + W(r[3]) + '</div>'; }).join('') +
           '<div class="k"><span>작업 합계</span><b>' + W(x.sum) + '</b></div><div class="k"><span>원천세</span><b>' + W(x.tax) + '</b></div><div class="k b"><span>핏치지급액</span><b>' + W(x.net) + '</b></div><div class="k lt"><span>강영순 수수료 (25%)</span><b>' + W(x.fee) + '</b></div><div class="k f"><span>실제지급액</span><b>' + W(x.act) + '</b></div>';
       }).join('');
-      return '<div class="fm-p' + (F.open[o.id] ? ' on' : '') + '" data-id="' + esc(o.id) + '" onclick="famOpen(this.dataset.id)">' + ckHtml(o.n) + '<div class="l1"><span class="t">' + esc(shortProj(o.n)) + '</span><span class="a">' + W(act) + '</span></div>' +
+      return '<div class="fm-p' + (F.open[o.id] ? ' on' : '') + '" data-id="' + esc(o.id) + '" onclick="famOpen(this.dataset.id)">' + (pjParts(o.n).ck && typeof woCK === 'function' ? '<span class="fm-ck">' + woCK(pjParts(o.n).ck) + '</span>' : '') + '<div class="l1"><span class="t">' + (function (q) { return '<span class="fm-tt"><b>' + esc(q.a) + '</b>' + (q.p ? '<b>' + esc(q.p) + '</b>' : '') + (q.m ? '<small>' + esc(q.m) + '</small>' : '') + '</span>'; })(pjParts(o.n)) + '</span><span class="a">' + W(act) + '</span></div>' +
         '<div class="l2"><span>' + esc(dd(o.d)) + '</span>' + ws.map(function (w) { return '<span>' + w + ' ' + W(o.w[w].act) + '</span>'; }).join('') + (o.p ? '<span class="pd">지급 ' + esc(dd(o.p)) + '</span>' : '<span class="np">미지급</span>') + '</div><div class="fm-pd">' + det + '</div></div>';
     }).join('') + '</div>';
     return h;
