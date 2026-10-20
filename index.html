@@ -7,7 +7,7 @@
 <meta name="theme-color" content="#f2f4f6">
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=3">
 <link rel="apple-touch-icon" href="apple-touch-icon.png?v=3">
-<meta name="pm-build" content="202610201340">
+<meta name="pm-build" content="202610201350">
 <link rel="manifest" href="manifest.webmanifest?v=3">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -7216,7 +7216,12 @@ function txIc(id) {
     var get = function (k) { var x = (d.info || []).filter(function (i) { return i.k === k; })[0]; return x ? x.v : ''; };
     var t = d.total || [], tv = function (i) { return t[i] ? t[i].v : ''; };
     var tt = get('세금구분'), vat = /10/.test(tt) || /부가/.test(tt);
-    return { sub: N(get('합계') || tv(0)), tax: N(get('세금') || tv(1)), fin: N(get('지급액') || tv(2)), vat: vat, pay: get('지급일자'), rows: (d.rows || []).filter(function (r) { return r.v.some(function (v) { return String(v).trim(); }); }) };
+    // 2026-10-20 (현아): 단가는 단가표 금액(G열) 그대로 보여주고, 수수료는 작업 합계에서 한 번에 뺌
+    var rows = (d.rows || []).filter(function (r) { return r.v.some(function (v) { return String(v).trim(); }); });
+    var sub = N(get('합계') || tv(0)), gross = 0, fp = '';
+    rows.forEach(function (r) { var v = r.v, u = N(v[5]) || N(v[3]), c = N(v[2]); r.u = u; r.g = u * c; gross += r.g; if (!fp && v[6] && N(v[6])) fp = String(v[6]).replace(/\.0+%$/, '%'); });
+    if (!gross || gross < sub) gross = sub;
+    return { sub: sub, gross: gross, fee: gross - sub, feeP: fp, tax: N(get('세금') || tv(1)), fin: N(get('지급액') || tv(2)), vat: vat, pay: get('지급일자'), rows: rows };
   }
   // 2026-10-18 (현아): 지급내역서가 없어도 작업내역서 작업자 명단에 있는 사람은 표기 (명단에 없으면 안 넣음 · 김현수도 동일)
   function pgExtra(g) {
@@ -7312,11 +7317,12 @@ function txIc(id) {
     h += '<div class="wd-tabs"><button class="wo-chip' + (PG.sel === -1 ? ' on' : '') + '" onclick="pgSel(-1)">요약</button><button class="wo-chip' + (PG.sel === -2 ? ' on' : '') + '" onclick="pgSel(-2)">전체</button>' +
       R.map(function (r, i) { return '<button class="wo-chip' + (PG.sel === i ? ' on' : '') + (isInt(r.w) ? ' pg-xc' : '') + '" onclick="pgSel(' + i + ')">' + esc(r.w) + '</button>'; }).join('') + '</div>';
     if (PG.sel === -2) {
-      h += '<table class="dv-tbl pg-all"><thead><tr><th>작업 세부내역</th><th>컷수</th><th>컷당</th><th>소계</th></tr></thead><tbody>' + R.map(function (r, i) {
+      h += '<table class="dv-tbl pg-all"><thead><tr><th>작업 세부내역</th><th>컷수</th><th>단가</th><th>소계</th></tr></thead><tbody>' + R.map(function (r, i) {
         var hd = '<tr class="pg-wh' + (isInt(r.w) ? ' pg-x' : '') + '" onclick="pgSel(' + i + ')"><td colspan="3">' + esc(r.w) + (isInt(r.w) ? '<span class="pg-tag">집계 제외</span>' : '') + '</td><td>' + (r.v ? W(r.v.sub) : '') + '</td></tr>';
         if (r.none) return hd + '<tr class="pg-x"><td colspan="4" class="n" style="text-align:left">' + (pgFam(r.w, R) ? '강영순 지급내역서에 합산' : '지급내역서 미작성') + '</td></tr>' + pgPrev(r.w);
         if (!r.v) return hd + '<tr><td colspan="4" class="n" style="text-align:left">' + (r.d && r.d.err ? '⚠ ' + esc(r.d.err) : '불러오는 중…') + '</td></tr>';
-        return hd + (r.v.rows.length ? r.v.rows.map(function (q) { var v = q.v; return '<tr' + (isInt(r.w) ? ' class="pg-x"' : '') + '><td>' + esc(v[1] || '-') + '</td><td class="n">' + esc(v[2] || '') + '</td><td class="n">' + W(N(v[3])) + '</td><td>' + W(N(v[4])) + '</td></tr>'; }).join('') : '<tr><td colspan="4" class="n" style="text-align:left">작업이 없어요</td></tr>');
+        return hd + (r.v.rows.length ? r.v.rows.map(function (q) { var v = q.v; return '<tr' + (isInt(r.w) ? ' class="pg-x"' : '') + '><td>' + esc(v[1] || '-') + '</td><td class="n">' + esc(v[2] || '') + '</td><td class="n">' + W(q.u) + '</td><td>' + W(q.g) + '</td></tr>'; }).join('') : '<tr><td colspan="4" class="n" style="text-align:left">작업이 없어요</td></tr>') +
+          (r.v.fee ? '<tr class="pg-fee"><td colspan="3">수수료' + (r.v.feeP ? ' (' + esc(r.v.feeP) + ')' : '') + '</td><td><i class="pf2-mn">−</i>' + W(r.v.fee) + '</td></tr>' : '');
       }).join('') + '<tr class="pg-t"><td colspan="3">합계 (공급가액)</td><td>' + W(sum('sub')) + '</td></tr></tbody></table>' +
         '<div class="pg-hint">' + (R.some(function (r) { return isInt(r.w); }) ? PG_INT.join('·') + '은 내부 인원이라 합계에서 빠져요 · ' : '') + '작업자 이름을 누르면 그 사람 지급내역이 보여요</div>';
     } else if (PG.sel === -1) {
@@ -7333,10 +7339,10 @@ function txIc(id) {
       if (r && r.none) { h += '<div class="wo-empty">' + esc(r.w) + (pgFam(r.w, R) ? '의 작업은 강영순 지급내역서에 합쳐져 있어요' : '의 지급내역서가 아직 없어요') + (isInt(r.w) ? ' (내부 인원 · 매입 집계 제외)' : '') + '</div>'; var pv = pgPrev(r.w); if (pv) h += '<table class="dv-tbl pg-all"><thead><tr><th>작업 세부내역 (미리보기)</th><th>컷수</th><th>컷당</th><th>소계</th></tr></thead><tbody>' + pv + '</tbody></table>'; }
       else if (!r || !r.v) h += '<div class="wo-empty">' + (r && r.d && r.d.err ? '⚠ ' + esc(r.d.err) : '불러오는 중…') + '</div>';
       else {
-        h += '<table class="dv-tbl"><thead><tr><th>작업 세부내역</th><th>컷수</th><th>컷당</th><th>소계</th></tr></thead><tbody>' +
-          (r.v.rows.length ? r.v.rows.map(function (q) { var v = q.v; return '<tr><td>' + esc(v[1] || '-') + '</td><td class="n">' + esc(v[2] || '') + '</td><td class="n">' + W(N(v[3])) + '</td><td>' + W(N(v[4])) + '</td></tr>'; }).join('')
+        h += '<table class="dv-tbl"><thead><tr><th>작업 세부내역</th><th>컷수</th><th>단가</th><th>소계</th></tr></thead><tbody>' +
+          (r.v.rows.length ? r.v.rows.map(function (q) { var v = q.v; return '<tr><td>' + esc(v[1] || '-') + '</td><td class="n">' + esc(v[2] || '') + '</td><td class="n">' + W(q.u) + '</td><td>' + W(q.g) + '</td></tr>'; }).join('')
             : '<tr><td colspan="4" style="text-align:center;color:var(--faint);padding:18px">작업이 없어요</td></tr>') + '</tbody></table>';
-        h += '<div class="dv-tot"><div class="r"><span>합산 (공급가액)</span><b>' + W(r.v.sub) + '</b></div>' +
+        h += '<div class="dv-tot">' + (r.v.fee ? '<div class="r"><span>작업 합계 (단가 기준)</span><b>' + W(r.v.gross) + '</b></div><div class="r"><span>수수료' + (r.v.feeP ? ' (' + esc(r.v.feeP) + ')' : '') + '</span><b><i class="pf2-mn">−</i>' + W(r.v.fee) + '</b></div>' : '') + '<div class="r"><span>합산 (공급가액)</span><b>' + W(r.v.sub) + '</b></div>' +
           '<div class="r"><span>' + (r.v.vat ? '부가세 (10%)' : '원천세 (3.3%)') + '</span><b>' + (r.v.vat ? '+' : '<i class="pf2-mn">−</i>') + W(Math.abs(r.v.tax)) + '</b></div>' +
           '<div class="r t"><span>최종 지급액</span><b style="color:#f04452">' + W(r.v.fin) + '</b></div></div>';
       }
@@ -7935,13 +7941,13 @@ function txIc(id) {
 .wo-x .wx-lk a,.wo-x .wx-lk button{display:inline-flex;align-items:center;gap:5px;height:30px;padding:0 12px;border-radius:999px;border:0;background:var(--chip);color:var(--txt2);font-family:inherit;font-size:12px;font-weight:600;text-decoration:none;cursor:pointer}
 .wo-x .wx-lk svg{width:14px;height:14px}
 .wo-x .wx-ld{padding:10px 2px;font-size:12px;color:var(--txt3)}
-.wo-x .wx-cat{margin:12px 0 2px;border-top:1px solid #d1d6db}
+.wo-x .wx-cat{margin:12px 0 2px;border-top:1px solid #e0e4e8}
 .wo-x .wx-cat>div{display:flex;justify-content:space-between;align-items:center;padding:7px 2px;border-bottom:1px solid #f2f4f6;font-size:13px;color:var(--txt)}
 .wo-x .wx-cat>div b{font-weight:700}
 .wo-x .wx-cat>.hd{font-size:12px;font-weight:700;border-bottom:1px solid #b0b8c1;padding-top:0}
 .wo-x .wx-cat>.u b{color:#f04452}
 .wo-x .wx-cat>.u small{font-size:11px;color:#b0b8c1}
-.wo-x .wx-cat>.t{border-top:1px solid #d1d6db;border-bottom:0;font-weight:800}
+.wo-x .wx-cat>.t{border-top:1px solid #e0e4e8;border-bottom:0;font-weight:800}
 .wo-x .wx-cat>.t b{font-weight:800}
 .wo-x .wx-sp{height:14px}
 .wo-x .wx-dh{display:flex;justify-content:space-between;margin-top:22px;padding:0 2px 7px;font-size:12px;font-weight:700;color:var(--txt);border-bottom:1px solid #b0b8c1}
@@ -8086,13 +8092,15 @@ function txIc(id) {
 </script>
 <style>
 /* 2026-10-20 (현아): 매입 상세 '전체' — 작업자별 머리줄 + 세부내역 */
-#mo-doc .pg-all .pg-wh td{font-weight:700;color:var(--txt);padding-top:14px!important;border-bottom:1px solid #d1d6db!important;cursor:pointer}
+#mo-doc .pg-all .pg-wh td{font-weight:700;color:var(--txt);padding-top:14px!important;border-bottom:1px solid #e0e4e8!important;cursor:pointer}
 #mo-doc .pg-all .pg-wh td:last-child{text-align:right}
 #mo-doc .pg-all tr.pg-x td{color:#b0b8c1!important}
 #mo-doc .pg-all .pg-t td{font-weight:800;border-top:1px solid #b0b8c1}
 #mo-doc .pg-all .pg-t td:last-child{text-align:right}
 
 #mo-doc .pg-all tr.pg-pv td{color:var(--txt2)}
+#mo-doc .pg-all tr.pg-fee td{color:var(--txt3);font-size:12px}
+#mo-doc .pg-all tr.pg-fee td:last-child{text-align:right}
 #mo-doc .pg-all tr.pg-pv td.n{color:var(--txt3)}
 </style>
 </body>
