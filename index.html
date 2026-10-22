@@ -7,7 +7,7 @@
 <meta name="theme-color" content="#f2f4f6">
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=3">
 <link rel="apple-touch-icon" href="apple-touch-icon.png?v=3">
-<meta name="pm-build" content="202610221130">
+<meta name="pm-build" content="202610221230">
 <link rel="manifest" href="manifest.webmanifest?v=3">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -2311,35 +2311,9 @@ function woTot(t) {
   var all = 0; for (c = 1; c <= 11; c++) all += s[c];
   return { s: s, all: all };
 }
-function woDetail() {
-  var d = WO.cur, b = document.getElementById('wo-d-body'); if (!d || !d.tabs) return;
-  var keys = ['거래처', '아티스트명', '요청일', '프로젝트명', '담당자'];
-  var h = '<div class="wo-info">' + keys.map(function (k) { return '<div><span>' + k + '</span><p>' + esc(d.info[k] || '-') + '</p></div>'; }).join('') +
-    '<div><span>작업 폴더 링크</span><p>' + (d.link ? '<a href="' + esc(d.link) + '" target="_blank" style="color:var(--acc2)">열기 ↗</a>' : '<span style="color:var(--txt3)">없음</span>') + '</p></div></div>';
-  (d.warn || []).forEach(function (w) { h += '<div class="wo-warn">⚠ ' + esc(w) + '</div>'; });
-  h += '<div class="wo-tabs">' + d.tabs.map(function (t, i) { return '<button class="wo-chip' + (i === WO.tab ? ' on' : '') + '" onclick="woTab(' + i + ')">' + esc(t.name) + '<b>' + woTot(t).all + '컷</b></button>'; }).join('') +
-    '<span style="flex:1"></span><select class="fi sm" id="wo-addw" style="width:auto;height:30px;padding:0 8px"><option value="">+ 작업자 추가</option></select>' +
-    '<button class="btn btn-g" onclick="woAddWorker()">추가</button>' +
-    '<a class="btn btn-g" href="' + esc(d.url) + '" target="_blank" style="text-decoration:none">시트 열기 ↗</a></div>';
-  var t = d.tabs[WO.tab];
-  if (!t) { h += '<div class="wo-empty">작업자 탭이 없어요. 위에서 작업자를 추가해주세요.</div>'; b.innerHTML = h; woFillAddW(); return; }
-  var head = (d.head || []).slice(1);
-  h += '<div class="wo-tw"><table class="wo-t"><thead><tr>' + head.map(function (x, j) { return '<th style="' + (j === 0 ? 'width:22%' : j === 12 ? 'width:16%' : '') + '">' + esc(x) + '</th>'; }).join('') + '</tr></thead><tbody>';
-  for (var i = 0; i < Math.min(t.show, t.rows.length); i++) {
-    var r = t.rows[i];
-    h += '<tr>' + r.e.map(function (x, j) {
-      var ch = String(x).trim() !== String(r.v[j] || '').trim();
-      return '<td><input class="' + (j === 0 || j === 12 ? 'l' : '') + (ch ? ' ch' : '') + '" ' + (r.f && r.f[j] ? 'disabled title="수식 칸이라 시트에서만 고칠 수 있어요"' : '') +
-        (j >= 1 && j <= 11 ? ' inputmode="numeric"' : '') + ' value="' + esc(x) + '" oninput="woEdit(' + i + ',' + j + ',this)"></td>';
-    }).join('') + '</tr>';
-  }
-  var tt = woTot(t);
-  h += '<tr class="tot"><td>합계 ' + tt.all + '컷</td>' + tt.s.slice(1).map(function (x) { return '<td>' + (x || '') + '</td>'; }).join('') + '<td></td></tr></tbody></table></div>';
-  h += '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><button class="btn btn-g" onclick="woMoreRows()">+ 행 추가</button>' +
-    '<span class="wo-sub" style="flex:1">파란 칸 = 아직 저장 안 한 수정 · 저장하면 시트에 바로 반영돼요</span>' +
-    '<button class="btn btn-p" id="wo-save" onclick="woSave()">저장</button></div>';
-  b.innerHTML = h; woFillAddW();
-}
+// 작업내역서 상세 (2026-10-22 정리): 기본 화면은 woDetailCore_, 덧붙이는 작업은 WO_DETAIL_STEPS에 순서대로 등록
+var WO_DETAIL_STEPS = [];
+function woDetail() { var r = woDetailCore_.apply(this, arguments); WO_DETAIL_STEPS.forEach(function (f) { try { f(); } catch (e) { console.error(e); } }); return r; }
 function woTab(i) { WO.tab = i; woDetail(); }
 function woEdit(i, j, el) {
   var t = WO.cur.tabs[WO.tab], r = t.rows[i]; r.e[j] = el.value;
@@ -2695,7 +2669,7 @@ function woRowEditor(t, ti, r, i) {
   h += '<button class="wd-done" onclick="woRowEdit(-1)">완료</button></div>';
   return h;
 }
-woDetail = function () {
+var woDetailCore_ = function () {
   var d = WO.cur, b = document.getElementById('wo-d-body'); if (!d || !d.tabs) return;
   var I = d.info || {}, it = WO.items.filter(function (x) { return x.id === d.id; })[0];
   var art = String(I['아티스트명'] || '').match(/\(([^)]*)\)\s*$/);
@@ -3942,9 +3916,7 @@ function txToggle(id, ym) {
 function woDlTxt(dl) { return (dl || []).map(function (s) { var m = String(s).match(/^\d{4}-(\d{2})-(\d{2})/); return m ? m[1] + '.' + m[2] : s; }).join('·'); }
 (function () {
   // 상세: 마감일 칸 (최대 3개) + 저장
-  var od = woDetail;
-  woDetail = function () {
-    od.apply(this, arguments);
+  WO_DETAIL_STEPS.push(function () {
     var d = WO.cur, b = document.getElementById('wo-d-body'); if (!d || !d.tabs || !b) return;
     var inf = b.querySelector('.wd-links') || b.querySelector('.wo-info'); if (!inf || b.querySelector('.wo-dlw')) return;
     var dl = d.dlEdit || (d.dl || []).slice();
@@ -3954,7 +3926,7 @@ function woDlTxt(dl) { return (dl || []).map(function (s) { var m = String(s).ma
     inf.parentNode.insertBefore(w, inf.nextSibling);
     // 만들 때 저장 못 한 마감일이 남아 있으면 지금 저장
     try { var st = JSON.parse(localStorage.getItem('pm_wo_dl_pend') || '{}'); if (st[d.id] && !(d.dl || []).length) { d.dlEdit = st[d.id]; delete st[d.id]; localStorage.setItem('pm_wo_dl_pend', JSON.stringify(st)); setTimeout(woDlSave, 300); } } catch (e) {}
-  };
+  });
 })();
 function woDlSave() {
   var d = WO.cur; if (!d) return;
@@ -6226,11 +6198,9 @@ document.addEventListener('click', function (e) {
 </style>
 <script>
 (function () {
-  var _wd = woDetail;
   function kv(k, v) { var e = !String(v || '').trim(); return '<div class="r"><span>' + esc(k) + '</span><b' + (e ? ' class="e"' : '') + '>' + (e ? '-' : esc(v)) + '</b></div>'; }
   function shortC(c) { var t = String(c || '').replace(/\s*\(.*\)\s*$/, '').replace(/\s*ENTERTAINMENT\s*/i, ' ').trim(); return t || c; }
-  woDetail = function () {
-    _wd.apply(this, arguments);
+  WO_DETAIL_STEPS.push(function () {
     var d = WO.cur, b = document.getElementById('wo-d-body'); if (!d || !d.tabs || !b) return;
     var I = d.info || {}, it = (WO.items || []).filter(function (x) { return x.id === d.id; })[0] || {};
     var art = String(I['아티스트명'] || '').match(/\(([^)]*)\)\s*$/), artist = (art && art[1]) || it.artist || I['아티스트명'] || '';
@@ -6253,7 +6223,7 @@ document.addEventListener('click', function (e) {
     var bar = b.querySelector('.wd-bar');
     var btns = document.createElement('div'); btns.className = 'wv-btns'; btns.innerHTML = ob(d.link, '작업폴더') + ob(d.url, '작업내역서 시트');
     if (bar) b.insertBefore(btns, bar); else b.appendChild(btns);
-  };
+  });
   if (typeof woEd === 'function') { var _ed = woEd; woEd = function () { var r = _ed.apply(this, arguments); try { var a = 0; WO.cur.tabs.forEach(function (t) { a += woTot(t).all; }); var hb = document.querySelector('#mo-wo .wv-hd b'); if (hb) hb.textContent = a + '컷'; } catch (e) {} return r; }; }
 })();
 </script>
@@ -6311,8 +6281,7 @@ document.addEventListener('click', function (e) {
     el.innerHTML = h; el.style.display = h ? '' : 'none';
   }
   window.wvCatDraw = draw;
-  var _wd = woDetail;
-  woDetail = function () { _wd.apply(this, arguments); draw(); if (!WO.opts && typeof woOptsLoad === 'function') woOptsLoad(function () { draw(); }); };
+  WO_DETAIL_STEPS.push(function () { draw(); if (!WO.opts && typeof woOptsLoad === 'function') woOptsLoad(function () { draw(); }); });
   var _ed = woEd; woEd = function () { var r = _ed.apply(this, arguments); draw(); return r; };
 })();
 </script>
@@ -6411,13 +6380,11 @@ document.addEventListener('click', function (e) {
     var b = el.parentNode.querySelector('b'), t = fmt(el.value); b.textContent = t || '선택'; b.className = t ? '' : 'e';
     clearTimeout(tmr); tmr = setTimeout(function () { if (WO.cur === d && d.dlEdit) woDlSave(); }, 700);
   };
-  var _wd = woDetail;
-  woDetail = function () {
-    _wd.apply(this, arguments);
+  WO_DETAIL_STEPS.push(function () {
     var d = WO.cur, g = document.querySelector('#mo-wo .wv-more .wv-info'); if (!d || !d.tabs || !g) return;
     g.querySelectorAll('.wv-dr').forEach(function (x) { x.remove(); });
     g.insertAdjacentHTML('beforeend', rows(d));
-  };
+  });
   var _cl = woClose;
   woClose = function () {
     var d = WO.cur; if (d && d.dlEdit) { clearTimeout(tmr); woDlSave(); }
@@ -8176,13 +8143,9 @@ td.rate-val{white-space:nowrap}
 <script>
 (function () {
   var IC = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>';
-  if (typeof woDetail !== 'function') return;
-  var _wd = woDetail;
-  woDetail = function () {
-    var r = _wd.apply(this, arguments);
+  WO_DETAIL_STEPS.push(function () {
     try { var h = document.querySelector('#mo-wo .wv-hd h3'); if (h && WO.cur && WO.cur.id && !h.querySelector('.wv-rn')) h.insertAdjacentHTML('beforeend', '<button type="button" class="wv-rn" aria-label="이름 바꾸기" onclick="woRename()">' + IC + '</button>'); } catch (e) {}
-    return r;
-  };
+  });
   function close() { var x = document.getElementById('rn-dim'); if (x) x.remove(); }
   window.woRename = function () {
     var d = WO.cur; if (!d || !d.id) return;
