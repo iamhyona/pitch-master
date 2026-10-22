@@ -7,7 +7,7 @@
 <meta name="theme-color" content="#f2f4f6">
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=3">
 <link rel="apple-touch-icon" href="apple-touch-icon.png?v=3">
-<meta name="pm-build" content="202610202145">
+<meta name="pm-build" content="202610221000">
 <link rel="manifest" href="manifest.webmanifest?v=3">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -577,7 +577,7 @@ select.fi option{background:var(--sur2)}
 var PW = {}; // 2026-10-11: 비밀번호는 서버에서 확인
 
 // ── 새 Apps Script URL ──
-var AS_URL = 'https://script.google.com/macros/s/AKfycbwGMvP30yzgdcmW--fa1eZC2aSbXz6AsyN0q4P3yxeqt6mgsxJ5MH91inqV35kP9l3i/exec';
+var AS_URL = 'https://script.google.com/macros/s/AKfycbxLa9jGkHXvy6pMzeYs58O3siUf4_n_9w1OMVEM2ERDnyqjtn_I_HlPnl2FlKlIpyVH-A/exec'; // 거래처마스터 웹앱 (서버 주소는 여기 한 곳만)
 var AS_INFO = AS_URL;
 var AS_RATE = AS_URL;
 
@@ -1636,7 +1636,7 @@ document.addEventListener('keydown',function(e){if(e.key==='Escape')document.que
            (박현아·박슬기·박종배) 세부내역만 표시하지 않음
    - 비밀번호는 코드에 없음: 서버(거래처마스터 스크립트 속성 PM_PW_ADMIN · PM_PW_GUEST)가 확인
    ═════════════════════════════════════════════════════════════════════ */
-AS_URL = 'https://script.google.com/macros/s/AKfycbxLa9jGkHXvy6pMzeYs58O3siUf4_n_9w1OMVEM2ERDnyqjtn_I_HlPnl2FlKlIpyVH-A/exec';
+/* 서버 주소는 맨 위 AS_URL 한 곳에서만 정함 (2026-10-22 정리) */
 var PM_RATE_SHEET = 'https://docs.google.com/spreadsheets/d/1q1HeJGniMvTbSvUjp-QUeY_vmZv05HmvyrDvelbGcAE/edit';
 var PM_HIDE = ['박현아', '박슬기', '박종배'];
 // 로그인: 비밀번호는 서버에서 확인하고, 이 기기에는 로그인 정보만 기억 (로그아웃하면 지움)
