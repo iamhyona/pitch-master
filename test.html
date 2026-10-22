@@ -7,7 +7,7 @@
 <meta name="theme-color" content="#f2f4f6">
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=3">
 <link rel="apple-touch-icon" href="apple-touch-icon.png?v=3">
-<meta name="pm-build" content="202610221230">
+<meta name="pm-build" content="202610221330">
 <link rel="manifest" href="manifest.webmanifest?v=3">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -586,13 +586,8 @@ var selRole = null;
 var SHEET_LOADED = false;
 
 function selectRole(role,el){selRole=role;document.querySelectorAll('.role-btn').forEach(function(b){b.classList.remove('selected');});el.classList.add('selected');document.getElementById('login-pw-wrap').classList.add('show');document.getElementById('login-pw').value='';document.getElementById('login-err').textContent='';document.getElementById('login-btn').disabled=false;setTimeout(function(){document.getElementById('login-pw').focus();},80);}
-function doLogin(){if(!selRole){document.getElementById('login-err').textContent='접속 유형을 선택해주세요';return;}var pw=document.getElementById('login-pw').value;if(pw!==PW[selRole]){document.getElementById('login-err').textContent='비밀번호가 틀렸어요';document.getElementById('login-pw').value='';document.getElementById('login-pw').focus();return;}SESSION.role=selRole;SESSION.editMode=false;try{localStorage.setItem('pm_auth',JSON.stringify({role:selRole,t:Date.now()}));}catch(e){}document.getElementById('login-screen').classList.add('hidden');document.getElementById('app').style.display='flex';applyRoleUI();buildRateTabs();renderAll();if(!SHEET_LOADED)loadSheetData();}
 function doLogout(){try{localStorage.removeItem('pm_auth');}catch(e){}SESSION.role=null;SESSION.editMode=false;selRole=null;document.getElementById('login-screen').classList.remove('hidden');document.getElementById('app').style.display='none';document.querySelectorAll('.role-btn').forEach(function(b){b.classList.remove('selected');});document.getElementById('login-pw-wrap').classList.remove('show');document.getElementById('login-pw').value='';document.getElementById('login-err').textContent='';document.getElementById('login-btn').disabled=true;CUR='dash';}
-function applyRoleUI(){var isAdmin=SESSION.role==='admin';var c=isAdmin?['rgba(59,130,246,.12)','var(--acc2)']:['rgba(167,139,250,.12)','var(--purple)'];document.getElementById('role-tag').innerHTML='<span style="display:inline-flex;align-items:center;padding:2px 8px;border-radius:5px;font-size:10px;font-weight:700;background:'+c[0]+';color:'+c[1]+'">'+(isAdmin?'관리자':'게스트')+'</span>';document.getElementById('edit-mode-btn').style.display=isAdmin?'':'none';['tab-btn-rates-bill','tab-btn-rates-pay','tab-btn-dash','tab-btn-invoice','tab-btn-taxbill'].forEach(function(id){var el=document.getElementById(id);if(el)el.style.display=isAdmin?'':'none';});if(!isAdmin){document.querySelectorAll('.tab').forEach(function(t){t.classList.remove('active');});document.querySelector('[data-tab="agencies"]').classList.add('active');document.querySelectorAll('.tab-panel').forEach(function(p){p.classList.remove('active');});document.getElementById('tab-agencies').classList.add('active');CUR='agencies';}updateEditUI();}
 function toggleEditMode(){SESSION.editMode=!SESSION.editMode;var btn=document.getElementById('edit-mode-btn');if(SESSION.editMode){btn.textContent='편집 종료';btn.classList.add('btn-danger');btn.classList.remove('btn-g');}else{btn.textContent='편집하기';btn.classList.remove('btn-danger');btn.classList.add('btn-g');}updateEditUI();renderAll();toast(SESSION.editMode?'편집 모드 켜짐':'편집 모드 꺼짐');}
-function updateEditUI(){var show=SESSION.role==='admin'&&SESSION.editMode;['btn-add-ag','btn-add-lt','btn-edit-rate','btn-edit-rate-bill'].forEach(function(id){var el=document.getElementById(id);if(el)el.style.display=show?'':'none';});}
-function canEdit(){return SESSION.role==='admin'&&SESSION.editMode;}
-function canSeeDetail(){return SESSION.role==='admin';}
 
 // ── 데이터 ──
 var AG_RAW=[];
@@ -606,150 +601,8 @@ try{var _sv=localStorage.getItem('pm_db');if(_sv){var _ex=JSON.parse(_sv);if(_ex
 function saveDB(){try{localStorage.setItem('pm_db',JSON.stringify({ag:DB.agencies,lt:DB.litters,cr:CUSTOM_RATES,cf:CUSTOM_FEES}));}catch(e){}}
 
 // ── 구글 시트 쓰기 ──
-function postSheet(action, data) {
-  fetch(AS_URL, {
-    method:'POST',
-    headers:{'Content-Type':'text/plain'},
-    body:JSON.stringify({action:action, data:data})
-  }).then(function(r){return r.json();})
-  .then(function(res){
-    if(res.ok) toast('시트에도 저장됐어요!');
-    else toast('시트 저장 실패: '+(res.error||''));
-  })
-  .catch(function(){toast('시트 연결 실패 (로컬 저장은 완료)');});
-}
 
 // ── 구글 시트 읽기 ──
-function loadSheetData(){
-  showSyncBar('loading','구글 시트에서 불러오는 중...');
-  fetch(AS_URL+'?t='+Date.now(), {method:'GET', redirect:'follow'})
-    .then(function(r){return r.json();})
-    .catch(function(){return null;})
-    .then(function(data){
-      if(!data){
-        showSyncBar('error','⚠ 시트 연결 실패 — 내장 데이터로 표시 중');
-        setTimeout(hideSyncBar,3000); return;
-      }
-
-      var ok = false;
-
-      var clientRows  = (data['거래처회사명'] && data['거래처회사명'].rows) || [];
-      var contactRows = (data['거래처담당자'] && data['거래처담당자'].rows) || [];
-
-      // 거래처명 기준으로 매핑 (clientId 불일치 방지)
-      var clientMap = {};
-      clientRows.forEach(function(r){
-        var name = String(r['거래처명']||'').trim();
-        if(!name) return;
-        clientMap[name] = {
-          cid:   String(r.clientId||'').trim(),
-          name:  name,
-          ceo:   String(r['대표명']||'').trim(),
-          biz:   String(r['사업자번호']||'').trim(),
-          artists: String(r['소속 아티스트']||'').trim()
-        };
-      });
-
-      var sheetAgencies = [];
-      contactRows.forEach(function(r){
-        var ctid = String(r.contactId||'').trim();
-        var cname = String(r['거래처명']||'').trim();
-        if(!ctid || !cname) return;
-        var client = clientMap[cname] || {};
-        sheetAgencies.push({
-          id:ctid, clientId:client.cid||'',
-          name:cname,
-          ceo:client.ceo||'', biz:client.biz||'', artists:client.artists||'',
-          manager:String(r['담당자명']||'').trim(),
-          email:String(r['담당자 이메일']||'').trim(),
-          tel:String(r['담당자 연락처']||'').trim(),
-          dept:String(r['담당 부서']||'').trim()
-        });
-      });
-      // 담당자 없는 거래처도 추가
-      Object.values(clientMap).forEach(function(c){
-        var hasCt = sheetAgencies.some(function(a){return a.name===c.name;});
-        if(!hasCt) sheetAgencies.push({id:c.cid,clientId:c.cid,name:c.name,ceo:c.ceo,biz:c.biz,artists:c.artists,manager:'',email:'',tel:'',dept:''});
-      });
-      if(sheetAgencies.length>0){ DB.agencies=sheetAgencies; ok=true; }
-
-      var ltRows = (data['리터쳐'] && data['리터쳐'].rows) || [];
-      var sheetLitters = [];
-      ltRows.forEach(function(r){
-        var rid  = String(r.vendorId||r.retoucherId||'').trim();
-        var name = String(r['외주처명']||r['리터쳐명']||'').trim();
-        if(!name) return;
-        sheetLitters.push({
-          id:rid||name,
-          tax:String(r['세금구분']||'원천세').trim(),
-          name:name,
-          regId:String(r['주민번호/사업자번호']||'').trim(),
-          addr:String(r['주소']||'').trim(),
-          bank:String(r['은행']||'').trim(),
-          acct:String(r['계좌번호']||'').trim(),
-          email:String(r['이메일']||'').trim(),
-          tel:String(r['연락처']||'').trim(),
-          ceo:String(r['대표명(사업자)']||'').trim()
-        });
-      });
-      if(sheetLitters.length>0){ DB.litters=sheetLitters; ok=true; }
-
-      var billRows = (data['소속사별 청구단가'] && data['소속사별 청구단가'].rows) || [];
-      var payRows  = (data['리터쳐별 소속사별 지급단가'] && data['리터쳐별 소속사별 지급단가'].rows) || [];
-
-      if(billRows.length>0){
-        var priceMap={};
-        billRows.forEach(function(r){
-          var pid   = String(r.priceId||'').trim();
-          var cname = String(r['회사명']||r.AGENCY_NAME||'').trim();
-          var proj  = String(r['작업구분']||r.PROJECT_NAME||'').trim();
-          var rawBase = String(r['청구단가']||r.PREMIUM_PRICE||r.BASE_PRICE||'');
-          var base = isNaN(rawBase.replace(/,/g,'')) ? rawBase : (parseFloat(rawBase.replace(/,/g,''))||0);
-          if(!pid||!proj) return;
-          priceMap[pid]={cname:cname,proj:proj,base:base,baseRaw:rawBase};
-        });
-
-        var LITTERS=['김현수','박현아','강영순','최현경','이은지','권미향','김슬기','기타'];
-        var payByPrice={};
-        payRows.forEach(function(r){
-          var pid   = String(r.priceId||'').trim();
-          var ltNm  = String(r['리터쳐명']||r.RETOUCHER_NAME||'').trim();
-          var pay   = parseFloat(String(r['지급단가']||r.PAYOUT_PRICE||'0').replace(/,/g,''))||0;
-          if(!pid) return;
-          if(!payByPrice[pid]) payByPrice[pid]={};
-          payByPrice[pid][ltNm]=pay;
-        });
-
-        var byCompany={};
-        Object.keys(priceMap).forEach(function(pid){
-          var p=priceMap[pid];
-          if(!byCompany[p.cname]) byCompany[p.cname]=[];
-          var litVals=LITTERS.map(function(nm){
-            if(payByPrice[pid]&&payByPrice[pid][nm]!=null) return payByPrice[pid][nm];
-            // base가 텍스트(긴급 등)면 지급단가 0
-            if(typeof p.base !== 'number') return 0;
-            return Math.round(p.base*0.8);
-          });
-          byCompany[p.cname].push([p.proj,p.base].concat(litVals));
-        });
-        Object.keys(byCompany).forEach(function(cname){ RATES_RAW[cname]=byCompany[cname]; });
-        if(Object.keys(byCompany).length>0) ok=true;
-      }
-
-      saveDB();
-      if(ok){
-        SHEET_LOADED=true;
-        showSyncBar('success','✓ 시트 연동 완료');
-        setTimeout(hideSyncBar,2500);
-        buildRateTabs(); renderAll();
-        // 견적서 탭이 열려있으면 재초기화 (작업유형 갱신)
-        if (CUR === 'invoice') initInvoiceTab();
-      } else {
-        showSyncBar('error','⚠ 시트 연결 실패 — 로컬 데이터로 표시 중');
-        setTimeout(hideSyncBar,3000);
-      }
-    });
-}
 
 function showSyncBar(type,msg){var el=document.getElementById('sync-bar');if(!el)return;el.style.display='flex';el.className='sync-bar'+(type!=='loading'?' '+type:'');el.innerHTML=(type==='loading'?'<span class="spin">↻</span> ':'')+msg;}
 function hideSyncBar(){var el=document.getElementById('sync-bar');if(el)el.style.display='none';}
@@ -782,24 +635,6 @@ function tbLS(k,v){try{if(v===undefined)return JSON.parse(localStorage.getItem(k
 function tbClients(){var m={},o=[];DB.agencies.forEach(function(a){if(!a.name)return;if(!m[a.name]){m[a.name]={name:a.name,ceo:a.ceo||'',biz:a.biz||'',artists:a.artists||'',contacts:[]};o.push(m[a.name]);}var c=m[a.name];if(!c.ceo&&a.ceo)c.ceo=a.ceo;if(!c.biz&&a.biz)c.biz=a.biz;if(!c.artists&&a.artists)c.artists=a.artists;if(a.manager)c.contacts.push({name:a.manager,email:a.email||''});});return {map:m,list:o};}
 function tbToday(){var d=new Date();return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2);}
 function tbWon(n){var neg=n<0;n=Math.abs(n);var r=Math.round(n*100)/100;var i=Math.floor(r),f=Math.round((r-i)*100);var s=String(i).replace(/\B(?=(\d{3})+(?!\d))/g,',');if(f)s+='.'+(f%10?('0'+f).slice(-2):String(f/10));return (neg?'-':'')+s;}
-function initTaxBill(){
-  var C=tbClients();
-  var sel=document.getElementById('tb-client'),cur=sel.value;
-  sel.innerHTML='<option value="">거래처 선택</option>'+C.list.map(function(c){return '<option value="'+esc(c.name)+'">'+esc(c.name)+'</option>';}).join('');
-  if(cur)sel.value=cur;
-  if(!TB_INIT){
-    TB_INIT=true;
-    document.getElementById('tb-date').value=tbToday();
-    document.getElementById('tb-quick').addEventListener('input',tbQuick);
-    sel.addEventListener('change',function(){tbFillClient(true);tbBuild();});
-    ['tb-artist','tb-work','tb-cname','tb-ceo','tb-biz','tb-email','tb-date'].forEach(function(id){document.getElementById(id).addEventListener('input',tbBuild);});
-    document.getElementById('tb-mgr').addEventListener('input',function(){tbFillMgr();tbBuild();});
-    var amt=document.getElementById('tb-amt');
-    amt.addEventListener('input',function(){var v=amt.value.replace(/[^\d.]/g,'');amt.value=v?tbWon(+v):'';tbBuild();});
-    document.getElementById('tb-copy').addEventListener('click',tbCopy);
-  }
-  tbBuild();
-}
 function tbQuick(){
   var parts=document.getElementById('tb-quick').value.split(/[,，\t]|\s{2,}/).map(function(x){return x.trim();}).filter(Boolean);
   var artist=parts[0]||'',mgr=parts[1]||'',amt=(parts[2]||'').replace(/[^\d.]/g,'');
@@ -876,14 +711,6 @@ function pmFavRank(n) {
   return 99;
 }
 function pmCmpClient(a, b) { var ra = pmFavRank(a), rb = pmFavRank(b); return ra !== rb ? ra - rb : String(a || '').localeCompare(String(b || ''), 'ko'); }
-function switchTab(t){
-  if((t==='rates-bill'||t==='rates-pay'||t==='dash'||t==='invoice'||t==='taxbill')&&SESSION.role==='guest'){toast('관리자만 접근 가능해요');return;}
-  document.querySelectorAll('.tab').forEach(function(b){b.classList.toggle('active',b.dataset.tab===t);});
-  document.querySelectorAll('.tab-panel').forEach(function(p){p.classList.toggle('active',p.id==='tab-'+t);});
-  CUR=t;agP=0;ltP=0;rtBillP=0;rtPayP=0;
-  if(t==='rates-bill'||t==='rates-pay'||t==='invoice')buildRateTabs();
-  renderAll();
-}
 
 function renderAll(){
   updateStats();
@@ -1063,19 +890,6 @@ function buildRateTabs(){
   document.querySelectorAll('.rate-litter-btn').forEach(function(b){b.classList.toggle('on',b.dataset.litter==='all'?pmCols().every(function(c){return selLitters.has(c);}):selLitters.has(b.dataset.litter));});
 }
 function switchRateSelect(k,tab){rtF=k;rtBillP=0;rtPayP=0;['rate-select-bill','rate-select-pay'].forEach(function(id){var el=document.getElementById(id);if(el)el.value=k;});if(tab==='bill')renderBill();else renderPay();}
-function switchLitter(litter){
-  rtPayP=0;
-  if(litter==='all'){selLitters=new Set(ALL_COLS);}
-  else{
-    if(selLitters.has(litter)){selLitters.delete(litter);if(selLitters.size===0)selLitters=new Set(ALL_COLS);}
-    else{selLitters.add(litter);}
-  }
-  document.querySelectorAll('.rate-litter-btn').forEach(function(b){
-    if(b.dataset.litter==='all') b.classList.toggle('on',ALL_COLS.every(function(c){return selLitters.has(c);}));
-    else b.classList.toggle('on',selLitters.has(b.dataset.litter));
-  });
-  renderPay();
-}
 function renderBill(){
   var rows=RATES_RAW[rtF]||[];
   // 2026-10-12: 2열로 나눠 보여주기 (스크롤 줄이기)
@@ -1085,43 +899,7 @@ function renderBill(){
   document.getElementById('pi-rt-bill').textContent='';
   document.getElementById('pb-rt-bill').innerHTML='';
 }
-function renderPay(){
-  var rows=RATES_RAW[rtF]||[];
-  var activeCols=ALL_COLS.filter(function(nm){return selLitters.has(nm);});
-  var html='<div class="rate-table-box"><table><thead><tr><th>항목</th><th style="text-align:right">기본단가</th>'
-    +activeCols.map(function(nm){return '<th style="text-align:right">'+esc(nm)+'</th>';}).join('')+'</tr></thead><tbody>';
-  rows.forEach(function(r){
-    html+='<tr><td class="proj-nm">'+esc(r[0])+'</td><td class="base-val">'+wn(r[1])+'</td>'
-      +activeCols.map(function(nm){var idx=ALL_COLS.indexOf(nm);return '<td class="rate-val">'+wn(r[idx+2])+'</td>';}).join('')+'</tr>';
-  });
-  html+='</tbody></table></div>';
-  document.getElementById('mc-pay').innerHTML=rows.length?html:'<div style="padding:24px;text-align:center;color:var(--txt3);font-size:12px">데이터 없음</div>';
-  document.getElementById('pi-rt-pay').textContent='';
-  document.getElementById('pb-rt-pay').innerHTML='';
-}
 
-function openRateEditMo(){
-  var nm=rtF;
-  document.getElementById('rate-edit-name').textContent=nm;
-  var baseRows=JSON.parse(JSON.stringify(RATES_RAW[nm]||[]));
-  var feeHtml='<div style="display:flex;gap:6px;flex-wrap:wrap">';
-  ALL_COLS.forEach(function(col){
-    var fee=CUSTOM_FEES[col]!==undefined?CUSTOM_FEES[col]:0.8;
-    var pct=Math.round((1-fee)*100);
-    feeHtml+='<div style="display:flex;align-items:center;gap:4px;background:var(--sur2);border:1px solid var(--bdr);border-radius:6px;padding:4px 8px">'
-      +'<span style="font-size:11px;font-weight:700;color:var(--txt2)">'+col+'</span>'
-      +'<input type="number" class="fi sm" id="fee-'+col+'" value="'+pct+'" min="0" max="99" style="width:44px;text-align:right;padding:2px 4px;height:24px" onchange="recalcRateEditTable()">'
-      +'<span style="font-size:10px;color:var(--txt3)">%</span></div>';
-  });
-  feeHtml+='</div>';
-  var fhEl=document.getElementById('fee-header');if(fhEl)fhEl.innerHTML=feeHtml;
-  var thHtml='<tr style="background:var(--sur2)"><th style="text-align:left;padding:7px 8px;font-size:10px;color:var(--txt3);text-transform:uppercase;white-space:nowrap;border-bottom:1px solid var(--bdr);font-weight:700">항목</th><th style="text-align:right;padding:7px 8px;font-size:10px;color:var(--txt3);text-transform:uppercase;white-space:nowrap;border-bottom:1px solid var(--bdr);font-weight:700">기본단가</th>';
-  ALL_COLS.forEach(function(col){thHtml+='<th style="text-align:right;padding:7px 8px;font-size:10px;color:var(--acc2);text-transform:uppercase;white-space:nowrap;border-bottom:1px solid var(--bdr);font-weight:700">'+col+'</th>';});
-  thHtml+='<th style="width:28px;border-bottom:1px solid var(--bdr)"></th></tr>';
-  var thEl=document.getElementById('rate-edit-thead');if(thEl)thEl.innerHTML=thHtml;
-  renderRateEditRows(baseRows);
-  openMo('mo-rate');
-}
 function renderRateEditRows(rows){
   var tbody=document.getElementById('rate-edit-tbody');if(!rows||!tbody)return;
   tbody.innerHTML=rows.map(function(r,i){
@@ -1195,26 +973,8 @@ function fltLt(f,el){ltF=f;ltP=0;document.querySelectorAll('#tab-litt .ft').forE
 function openMo(id){EI=-1;document.getElementById(id).classList.add('open');}
 function closeMo(id){document.getElementById(id).classList.remove('open');}
 
-function saveAg(){
-  if(!canEdit())return;
-  var name=gv('ag-name');if(!name){toast('거래처명을 입력해주세요');return;}
-  var obj={id:EI>=0?DB.agencies[EI].id:uid(),name:name,ceo:gv('ag-ceo'),biz:gv('ag-biz'),artists:gv('ag-artists'),manager:gv('ag-manager'),tel:gv('ag-tel'),email:gv('ag-email'),dept:''};
-  if(EI>=0)DB.agencies[EI]=obj;else DB.agencies.push(obj);
-  saveDB();closeMo('mo-ag');renderAll();toast(EI>=0?'수정됐어요':'추가됐어요');
-  postSheet('upsert_contact',{contactId:obj.id,clientId:'',거래처명:obj.name,담당자명:obj.manager,'담당자 이메일':obj.email,'담당자 연락처':obj.tel,'담당 부서':'',isActive:true});
-}
 function editAg(id){if(!canEdit())return;var i=DB.agencies.findIndex(function(a){return a.id===id;});if(i<0)return;EI=i;var a=DB.agencies[i];document.getElementById('mo-ag-title').textContent='거래처 수정';document.getElementById('ag-name').value=a.name||'';document.getElementById('ag-ceo').value=a.ceo||'';document.getElementById('ag-biz').value=a.biz||'';document.getElementById('ag-artists').value=a.artists||'';document.getElementById('ag-manager').value=a.manager||'';document.getElementById('ag-tel').value=a.tel||'';document.getElementById('ag-email').value=a.email||'';openMo('mo-ag');}
-function delAg(id){if(!canEdit())return;if(!confirm('삭제할까요?'))return;var a=DB.agencies.find(function(x){return x.id===id;});DB.agencies=DB.agencies.filter(function(x){return x.id!==id;});saveDB();renderAll();toast('삭제됐어요');if(a)postSheet('delete_contact',{contactId:a.id});}
-function saveLt(){
-  if(!canEdit())return;
-  var name=gv('lt-name');if(!name){toast('이름을 입력해주세요');return;}
-  var obj={id:EI>=0?DB.litters[EI].id:uid(),name:name,tax:document.getElementById('lt-tax').value,regId:gv('lt-regid'),addr:gv('lt-addr'),ceo:gv('lt-ceo'),bank:document.getElementById('lt-bank').value,acct:gv('lt-acct'),email:gv('lt-email'),tel:gv('lt-tel')};
-  if(EI>=0)DB.litters[EI]=obj;else DB.litters.push(obj);
-  saveDB();closeMo('mo-lt');renderAll();toast(EI>=0?'수정됐어요':'추가됐어요');
-  postSheet('upsert_litter',{retoucherId:obj.id,세금구분:obj.tax,리터쳐명:obj.name,'주민번호/사업자번호':obj.regId,주소:obj.addr,은행:obj.bank,계좌번호:obj.acct,이메일:obj.email,연락처:obj.tel,'대표명(사업자)':obj.ceo,isActive:true});
-}
 function editLt(id){if(!canEdit())return;var i=DB.litters.findIndex(function(l){return l.id===id;});if(i<0)return;EI=i;var l=DB.litters[i];document.getElementById('mo-lt-title').textContent='외주처 수정';document.getElementById('lt-name').value=l.name||'';document.getElementById('lt-tax').value=l.tax||'원천세';document.getElementById('lt-regid').value=l.regId||'';document.getElementById('lt-addr').value=l.addr||'';document.getElementById('lt-ceo').value=l.ceo||'';document.getElementById('lt-bank').value=l.bank||'IBK';document.getElementById('lt-acct').value=l.acct||'';document.getElementById('lt-email').value=l.email||'';document.getElementById('lt-tel').value=l.tel||'';openMo('mo-lt');}
-function delLt(id){if(!canEdit())return;if(!confirm('삭제할까요?'))return;var l=DB.litters.find(function(x){return x.id===id;});DB.litters=DB.litters.filter(function(x){return x.id!==id;});saveDB();renderAll();toast('삭제됐어요');if(l)postSheet('delete_litter',{retoucherId:l.id});}
 
 
 
@@ -1274,47 +1034,6 @@ function confirmDirectInput() {
 var INV_ITEMS = [];
 var INV_ITEM_ID = 0;
 
-function initInvoiceTab() {
-  // 거래처 드롭다운
-  var agSel = document.getElementById('inv-client');
-  if (!agSel) return;
-  var agMap = buildAgMap();
-  var agNames = Object.keys(agMap).sort(pmCmpClient);
-  agSel.innerHTML = '<option value="">거래처 선택</option>'
-    + agNames.map(function(n){return '<option value="'+esc(n)+'">'+esc(n)+'</option>';}).join('')
-    + '<option value="__direct__">직접 입력</option>';
-
-  // 소속사 드롭다운 + 첫번째 자동 선택
-  var agencySel = document.getElementById('inv-agency');
-  if (agencySel) {
-    var agencies = Object.keys(RATES_RAW).sort(pmCmpClient);
-    agencySel.innerHTML = agencies.map(function(k){
-      return '<option value="'+esc(k)+'">'+esc(k)+'</option>';
-    }).join('') + '<option value="__direct__">직접 입력</option>';
-    // 첫번째 소속사 자동 선택
-    if (agencies.length > 0 && !agencySel.value) {
-      agencySel.value = agencies[0];
-    }
-  }
-
-  // 오늘 날짜 기본값 (작성일 + 검수완료일)
-  var today = new Date().toISOString().slice(0,10);
-  var dateEl = document.getElementById('inv-date');
-  if (dateEl && !dateEl.value) dateEl.value = today;
-  var writeEl = document.getElementById('inv-write');
-  if (writeEl && !writeEl.value) writeEl.value = today;
-  var doneEl = document.getElementById('inv-done');
-  if (doneEl && !doneEl.value) doneEl.value = today;
-
-  // 항목 없으면 1개 추가 (소속사 선택 후 추가해야 작업유형이 채워짐)
-  if (INV_ITEMS.length === 0) addInvItem();
-  else {
-    // 기존 항목 작업유형 갱신
-    onInvAgencyChange();
-  }
-
-  calcInvTotal();
-}
 
 
 function onInvManagerChange() {
@@ -1338,61 +1057,6 @@ function onInvArtistChange() {
   });
 }
 
-function onInvClientDirectCheck() {
-  if (gv('inv-client') === '__direct__') {
-    openDirectInput('거래처 직접 입력', '거래처명', '거래처명 입력', function(val) {
-      var sel = document.getElementById('inv-client');
-      var opt = document.createElement('option');
-      opt.value = val; opt.textContent = val; opt.selected = true;
-      sel.insertBefore(opt, sel.lastChild);
-      sel.value = val;
-      onInvClientChange();
-    });
-  } else {
-    onInvClientChange();
-  }
-}
-function onInvClientChange() {
-  var agMap = buildAgMap();
-  var name = gv('inv-client');
-  var ag = agMap[name];
-
-  // 담당자 드롭다운 (직접입력 옵션 포함)
-  var mgSel = document.getElementById('inv-manager');
-  if (mgSel) {
-    var contacts = ag ? (ag.contacts||[]).filter(function(c){return c.manager;}) : [];
-    mgSel.innerHTML = '<option value="">담당자 선택</option>'
-      + contacts.map(function(c){
-          return '<option value="'+esc(c.manager)+'">'+esc(c.manager)+(c.dept?' ('+c.dept+')':'')+'</option>';
-        }).join('')
-      + '<option value="__direct__">직접 입력</option>';
-  }
-
-  // 아티스트 드롭다운 (직접입력 옵션 포함)
-  var artists = ag && ag.artists ? ag.artists.split(',').map(function(s){return s.trim();}).filter(Boolean) : [];
-  var artSel = document.getElementById('inv-artist');
-  if (artSel) {
-    artSel.innerHTML = '<option value="">아티스트 선택</option>'
-      + artists.map(function(a){return '<option value="'+esc(a)+'">'+esc(a)+'</option>';}).join('')
-      + '<option value="__direct__">직접 입력</option>';
-  }
-
-  // 소속사 자동 매칭 후 작업유형 즉시 갱신
-  var agencySel = document.getElementById('inv-agency');
-  if (agencySel && name) {
-    var agencies = Object.keys(RATES_RAW);
-    // 완전일치 우선, 그 다음 공백무시 일치
-    var matched = agencies.find(function(a){return a===name;})
-      || agencies.find(function(a){return a.replace(/\s/g,'')===name.replace(/\s/g,'');});
-    if (matched) {
-      agencySel.value = matched;
-    } else {
-      // 없으면 직접입력 선택
-      agencySel.value = '__direct__';
-    }
-    onInvAgencyChange();
-  }
-}
 
 
 
@@ -1424,69 +1088,9 @@ function onInvAgencyDirectCheck() {
     onInvAgencyChange();
   }
 }
-function onInvAgencyChange() {
-  // 모든 항목의 작업유형 드롭다운 갱신
-  INV_ITEMS.forEach(function(item) {
-    var sel = document.getElementById('inv-type-'+item.id);
-    if (!sel) return;
-    var agency = gv('inv-agency');
-    var rows = RATES_RAW[agency] || [];
-    sel.innerHTML = '<option value="">작업유형 선택</option>'
-      + rows.map(function(r){return '<option value="'+esc(r[0])+'">'+esc(r[0])+'</option>';}).join('')
-      + '<option value="__direct__">직접 입력</option>';
-  });
-  calcInvTotal();
-}
-
-function addInvItem() {
-  var id = ++INV_ITEM_ID;
-  INV_ITEMS.push({id: id});
-
-  var agency = gv('inv-agency') || '';
-  var rows = RATES_RAW[agency] || [];
-  var typeOpts = '<option value="">작업유형 선택</option>'
-    + rows.map(function(r){return '<option value="'+esc(r[0])+'">'+esc(r[0])+'</option>';}).join('')
-    + '<option value="__direct__">직접 입력</option>';
-
-  var html = '<div id="inv-item-'+id+'" style="padding:10px 0;border-bottom:1px solid var(--bdr)">'
-    // Description
-    +'<div style="margin-bottom:6px">'
-      +'<input class="fi sm" id="inv-desc-'+id+'" placeholder="예: 모노코어 블랙착 1순위 루카 (상세히 작성)" style="width:100%" oninput="calcInvTotal()">'
-    +'</div>'
-    // 유형 + 컷수 + 단가 + 합산
-    +'<div style="display:grid;grid-template-columns:1fr 80px 90px 100px;gap:6px;margin-bottom:6px;align-items:center">'
-      +'<select class="fi sm" id="inv-type-'+id+'" onchange="onInvTypeChange('+id+')">'+typeOpts+'</select>'
-      +'<input class="fi sm" id="inv-qty-'+id+'" type="number" placeholder="컷수" min="1" style="text-align:right" oninput="calcInvTotal()">'
-      +'<input class="fi sm" id="inv-price-'+id+'" type="text" placeholder="단가" style="text-align:right;color:var(--txt)" oninput="onInvPriceInput('+id+')">'
-      +'<div style="font-size:13px;font-weight:700;color:var(--txt);text-align:right;padding:0 4px" id="inv-amount-'+id+'">0</div>'
-    +'</div>'
-    // 긴급/고급 + 소계 (X버튼 제거, 합산금액 단가 옆으로 이동)
-    +'<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">'
-      +'<label style="display:flex;align-items:center;gap:4px;font-size:11px;cursor:pointer">'
-        +'<input type="checkbox" id="inv-urgent-'+id+'" onchange="calcInvTotal()"> 긴급 (+25%)'
-      +'</label>'
-      +'<label style="display:flex;align-items:center;gap:4px;font-size:11px;cursor:pointer">'
-        +'<input type="checkbox" id="inv-premium-'+id+'" onchange="onInvPremiumChange('+id+')">'
-        +' 고급단가'
-      +'</label>'
-    +'</div>'
-  +'</div>';
-
-  var container = document.getElementById('inv-items');
-  if (container) {
-    var div = document.createElement('div');
-    div.innerHTML = html;
-    container.appendChild(div.firstChild);
-  }
-  calcInvTotal();
-}
 
 
-function removeLastInvItem() {
-  if (INV_ITEMS.length === 0) return;
-  var last = INV_ITEMS[INV_ITEMS.length - 1];
-  removeInvItem(last.id);
-}
+
 function removeInvItem(id) {
   INV_ITEMS = INV_ITEMS.filter(function(i){return i.id !== id;});
   var el = document.getElementById('inv-item-'+id);
@@ -1494,132 +1098,13 @@ function removeInvItem(id) {
   calcInvTotal();
 }
 
-function onInvTypeChange(id) {
-  var typeSel = document.getElementById('inv-type-'+id);
-  if (!typeSel) return;
-  var typeName = typeSel.value;
-  // 직접입력 선택시 프롬프트
-  if (typeName === '__direct__') {
-    openDirectInput('작업유형 직접 입력', '작업유형', '작업유형 입력', function(val) {
-      var opt = document.createElement('option');
-      opt.value = val; opt.textContent = val; opt.selected = true;
-      typeSel.insertBefore(opt, typeSel.lastChild);
-      typeSel.value = val;
-      // 단가 자동입력 없이 calcInvTotal만
-      calcInvTotal();
-    });
-    return;
-  }
-  var agency = gv('inv-agency');
-  var rows = RATES_RAW[agency] || [];
-  var row = rows.find(function(r){return r[0] === typeName;});
-  if (!row) { calcInvTotal(); return; }
-
-  var isPremium = document.getElementById('inv-premium-'+id) && document.getElementById('inv-premium-'+id).checked;
-  // row[1]=기본단가, 텍스트면(긴급 등) 0
-  var basePrice = parseFloat(row[1]) || 0;
-  var price = isPremium ? (parseFloat(row[4]) || basePrice) : basePrice;
-  var priceEl = document.getElementById('inv-price-'+id);
-  if (priceEl) {
-    priceEl.value = price ? Number(price).toLocaleString('ko-KR') : '';
-  }
-  calcInvTotal();
-}
 
 function onInvPremiumChange(id) {
   onInvTypeChange(id);
 }
 
-function getItemAmount(id) {
-  var qty   = parseFloat((document.getElementById('inv-qty-'+id)||{}).value)||0;
-  var price = getPriceVal(id);
-  var urgent= document.getElementById('inv-urgent-'+id) && document.getElementById('inv-urgent-'+id).checked;
-  var amount = qty * price;
-  if (urgent) amount = Math.round(amount * 1.25);
-  return amount;
-}
 
-function calcInvTotal() {
-  var subtotal = 0;
-  INV_ITEMS.forEach(function(item) {
-    var amount = getItemAmount(item.id);
-    subtotal += amount;
-    var amEl = document.getElementById('inv-amount-'+item.id);
-    if (amEl) amEl.textContent = amount.toLocaleString('ko-KR');
-  });
-  var vat   = Math.round(subtotal * 0.1);
-  var total = subtotal + vat;
-  var stEl = document.getElementById('inv-subtotal');
-  var vtEl = document.getElementById('inv-vat');
-  var ttEl = document.getElementById('inv-total');
-  if (stEl) stEl.textContent = subtotal.toLocaleString('ko-KR');
-  if (vtEl) vtEl.textContent = vat.toLocaleString('ko-KR');
-  if (ttEl) ttEl.textContent = total.toLocaleString('ko-KR');
-}
 
-function submitInvoice() {
-  var client  = gv('inv-client');
-  var project = gv('inv-project');
-  if (!client) { toast('거래처를 선택해주세요'); return; }
-
-  var items = INV_ITEMS.map(function(item) {
-    return {
-      desc:      (document.getElementById('inv-desc-'+item.id)||{}).value || '',
-      qty:       parseFloat((document.getElementById('inv-qty-'+item.id)||{}).value)||0,
-      unitPrice: getPriceVal(item.id),
-      urgent:    (function(){var el=document.getElementById('inv-urgent-'+item.id);return !!(el&&el.checked);})(),
-      premium:   !!(document.getElementById('inv-premium-'+item.id)||{}).checked,
-    };
-  }).filter(function(i){return i.qty > 0;});
-
-  if (items.length === 0) { toast('작업 항목을 입력해주세요'); return; }
-
-  var btn = document.querySelector('#tab-invoice button[onclick="submitInvoice()"]');
-  if (btn) { btn.disabled = true; btn.textContent = '생성 중...'; }
-
-  var payload = {
-    client:     client,
-    project:    project,
-    manager:    gv('inv-manager'),
-    artistName: gv('inv-artist') || client,
-    doneDate:   gv('inv-done'),
-    writeDate:  gv('inv-date'),
-    workLink:   gv('inv-link'),
-    items:      items,
-  };
-
-  fetch(AS_URL, {
-    method: 'POST',
-    headers: {'Content-Type':'text/plain'},
-    body: JSON.stringify({action:'create_invoice', data:payload})
-  })
-  .then(function(r){return r.json();})
-  .then(function(res) {
-    if (btn) { btn.disabled = false; btn.textContent = '구글 시트로 견적서 생성'; }
-    var resultEl = document.getElementById('inv-result');
-    if (res.ok) {
-      toast('견적서 생성 완료!');
-      if (resultEl) {
-        resultEl.style.display = 'block';
-        resultEl.innerHTML = '<div style="background:rgba(52,211,153,.08);border:1px solid rgba(52,211,153,.2);border-radius:10px;padding:14px 16px">'
-          +'<div style="font-size:12px;font-weight:700;color:var(--grn);margin-bottom:8px">✓ 견적서가 생성됐어요</div>'
-          +'<div style="font-size:11px;color:var(--txt2);margin-bottom:10px">'+esc(res.name)+'</div>'
-          +'<a href="'+res.url+'" target="_blank" class="btn btn-p" style="display:inline-flex;text-decoration:none">구글 시트 열기 →</a>'
-          +'</div>';
-      }
-    } else {
-      toast('생성 실패: '+(res.error||''));
-      if (resultEl) {
-        resultEl.style.display = 'block';
-        resultEl.innerHTML = '<div style="background:rgba(255,95,95,.08);border:1px solid rgba(255,95,95,.2);border-radius:10px;padding:12px 16px;font-size:12px;color:var(--danger)">오류: '+(res.error||'')+'</div>';
-      }
-    }
-  })
-  .catch(function(err) {
-    if (btn) { btn.disabled = false; btn.textContent = '구글 시트로 견적서 생성'; }
-    toast('연결 실패');
-  });
-}
 
 
 var _tt;
@@ -1960,141 +1445,8 @@ var PF = { mode: 'pay' };
 function pfEl(id) { return document.getElementById(id); }
 function pfV(id) { var e = pfEl(id); return e ? e.value.trim() : ''; }
 function pfSet(id, v) { var e = pfEl(id); if (e) e.value = v == null ? '' : v; }
-function initTaxBill() {
-  var box = pfEl('tab-taxbill'); if (!box) return;
-  if (!box.dataset.pf) {
-    box.dataset.pf = '1';
-    box.innerHTML =
-      '<div class="tb-box"><div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px">' +
-        '<button class="btn btn-g" id="pf-m-pay" type="button" onclick="pfMode(\'pay\')">지급 문구</button>' +
-        '<button class="btn btn-p" id="pf-m-tax" type="button" onclick="pfMode(\'tax\')">청구 문구</button>' +
-        '<button class="btn btn-g" type="button" style="margin-left:auto" onclick="pfDocs()">청구서·지급내역서에서 불러오기</button></div>' +
-        '<label class="fl" for="pf-quick" id="pf-quick-l">아티스트(또는 멤버), 담당자, 공급가액</label>' +
-        '<input class="fi" id="pf-quick" autocomplete="off">' +
-        '<div class="tb-hint" id="pf-hint"></div>' +
-        '<div id="pf-docs" style="display:none;margin-top:10px"><select class="fi sm" id="pf-doc" style="width:100%"></select></div></div>' +
-      '<div class="tb-box" id="pf-form"></div>' +
-      '<div class="tb-box"><div class="tb-head"><span class="fl" style="margin:0" id="pf-out-l">발행 요청 문구</span><button class="btn btn-p" id="pf-copy" type="button">복사</button></div>' +
-        '<textarea class="fi tb-out" id="pf-out" rows="11" spellcheck="false"></textarea>' +
-        '<div class="tb-hint">문구를 직접 고쳐서 복사해도 돼요. 입력칸을 바꾸면 다시 만들어져요.</div></div>';
-    pfEl('pf-quick').addEventListener('input', pfQuick);
-    pfEl('pf-copy').addEventListener('click', pfCopy);
-    pfEl('pf-doc').addEventListener('change', function () { pfLoadDoc(this.value); });
-  }
-  pfMode(PF.mode, true);
-}
-function pfMode(m, keep) {
-  PF.mode = m;
-  pfEl('pf-m-tax').className = 'btn ' + (m === 'tax' ? 'btn-p' : 'btn-g');
-  pfEl('pf-m-pay').className = 'btn ' + (m === 'pay' ? 'btn-p' : 'btn-g');
-  pfEl('pf-quick-l').textContent = m === 'tax' ? '아티스트(또는 멤버), 담당자, 공급가액' : '아티스트(또는 멤버), 외주처, 공급가액';
-  pfEl('pf-quick').placeholder = m === 'tax' ? '예) 앤팀, 문성언, 2349000' : '예) 에이엔, 강영순, 23만8천원';
-  pfEl('pf-out-l').textContent = m === 'tax' ? '계산서 발행 요청 문구' : '외주비용 지급 문구';
-  var f = function (id, label, attr) { return '<div class="fg"><label class="fl" for="' + id + '">' + label + '</label><input class="fi sm" id="' + id + '"' + (attr || '') + '></div>'; };
-  var html = m === 'tax'
-    ? '<div class="row2">' + f('pf-artist', '아티스트') + f('pf-work', '작업', ' value="리터칭"') + '</div>' +
-      '<div class="row2"><div class="fg"><label class="fl" for="pf-client">거래처</label><select class="fi sm" id="pf-client"></select></div>' + f('pf-cname', '계산서 거래처명') + '</div>' +
-      '<div class="row2">' + f('pf-ceo', '대표자') + f('pf-biz', '사업자등록번호') + '</div>' +
-      '<div class="row2">' + f('pf-mgr', '담당자', ' list="pf-mgr-list"') + f('pf-email', '메일주소', ' inputmode="email"') + '</div><datalist id="pf-mgr-list"></datalist>' +
-      '<div class="row2">' + f('pf-taxmail', '계산서 수신메일 (있을 때만)') + f('pf-date', '청구일자', ' type="date"') + '</div>' +
-      '<label class="tb-save" id="pf-save-wrap" hidden><input type="checkbox" id="pf-save" checked> 새 담당자예요. 복사할 때 01_거래처마스터 담당자 탭에 추가</label>' +
-      '<div class="row2">' + f('pf-amt', '공급가액', ' inputmode="numeric"') + '<div class="fg"></div></div>'
-    : '<div class="row2">' + f('pf-artist', '아티스트') + f('pf-work', '작업', ' value="리터칭"') + '</div>' +
-      '<div class="row2">' + f('pf-mgr', '거래처 담당자 (선택)', ' list="pf-mgr-list"') + f('pf-note', '추가 설명 (선택, 예: 일본)') + '</div><datalist id="pf-mgr-list"></datalist>' +
-      '<div class="row2"><div class="fg"><label class="fl" for="pf-vendor">지급처</label><select class="fi sm" id="pf-vendor"></select></div>' + f('pf-tax', '세금구분') + '</div>' +
-      '<div class="row2">' + f('pf-reg', '주민등록번호 / 사업자등록번호') + f('pf-corp', '회사명 (사업자만)') + '</div>' +
-      '<div class="row2">' + f('pf-bank', '은행') + f('pf-acct', '계좌번호') + '</div>' +
-      '<div class="row2">' + f('pf-amt', '공급가액', ' inputmode="numeric"') + '<div class="fg"></div></div>';
-  pfEl('pf-form').innerHTML = html;
-  if (m === 'tax') {
-    pfEl('pf-client').innerHTML = '<option value="">거래처 선택</option>' + PM.clients.map(function (c) { return '<option value="' + esc(c.disp) + '">' + esc(pmClientName(c)) + '</option>'; }).join('');
-    pfEl('pf-client').addEventListener('change', function () { pfFillClient(); pfBuild(); });
-    pfSet('pf-date', tbToday());
-  } else {
-    pfEl('pf-vendor').innerHTML = '<option value="">지급처 선택</option>' + PM.vendors.filter(function (v) { return !pmHidden(v.name); }).map(function (v) { return '<option value="' + esc(v.name) + '">' + esc(v.name) + ' · ' + esc(v.tax) + '</option>'; }).join('');
-    pfEl('pf-vendor').addEventListener('change', function () { pfFillVendor(); pfBuild(); });
-  }
-  pfEl('pf-form').querySelectorAll('input').forEach(function (e) { e.addEventListener('input', function () { if (e.id === 'pf-mgr') pfFillMgr(); if (e.id === 'pf-artist') pfFillArtist(); pfBuild(); }); });
-  pfEl('pf-amt').addEventListener('blur', function () { var n = pmMoney(this.value); this.value = n ? tbWon(n) : ''; pfBuild(); });
-  if (!keep) pfEl('pf-quick').value = '';
-  pfQuick();
-}
-function pfQuick() {
-  var parts = pfV('pf-quick').split(/(?<!\d),|,(?!\d{3}(?!\d))|[，\t\/]|\s{2,}/).map(function (x) { return x.trim(); }).filter(Boolean);
-  var hint = pfEl('pf-hint');
-  if (!parts.length) { hint.classList.remove('warn'); hint.textContent = '쉼표로 구분해서 넣으면 나머지는 PITCH_DB에서 찾아 채워요. 금액은 10000 · 10,000원 · 1만원 모두 돼요.'; pfBuild(); return; }
-  pfSet('pf-artist', parts[0] || '');
-  if (PF.mode === 'tax') pfSet('pf-mgr', parts[1] || ''); else { var vn = (parts[1] || '').trim(), sel = pfEl('pf-vendor'); if (vn) sel.value = PM.vendors.some(function (v) { return v.name === vn && !pmHidden(v.name); }) ? vn : ''; }
-  var amt = pmMoney(parts[2] || ''); pfSet('pf-amt', amt ? tbWon(amt) : '');
-  var msg = pfFillArtist();
-  if (PF.mode === 'pay') { pfFillVendor(); if (parts[1] && !pfV('pf-vendor')) msg += ' · "' + parts[1] + '" 지급처를 못 찾았어요'; }
-  pfFillMgr();
-  hint.classList.toggle('warn', /못 찾/.test(msg)); hint.textContent = msg;
-  pfBuild();
-}
-function pfFillArtist() {
-  var q = pfV('pf-artist'), r = pmFindArtist(q), msg = '';
-  if (!q) return '';
-  if (r) {
-    PF.artist = r.artist;
-    if (PF.mode === 'tax') {
-      var mgr = pfV('pf-mgr'), byMgr = mgr ? PM.contacts.filter(function (k) { return k.name === mgr && r.all.some(function (a) { return a.client === k.client; }); })[0] : null;
-      pfEl('pf-client').value = byMgr ? byMgr.client : r.artist.client; pfFillClient();
-    }
-    msg = (r.artist.ko || r.artist.disp) + ' → ' + pmClientName(pmClient(r.artist.client)) + (r.all.length > 1 ? ' (여러 거래처: ' + r.all.map(function (a) { return a.client; }).join(', ') + ')' : '');
-  } else { PF.artist = null; msg = '"' + q + '" 아티스트·멤버를 못 찾았어요' + (PF.mode === 'tax' ? '. 거래처를 골라 주세요.' : ''); }
-  return msg;
-}
-function pfFillClient() {
-  var c = pmClient(pfV('pf-client'));
-  pfSet('pf-cname', pmClientName(c)); pfSet('pf-ceo', c ? c.ceo : ''); pfSet('pf-biz', c ? c.biz : ''); pfSet('pf-taxmail', pmArtistTaxMail(c, PF.artist) || pmTaxMail(c));
-  pfMgrList(c ? c.disp : '');
-  pfFillMgr();
-}
 function pfMgrList(disp) { var dl = pfEl('pf-mgr-list'); if (dl) dl.innerHTML = PM.contacts.filter(function (k) { return !disp || k.client === disp; }).map(function (k) { return '<option value="' + esc(k.name) + '">'; }).join(''); }
-function pfFillMgr() {
-  if (PF.mode === 'pay') { if (PF.artist) pfMgrList(PF.artist.client); return; }
-  var c = pmClient(pfV('pf-client')), mgr = pfV('pf-mgr');
-  var k = c && mgr ? PM.contacts.filter(function (x) { return x.client === c.disp && x.name === mgr; })[0] : null;
-  var em = pfEl('pf-email');
-  if (k) { em.value = k.email; em.dataset.auto = '1'; } else if (em.dataset.auto === '1') { em.value = ''; em.dataset.auto = '0'; }
-  if (c) pfSet('pf-taxmail', (k && pmMemoMail(k.memo)) || pmArtistTaxMail(c, PF.artist) || pmTaxMail(c));
-  pfEl('pf-save-wrap').hidden = !(c && mgr && !k);
-}
-function pfFillVendor() {
-  var v = PM.vendors.filter(function (x) { return x.name === pfV('pf-vendor'); })[0];
-  var biz = v && /사업자/.test(v.tax);
-  pfSet('pf-tax', v ? v.tax : ''); pfSet('pf-reg', v ? v.regId : ''); pfSet('pf-corp', v && biz ? v.ceo : '');
-  pfSet('pf-bank', v ? v.bank : ''); pfSet('pf-acct', v ? v.acct : '');
-}
 function pfTitleArtist() { var q = pfV('pf-artist'); return PF.artist && PF.artist.ko ? PF.artist.ko : q; }
-function pfText() {
-  var amt = pmMoney(pfV('pf-amt')), d = pfV('pf-date').replace(/-/g, '.'), t = '<' + [pfTitleArtist(), pfV('pf-work') || '리터칭'].filter(Boolean).join(' ');
-  if (PF.mode === 'tax') {
-    var vat = amt * 0.1, out = t + ' 계산서 발행>\n' +
-      '-거래처명: ' + pfV('pf-cname') + '\n-대표자: ' + pfV('pf-ceo') + '\n-사업자등록번호: ' + pfV('pf-biz') + '\n-담당자: ' + pfV('pf-mgr') + '\n-메일주소: ' + pfV('pf-email') + '\n';
-    var tm = pfV('pf-taxmail'); if (tm && tm !== pfV('pf-email')) out += '-계산서 수신메일: ' + tm + '\n';
-    return out + '-청구일자: ' + d + '\n-공급가액: ' + tbWon(amt) + '원\n-부가세: ' + tbWon(vat) + '원\n-최종지급액\n' + tbWon(amt + vat) + '원 (vat 10% 포함)';
-  }
-  var head = t + [pfV('pf-mgr'), pfV('pf-note')].filter(Boolean).map(function (x) { return ' ' + x; }).join('') + ' 외주비용 지급>\n';
-  var bankLine = '-(은행) 계좌번호: (' + pfV('pf-bank') + ') ' + pfV('pf-acct') + '\n';
-  if (/사업자/.test(pfV('pf-tax'))) {
-    var v2 = amt * 0.1; // 부가세는 반올림 안 함
-    return head + '-지급처: ' + pfV('pf-vendor') + '\n-사업자등록번호: ' + pfV('pf-reg') + '\n-회사명 (대표자): ' + pfV('pf-corp') + ' (' + pfV('pf-vendor') + ')\n' + bankLine +
-      '-공급가액: ' + tbWon(amt) + '원\n-부가세: ' + tbWon(v2) + '원\n-최종지급액\n' + tbWon(amt + v2) + '원 (vat 10% 포함)';
-  }
-  var wt = pmWithholding(amt);
-  return head + '-지급처: ' + pfV('pf-vendor') + '\n-주민등록번호: ' + pfV('pf-reg') + '\n' + bankLine +
-    '-공급가액: ' + tbWon(amt) + '원\n-원천세: -' + tbWon(wt) + '원\n-최종지급액: \n' + tbWon(amt - wt) + '원 (3.3% 차감)';
-}
-function pfBuild() { var o = pfEl('pf-out'); if (o) o.value = pfText(); }
-function pfCopy() {
-  if (PF.mode === 'tax') {
-    var c = pmClient(pfV('pf-client')), mgr = pfV('pf-mgr');
-    if (!pfEl('pf-save-wrap').hidden && pfEl('pf-save').checked && c && mgr) { postSheet('pm_add_contact', { client: c.disp, name: mgr, email: pfV('pf-email') }); pfEl('pf-save-wrap').hidden = true; }
-  }
-  cp(pfEl('pf-out').value, null);
-}
 // 청구서·지급내역서에서 불러오기 (읽기만)
 function pfDocs() {
   var wrap = pfEl('pf-docs'), sel = pfEl('pf-doc');
@@ -2824,28 +2176,6 @@ function dcPass(S, x) {
 function dcSet(type, k, v) { DC[type][k] = v || ''; dcRender(type); }
 // 검색: 돋보기 누르면 머리 줄에서 왼쪽으로 늘어나는 검색칸
 function dcSearch(type) { var S = DC[type]; S.qOpen = !S.qOpen; var e = document.getElementById('dcq-' + type); if (!S.qOpen) { S.q = ''; if (e) e.value = ''; } if (e) { e.classList.toggle('open', !!S.qOpen); if (S.qOpen) setTimeout(function () { e.focus(); }, 60); } var sb = document.querySelector('#dc-' + type + ' .dc-sbtn'); if (sb) sb.classList.toggle('on', !!S.qOpen); dcList(type); }
-function dcRender(type) {
-  var S = DC[type], box = document.getElementById('dc-' + type); if (!box) return;
-  var bar = box.querySelector('.wo-bar'), old = bar.querySelector('.dc-chips'), sl = old ? old.scrollLeft : 0;
-  var base = S.items.filter(function (x) { return dcPass(S, x); }), cnt = {};
-  base.forEach(function (x) { cnt[x.folder] = (cnt[x.folder] || 0) + 1; });
-  var fl = S.folders.filter(function (f) { return f.n > 0 || f.name === S.folder; }).sort(function (a, b) { return pmCmpClient(a.name, b.name); });
-  var years = {}; S.items.forEach(function (x) { var d = dcD(x); if (d) years[d.slice(0, 4)] = 1; });
-  var yo = Object.keys(years).sort().reverse().map(function (y) { return '<option value="' + y + '"' + (S.y === y ? ' selected' : '') + '>' + y + '년</option>'; }).join('');
-  var mo = ''; for (var m = 1; m <= 12; m++) { var mm = ('0' + m).slice(-2); mo += '<option value="' + mm + '"' + (S.m === mm ? ' selected' : '') + '>' + m + '월</option>'; }
-  var any = S.y || S.m || S.from || S.to;
-  bar.innerHTML =
-    '<div class="dc-chips"><button class="wo-chip' + (S.folder ? '' : ' on') + '" onclick="dcFolder(\'' + type + '\',\'\')">전체<b>' + base.length + '</b></button>' +
-    fl.map(function (f) { return '<button class="wo-chip' + (S.folder === f.name ? ' on' : '') + '" data-f="' + esc(f.name) + '" onclick="dcFolder(\'' + type + '\',this.dataset.f)">' + esc(f.name) + '<b>' + (cnt[f.name] || 0) + '</b></button>'; }).join('') + '</div>' +
-    '<div class="dc-fl"><select class="dc-sel' + (S.y ? '' : ' ph') + '" onchange="dcSet(\'' + type + '\',\'y\',this.value)"><option value="">연도</option>' + yo + '</select>' +
-    '<select class="dc-sel' + (S.m ? '' : ' ph') + '" onchange="dcSet(\'' + type + '\',\'m\',this.value)"><option value="">월</option>' + mo + '</select>' +
-    '<span class="dc-per"><input type="date" class="dc-dt" value="' + (S.from || '') + '" onchange="dcSet(\'' + type + '\',\'from\',this.value)"><span>~</span><input type="date" class="dc-dt" value="' + (S.to || '') + '" onchange="dcSet(\'' + type + '\',\'to\',this.value)"></span>' +
-    (any ? '<button class="dc-rst" onclick="DC.' + type + '.y=DC.' + type + '.m=DC.' + type + '.from=DC.' + type + '.to=\'\';dcRender(\'' + type + '\')">초기화</button>' : '') + '</div>';
-  var nc = bar.querySelector('.dc-chips'); if (nc) nc.scrollLeft = sl;
-  var sb = box.querySelector('.dc-sbtn'); if (sb) sb.classList.toggle('on', !!S.qOpen);
-  var dl = box.querySelector('.dc-drive'); if (dl) { var cf = S.folders.filter(function (f) { return f.name === S.folder; })[0]; dl.href = WO_DRIVE + (cf ? cf.id : (S.root || '')); }
-  dcList(type);
-}
 function dcFolder(type, f) { DC[type].folder = f || ''; dcRender(type); }
 function dcList(type) {
   var S = DC[type], lb = document.querySelector('#dc-' + type + ' .wo-list'); if (!lb) return;
@@ -2927,19 +2257,6 @@ function txLoad(fresh) {
   });
 }
 function txYm(ym) { return ym.slice(0, 4) + '.' + ym.slice(5, 7); } // 2026-10-18 (현아): YYYY.MM
-function txRender() {
-  var lb = document.querySelector('#dc-tx .wo-list'); if (!lb) return;
-  var dl = document.querySelector('#dc-tx .dc-drive'); if (dl && TX.folder) dl.href = WO_DRIVE + TX.folder;
-  if (TX.loading && !TX.items.length) { lb.innerHTML = '<div class="wo-empty">드라이브에서 불러오는 중... (처음엔 20초쯤 걸려요)</div>'; return; }
-  if (TX.err && !TX.items.length) { lb.innerHTML = '<div class="wo-empty">⚠ ' + esc(TX.err) + '</div>'; return; }
-  if (!TX.items.length) { lb.innerHTML = '<div class="wo-empty">원천징수내역서가 없어요</div>'; return; }
-  lb.innerHTML = TX.items.map(function (x) {
-    var s = x.sum || {}, mm = (TX.memos[x.ym] || {}).memo || '';
-    return '<button class="tx-card" onclick="txOpen(\'' + esc(x.id) + '\',\'' + x.ym + '\')"><div class="t"><b>' + txYm(x.ym) + '</b><span>' + esc(s['인원 · 건수'] || '') + '</span></div>' +
-      '<div class="g"><div><small>지급총액</small><em>' + esc(s['지급총액'] || '-') + '</em></div><div><small>원천징수</small><em>' + esc(s['원천징수 합계'] || '-') + '</em></div><div><small>실지급액</small><em>' + esc(s['실지급액 합계'] || '-') + '</em></div></div>' +
-      (mm ? '<div class="m">' + esc(mm) + '</div>' : '') + '</button>';
-  }).join('');
-}
 function txOpen(id, ym) {
   TX.cur = { id: id, ym: ym }; DC.cur = null;
   document.getElementById('dc-title').textContent = txYm(ym) + ' 원천세';
@@ -3032,27 +2349,6 @@ var PF_KEYS = { tax: ['아티스트', '작업명', '거래처명', '대표자', 
 var PF_SRV = null;
 function pfTpl(k) { var t = PF_SRV || tbLS('pf_tpl') || {}; return t[k] || PF_TPL_DEF[k]; }
 function pfTplLoad() { if (!PM_K) return; woGet('&pftpl=1', function (d) { if (!d || !d.ok) return; var loc = tbLS('pf_tpl') || {}; PF_SRV = d.tpl || {}; if (!Object.keys(PF_SRV).length && Object.keys(loc).length) { PF_SRV = loc; woPost('pm_pf_tpl', { tpl: loc }, function () {}); } tbLS('pf_tpl', PF_SRV); pfBuild(); }); }
-function initTaxBill() {
-  var box = pfEl('tab-taxbill'); if (!box) return;
-  if (box.dataset.pf !== '2') {
-    box.dataset.pf = '2';
-    var gear = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>';
-    var copy = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>';
-    box.innerHTML =
-      '<div class="tb-box"><div class="pf-top">' +
-        '<button class="btn btn-g" id="pf-m-pay" type="button" onclick="pfMode(\'pay\')">지급 문구</button>' +
-        '<button class="btn btn-g" id="pf-m-tax" type="button" onclick="pfMode(\'tax\')">청구 문구</button>' +
-        '<button class="pf-ic" type="button" title="문구 포맷 수정" onclick="pfTplOpen()">' + gear + '</button>' +
-        '<button class="pf-ic" type="button" title="문구 복사" onclick="pfCopy()">' + copy + '</button></div>' +
-        '<label class="fl" for="pf-quick" id="pf-quick-l" style="margin-top:4px"></label>' +
-        '<input class="fi" id="pf-quick" autocomplete="off">' +
-        '<div class="tb-hint" id="pf-hint"></div></div>' +
-      '<div class="tb-box" id="pf-form"></div>';
-    pfEl('pf-quick').addEventListener('input', pfQuick);
-  }
-  pfTplLoad();
-  pfMode(PF.mode, true);
-}
 function pfMode(m, keep) {
   PF.mode = m; PF.artist = null;
   pfEl('pf-m-tax').className = 'btn ' + (m === 'tax' ? 'btn-p' : 'btn-g');
