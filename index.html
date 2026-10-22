@@ -7,7 +7,7 @@
 <meta name="theme-color" content="#f2f4f6">
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=3">
 <link rel="apple-touch-icon" href="apple-touch-icon.png?v=3">
-<meta name="pm-build" content="202610221000">
+<meta name="pm-build" content="202610221030">
 <link rel="manifest" href="manifest.webmanifest?v=3">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -8226,6 +8226,27 @@ td.rate-val{white-space:nowrap}
       });
     };
   };
+})();
+</script>
+<style>
+/* 2026-10-22 (현아): 메뉴 — 자주 쓰는 기록·작업내역·매입·매출만 보이고 나머지는 더보기 */
+.tabs:not(.tm-open) .tab:not([data-tab="taxbill"]):not([data-tab="dash"]):not([data-tab="py"]):not([data-tab="iv"]):not(.active){display:none!important}
+.tab-more{display:flex;align-items:center;gap:3px;padding:12px 0 10px;font-size:13px;font-weight:700;letter-spacing:.02em;color:var(--faint);border-bottom:2px solid transparent;margin-bottom:-1px;cursor:pointer;user-select:none;white-space:nowrap}
+.tab-more svg{width:13px;height:13px;transition:transform .2s}
+.tabs.tm-open .tab-more svg{transform:rotate(180deg)}
+</style>
+<script>
+(function () {
+  var tabs = document.querySelector('.tabs'); if (!tabs) return;
+  var b = document.createElement('div'); b.className = 'tab-more'; b.setAttribute('role', 'button');
+  var IC = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>';
+  function label() { b.innerHTML = (tabs.classList.contains('tm-open') ? '접기' : '더보기') + IC; }
+  b.onclick = function () { tabs.classList.toggle('tm-open'); label(); };
+  label(); tabs.appendChild(b);
+  // 나중에 붙는 메뉴(통계·팸)가 더보기 뒤로 가지 않게 항상 맨 끝으로
+  try { new MutationObserver(function () { if (tabs.lastElementChild !== b) tabs.appendChild(b); }).observe(tabs, { childList: true }); } catch (e) {}
+  // 접힌 메뉴를 고르면 다시 접음 (고른 메뉴는 계속 보임)
+  if (typeof switchTab === 'function') { var _sw = switchTab; switchTab = function () { var r = _sw.apply(this, arguments); tabs.classList.remove('tm-open'); label(); return r; }; }
 })();
 </script>
 </body>
