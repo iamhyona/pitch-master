@@ -7,7 +7,7 @@
 <meta name="theme-color" content="#f2f4f6">
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=3">
 <link rel="apple-touch-icon" href="apple-touch-icon.png?v=3">
-<meta name="pm-build" content="202610221030">
+<meta name="pm-build" content="202610221130">
 <link rel="manifest" href="manifest.webmanifest?v=3">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -2277,7 +2277,7 @@ function woRenderList() {
   // 2026-10-12: 표 대신 한 줄씩 카드 목록 (폰에서 글자 잘림 없게)
   lb.innerHTML = v.map(function (x) {
     return '<div class="wo-item" data-id="' + esc(x.id) + '" onclick="woOpen(this.dataset.id)">' +
-      woHead(x.clientKey, x.artist, x.title, x.date6, x.t) +
+      woHead(x.clientKey, x.artist, x.title, x.date6, x.t, x.dl) +
       '<div class="wo-l3"><span class="wo-wl">' + (x.workers || []).map(function (w) { return '<span class="wo-w">' + esc(w) + '</span>'; }).join('') + '</span></div></div>';
   }).join('');
 }
@@ -3299,7 +3299,15 @@ function woCK(k) {
 }
 // 수정시각: YY.MM.DD HH:MM (초·'수정'은 길어서 뺌)
 function woStamp(t) { if (!t) return ''; var d = new Date(t), p = function (n) { return ('0' + n).slice(-2); }; return p(d.getFullYear() % 100) + '.' + p(d.getMonth() + 1) + '.' + p(d.getDate()) + ' ' + p(d.getHours()) + ':' + p(d.getMinutes()); }
-function woHead(ck, artist, title, d6, t) {
+// 작업내역 한 줄 머리 (2026-10-22 정리: 마감일 · 요청일 대체를 여기 한 곳에서 처리)
+//  dl = 마감일 배열(있으면 날짜 옆에 ~ MM.DD), d6가 없으면 시트 요청일(woReqD6)로 날짜 표시
+function woHead(ck, artist, title, d6, t, dl) {
+  if (!/^\d{6}$/.test(d6 || '') && typeof woReqD6 === 'function') d6 = woReqD6(ck, title) || d6;
+  var h = woHeadBase_(ck, artist, title, d6, t);
+  if (dl && dl.length && typeof woDlTxt === 'function') h = h.replace('</small></span>', '</small><span class="wo-dl">~ ' + esc(woDlTxt(dl)) + '</span></span>');
+  return h;
+}
+function woHeadBase_(ck, artist, title, d6, t) {
   var parts = String(title || '').split(' · ').map(function (x) { return x.trim(); }).filter(Boolean);
   var mgr = parts.length > 1 ? parts.pop() : '', proj = parts.join(' ');
   return '<div class="wo-g"><div class="wo-ckr">' + woCK(ck) + '</div>' +
@@ -3933,20 +3941,6 @@ function txToggle(id, ym) {
 // 2026-10-12: 작업내역 — 발주일 ~ 마감일(1~3순위). 마감일은 작업내역서 작업합산 E2:K4에 저장
 function woDlTxt(dl) { return (dl || []).map(function (s) { var m = String(s).match(/^\d{4}-(\d{2})-(\d{2})/); return m ? m[1] + '.' + m[2] : s; }).join('·'); }
 (function () {
-  var oh = woHead;
-  woHead = function (ck, artist, title, d6, t, dl) {
-    var h = oh(ck, artist, title, d6, t);
-    if (dl && dl.length) h = h.replace('</small></span>', '</small><span class="wo-dl">~ ' + esc(woDlTxt(dl)) + '</span></span>');
-    return h;
-  };
-  // 작업내역 목록: x.dl 넘기기
-  var orl = woRenderList;
-  woRenderList = function () {
-    var keep = woHead, byId = {};
-    (WO.items || []).forEach(function (x) { byId[x.clientKey + '|' + x.date6 + '|' + x.t] = x.dl; });
-    woHead = function (ck, artist, title, d6, t) { return keep(ck, artist, title, d6, t, byId[ck + '|' + d6 + '|' + t]); };
-    try { orl.apply(this, arguments); } finally { woHead = keep; }
-  };
   // 상세: 마감일 칸 (최대 3개) + 저장
   var od = woDetail;
   woDetail = function () {
@@ -8157,13 +8151,9 @@ td.rate-val{white-space:nowrap}
     var L = (typeof WO !== 'undefined' && WO.items) || [];
     return L.filter(function (i) { return i.clientKey === ck && String(i.title || '') === String(title || '') && !/^\d{6}$/.test(i.date6 || ''); })[0];
   }
-  var keep = woHead;
-  woHead = function (ck, artist, title, d6, t, dl) {
-    if (!/^\d{6}$/.test(d6 || '')) {
-      var x = find(ck, title);
-      if (x) { var v = REQ[x.id]; if (/^\d{6}$/.test(v || '')) d6 = v; else if (!v) want(x); }
-    }
-    return keep.apply(this, [ck, artist, title, d6, t, dl]);
+  window.woReqD6 = function (ck, title) {
+    var x = find(ck, title); if (!x) return '';
+    var v = REQ[x.id]; if (/^\d{6}$/.test(v || '')) return v; if (!v) want(x); return '';
   };
 })();
 </script>
