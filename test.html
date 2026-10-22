@@ -7,7 +7,7 @@
 <meta name="theme-color" content="#f2f4f6">
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=3">
 <link rel="apple-touch-icon" href="apple-touch-icon.png?v=3">
-<meta name="pm-build" content="202610221130">
+<meta name="pm-build" content="202610221230">
 <link rel="manifest" href="manifest.webmanifest?v=3">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -2249,7 +2249,11 @@ function woLoad(fresh) {
     WO.err = ''; WO.items = d.items || []; WO.folders = d.folders || []; WO.root = d.root || ''; WO.loaded = true; woRender();
   });
 }
-function woView() {
+// 작업내역 목록 (2026-10-22 정리): 거르기는 WO_VIEW_FILTERS, 그리기 앞뒤 작업은 WO_LIST_BEFORE / WO_LIST_AFTER에 순서대로 등록
+var WO_VIEW_FILTERS = [], WO_LIST_BEFORE = [], WO_LIST_AFTER = [];
+function woView() { var v = woViewCore_.apply(this, arguments); WO_VIEW_FILTERS.forEach(function (f) { v = f(v); }); return v; }
+function woRenderList() { var a = arguments, self = this; WO_LIST_BEFORE.forEach(function (f) { try { f(); } catch (e) { console.error(e); } }); var r = woRenderListCore_.apply(self, a); WO_LIST_AFTER.forEach(function (f) { try { f(); } catch (e) { console.error(e); } }); return r; }
+function woViewCore_() {
   var q = WO.q.trim().toLowerCase();
   return WO.items.filter(function (x) {
     if (WO.folder && x.folder !== WO.folder) return false;
@@ -2268,7 +2272,7 @@ function woRender() {
   if (dl) { var cf = WO.folders.filter(function (f) { return f.name === WO.folder; })[0]; dl.href = WO_DRIVE + (cf ? cf.id : WO.root || '1loq0Q5v2gHT1aekgjh49PUfhdFyPMHvn'); }
   woRenderList();
 }
-function woRenderList() {
+function woRenderListCore_() {
   var lb = document.getElementById('wo-list'); if (!lb) return;
   if (WO.loading && !WO.items.length) { lb.innerHTML = '<div class="wo-empty">드라이브에서 작업내역서를 불러오는 중...</div>'; return; }
   if (WO.err && !WO.items.length) { lb.innerHTML = '<div class="wo-empty">⚠ ' + esc(WO.err) + '</div>'; return; }
@@ -3866,18 +3870,15 @@ function txToggle(id, ym) {
   };
   // 작업내역
   WO.months = 2;
-  var ov = woView;
-  woView = function () {
-    var v = ov.apply(this, arguments); WO._hid = 0;
+  WO_VIEW_FILTERS.push(function (v) {
+    WO._hid = 0;
     if (WO.months && !String(WO.q || '').trim()) v = v.filter(function (x) { if (older(x.date6, WO.months)) { WO._hid++; return false; } return true; });
     return v;
-  };
-  var orl = woRenderList;
-  woRenderList = function () {
-    orl.apply(this, arguments);
+  });
+  WO_LIST_AFTER.push(function () {
     var lb = document.getElementById('wo-list'); if (!lb || !WO.loaded) return;
     lb.insertAdjacentHTML('beforeend', lsFoot(WO._hid || 0, WO.months, 'WO.months+=2;woRenderList()', 'WO.months=0;woRenderList()', 'WO.months=2;woRenderList()', lb.querySelectorAll('.wo-item').length));
-  };
+  });
   // 지급내역·청구내역
   DC.invoice.months = 2; DC.pay.months = 2;
   var op = dcPass, lim = null;
@@ -4602,8 +4603,8 @@ function woDlSave() {
     });
   }
   function clear(panelId) { var p = document.getElementById(panelId); if (p) p.querySelectorAll('.ls-more.out').forEach(function (e) { e.remove(); }); }
-  var _w = woRenderList;
-  woRenderList = function () { clear('tab-dash'); var r = _w.apply(this, arguments); out('tab-dash'); return r; };
+  WO_LIST_BEFORE.push(function () { clear('tab-dash'); });
+  WO_LIST_AFTER.push(function () { out('tab-dash'); });
   var _d = dcList;
   dcList = function (type) { var pid = { invoice: 'tab-iv', pay: 'tab-py' }[type] || ('tab-' + type); clear(pid); var r = _d.apply(this, arguments); out(pid); return r; };
 })();
@@ -8060,8 +8061,7 @@ function txIc(id) {
       if (WO.xo[id]) { e.classList.add('xo'); paint(id); }
     });
   }
-  var orl = woRenderList;
-  woRenderList = function () { var r = orl.apply(this, arguments); deco(); return r; };
+  WO_LIST_AFTER.push(function () { deco(); });
   // 수정 화면에서 저장하면 펼친 내용도 새로
   if (typeof woSave === 'function') { var os = woSave; woSave = function () { var id = WO.cur && WO.cur.id, r = os.apply(this, arguments); if (id) setTimeout(function () { load(id, true); }, 2500); return r; }; }
 })();
