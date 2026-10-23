@@ -7,7 +7,7 @@
 <meta name="theme-color" content="#f2f4f6">
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=3">
 <link rel="apple-touch-icon" href="apple-touch-icon.png?v=3">
-<meta name="pm-build" content="202610231000">
+<meta name="pm-build" content="202610231100">
 <link rel="manifest" href="manifest.webmanifest?v=3">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -1129,12 +1129,18 @@ var PM_K = '';
 PW = { guest: true, admin: true };
 (function () { try { var a = JSON.parse(localStorage.getItem('pm_auth') || 'null'); if (a && a.k) PM_K = a.k; else localStorage.removeItem('pm_auth'); } catch (e) {} })();
 function pmQ() { return '&k=' + encodeURIComponent(PM_K); }
+// 2026-10-23: 비밀번호를 주소(URL)에 싣지 않고 POST 본문으로 보냄 (서버 action 'pm_q')
+function pmGetQ_(qs) {
+  var d = {};
+  String(qs || '').replace(/^[?&]+/, '').split('&').forEach(function (p) { if (!p) return; var i = p.indexOf('='); d[decodeURIComponent(i < 0 ? p : p.slice(0, i))] = i < 0 ? '1' : decodeURIComponent(p.slice(i + 1)); });
+  return fetch(AS_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ action: 'pm_q', data: d, k: PM_K }) });
+}
 function pmAuthFail(d) { if (d && d.auth === false) { toast('다시 로그인해주세요'); doLogout(); return true; } return false; }
 function doLogin() {
   var pw = document.getElementById('login-pw').value.trim(), err = document.getElementById('login-err');
   if (!pw) { err.textContent = '비밀번호를 입력해주세요'; return; }
   err.textContent = '확인 중...';
-  fetch(AS_URL + '?api=pm&auth=1&k=' + encodeURIComponent(pw) + '&t=' + Date.now()).then(function (r) { return r.json(); }).catch(function () { return null; }).then(function (d) {
+  fetch(AS_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ action: 'pm_q', data: { auth: '1' }, k: pw }) }).then(function (r) { return r.json(); }).catch(function () { return null; }).then(function (d) {
     if (!d) { err.textContent = '연결 실패 — 잠시 후 다시 시도해주세요'; return; }
     if (!d.ok) { err.textContent = '비밀번호가 틀렸어요'; document.getElementById('login-pw').value = ''; document.getElementById('login-pw').focus(); return; }
     err.textContent = ''; PM_K = pw; SESSION.role = d.role; SESSION.editMode = false; selRole = d.role;
@@ -1190,7 +1196,7 @@ function pmApply(d) {
 }
 function loadSheetData() {
   showSyncBar('loading', 'PITCH_DB에서 불러오는 중...');
-  fetch(AS_URL + '?api=pm' + pmQ() + '&t=' + Date.now(), { method: 'GET', redirect: 'follow' })
+  pmGetQ_('')
     .then(function (r) { return r.json(); }).catch(function () { return null; })
     .then(function (d) {
       if (pmAuthFail(d)) return;
@@ -1451,7 +1457,7 @@ function pfTitleArtist() { var q = pfV('pf-artist'); return PF.artist && PF.arti
 function pfDocs() {
   var wrap = pfEl('pf-docs'), sel = pfEl('pf-doc');
   wrap.style.display = ''; sel.innerHTML = '<option>불러오는 중...</option>';
-  fetch(AS_URL + '?api=pm&docs=1' + pmQ() + '&t=' + Date.now()).then(function (r) { return r.json(); }).then(function (d) {
+  pmGetQ_('&docs=1').then(function (r) { return r.json(); }).then(function (d) {
     var want = PF.mode === 'tax' ? 'invoice' : 'pay';
     var list = (d.docs || []).filter(function (x) { return x.type === want && !(pmGuest() && PM_HIDE.some(function (h) { return x.name.indexOf('<' + h + '>') >= 0; })); });
     sel.innerHTML = '<option value="">' + (want === 'invoice' ? '청구서(견적서)' : '지급내역서') + ' 선택 (최근 수정순)</option>' + list.map(function (x) { return '<option value="' + x.id + '">' + esc(x.name.replace(/^\[PITCH\]/, '')) + '</option>'; }).join('');
@@ -1459,7 +1465,7 @@ function pfDocs() {
 }
 function pfLoadDoc(id) {
   if (!id) return; var hint = pfEl('pf-hint'); hint.textContent = '파일 읽는 중...';
-  fetch(AS_URL + '?api=pm&doc=' + encodeURIComponent(id) + pmQ() + '&t=' + Date.now()).then(function (r) { return r.json(); }).then(function (o) {
+  pmGetQ_('&doc=' + encodeURIComponent(id)).then(function (r) { return r.json(); }).then(function (o) {
     if (!o.ok) { hint.textContent = '읽기 실패: ' + (o.error || ''); return; }
     pfEl('pf-quick').value = '';
     pfSet('pf-artist', o.artist); pfFillArtist();
@@ -1577,7 +1583,7 @@ input[type=date].fi::-webkit-date-and-time-value{text-align:left}
 var WO = { items: [], folders: [], root: '', folder: '', q: '', loaded: false, loading: false, cur: null, tab: 0, opts: null };
 var WO_DRIVE = 'https://drive.google.com/drive/folders/';
 function woGet(qs, cb) {
-  fetch(AS_URL + '?api=pm' + qs + pmQ() + '&t=' + Date.now()).then(function (r) { return r.json(); }).catch(function () { return null; })
+  pmGetQ_(qs).then(function (r) { return r.json(); }).catch(function () { return null; })
     .then(function (d) { if (pmAuthFail(d)) return; cb(d || { ok: false, error: '연결 실패 — 잠시 후 다시 시도해주세요' }); });
 }
 function woPost(action, data, cb) {
