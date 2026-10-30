@@ -7,7 +7,7 @@
 <meta name="theme-color" content="#f2f4f6">
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=3">
 <link rel="apple-touch-icon" href="apple-touch-icon.png?v=3">
-<meta name="pm-build" content="202610231100">
+<meta name="pm-build" content="202610311200">
 <link rel="manifest" href="manifest.webmanifest?v=3">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -7502,6 +7502,199 @@ td.rate-val{white-space:nowrap}
   try { new MutationObserver(function () { if (tabs.lastElementChild !== b) tabs.appendChild(b); }).observe(tabs, { childList: true }); } catch (e) {}
   // 접힌 메뉴를 고르면 다시 접음 (고른 메뉴는 계속 보임)
   if (typeof switchTab === 'function') { var _sw = switchTab; switchTab = function () { var r = _sw.apply(this, arguments); tabs.classList.remove('tm-open'); label(); return r; }; }
+})();
+</script>
+<style>
+/* 2026-10-31 (현아): 기록 — 견적서 이미지·카톡 캡처를 읽어서 칸 자동 작성 */
+.pfi-row{display:flex;align-items:center;gap:8px}
+.pfi-btn{height:36px;border:0;border-radius:999px;background:var(--chip);color:var(--txt);font-family:inherit;font-size:13px;font-weight:600;padding:0 14px;display:inline-flex;align-items:center;gap:6px;cursor:pointer;flex:none}
+.pfi-btn svg{width:16px;height:16px}
+.pfi-btn:disabled{opacity:.5;cursor:default}
+.pfi-tip{font-size:12px;color:var(--txt3);line-height:1.4;min-width:0}
+.pfi-st{font-size:12px;color:var(--txt2);line-height:1.5;margin-top:2px}
+.pfi-st:empty{display:none}
+.pfi-st.warn{color:var(--danger)}
+.pfi-raw{margin-top:4px;font-size:12px;color:var(--txt3)}
+.pfi-raw summary{cursor:pointer}
+.pfi-raw pre{white-space:pre-wrap;word-break:break-all;max-height:180px;overflow:auto;background:var(--chip);border-radius:10px;padding:8px 10px;margin:6px 0 0;font-family:inherit;font-size:12px;color:var(--txt2)}
+.pfi-drop{outline:2px dashed var(--txt3);outline-offset:4px;border-radius:14px}
+#pf-form .pfi-fill{box-shadow:0 0 0 2px #3182f6 inset}
+</style>
+<script>
+(function () {
+  var TESS = 'https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js';
+  var PDFJS = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+  var IC = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="11" r="2"/><path d="M21 17l-5-5-8 7"/></svg>';
+  function loadJs(src) { return new Promise(function (ok, no) { var s = document.createElement('script'); s.src = src; s.onload = ok; s.onerror = no; document.head.appendChild(s); }); }
+  function st(t, warn) { var e = pfEl('pfi-st'); if (!e) return; e.textContent = t || ''; e.classList.toggle('warn', !!warn); }
+  function nz(x) { return String(x || '').replace(/\s+/g, '').toLowerCase(); }
+
+  // ── 화면: 빠른 작성 박스 안에 [이미지로 채우기] ──
+  function mount() {
+    var q = pfEl('pf-quick'); if (!q || pfEl('pfi-btn')) return;
+    var wrap = document.createElement('div');
+    wrap.innerHTML = '<div class="pfi-row"><button type="button" class="pfi-btn" id="pfi-btn">' + IC + '이미지로 채우기</button>' +
+      '<span class="pfi-tip">견적서·청구서 이미지나 최종 견적 카톡 캡처 · 붙여넣기(⌘V)·끌어놓기도 돼요</span></div>' +
+      '<input type="file" id="pfi-file" accept="image/*,application/pdf" hidden>' +
+      '<div class="pfi-st" id="pfi-st"></div><details class="pfi-raw" id="pfi-raw" hidden><summary>읽은 글자 보기</summary><pre id="pfi-txt"></pre></details>';
+    var hint = pfEl('pf-hint'); (hint || q).insertAdjacentElement('afterend', wrap);
+    pfEl('pfi-btn').onclick = function () { pfEl('pfi-file').click(); };
+    pfEl('pfi-file').onchange = function () { var f = this.files && this.files[0]; this.value = ''; if (f) run(f); };
+    var box = wrap.closest('.tb-box') || wrap.parentNode;
+    if (box && !box.dataset.pfi) {
+      box.dataset.pfi = '1';
+      box.addEventListener('dragover', function (e) { e.preventDefault(); box.classList.add('pfi-drop'); });
+      box.addEventListener('dragleave', function () { box.classList.remove('pfi-drop'); });
+      box.addEventListener('drop', function (e) { e.preventDefault(); box.classList.remove('pfi-drop'); var f = e.dataTransfer.files && e.dataTransfer.files[0]; if (f) run(f); });
+    }
+  }
+  var oi = initTaxBill;
+  initTaxBill = function () { oi.apply(this, arguments); mount(); };
+  document.addEventListener('paste', function (e) {
+    var tab = pfEl('tab-taxbill'); if (!tab || !tab.classList.contains('active')) return;
+    var it = [].slice.call((e.clipboardData && e.clipboardData.items) || []).filter(function (x) { return /^image\//.test(x.type); })[0];
+    if (!it) return; e.preventDefault(); run(it.getAsFile());
+  });
+
+  // ── 글자 읽기 (이미지 확대·흑백 처리 후 OCR, PDF는 글자 먼저) ──
+  function prep(file) {
+    return new Promise(function (ok) {
+      var url = URL.createObjectURL(file), img = new Image();
+      img.onload = function () {
+        var s = Math.min(3, Math.max(1, 1800 / img.width)), c = document.createElement('canvas');
+        c.width = Math.round(img.width * s); c.height = Math.round(img.height * s);
+        var x = c.getContext('2d'); x.drawImage(img, 0, 0, c.width, c.height);
+        try {
+          var d = x.getImageData(0, 0, c.width, c.height), p = d.data, sum = 0, i;
+          for (i = 0; i < p.length; i += 4) { var g = p[i] * .299 + p[i + 1] * .587 + p[i + 2] * .114; p[i] = p[i + 1] = p[i + 2] = g; sum += g; }
+          if (sum / (p.length / 4) < 110) for (i = 0; i < p.length; i += 4) { p[i] = p[i + 1] = p[i + 2] = 255 - p[i]; } // 어두운 화면(다크모드 카톡) 반전
+          x.putImageData(d, 0, 0);
+        } catch (e) {}
+        URL.revokeObjectURL(url); ok(c);
+      };
+      img.onerror = function () { URL.revokeObjectURL(url); ok(file); };
+      img.src = url;
+    });
+  }
+  function ocr(src) {
+    return (window.Tesseract ? Promise.resolve() : loadJs(TESS)).then(function () {
+      return Tesseract.recognize(src, 'kor+eng', { logger: function (m) { if (m.status === 'recognizing text') st('글자 읽는 중... ' + Math.round(m.progress * 100) + '%'); else if (/load/.test(m.status)) st('글자 인식 준비 중... (처음 한 번은 조금 걸려요)'); } });
+    }).then(function (r) { return r.data.text; });
+  }
+  function pdfText(f) {
+    return (window.pdfjsLib ? Promise.resolve() : loadJs(PDFJS)).then(function () {
+      pdfjsLib.GlobalWorkerOptions.workerSrc = PDFJS.replace('pdf.min.js', 'pdf.worker.min.js'); return f.arrayBuffer();
+    }).then(function (b) { return pdfjsLib.getDocument({ data: b }).promise; }).then(function (pdf) {
+      return pdf.getPage(1).then(function (pg) {
+        return pg.getTextContent().then(function (tc) {
+          var L = {}, Y = []; tc.items.forEach(function (it) { var y = Math.round(it.transform[5]); if (!(y in L)) { L[y] = []; Y.push(y); } L[y].push(it.str); });
+          var t = Y.sort(function (a, b) { return b - a; }).map(function (y) { return L[y].join(' '); }).join('\n');
+          if (t.replace(/\s/g, '').length > 20) return t;
+          var vp = pg.getViewport({ scale: 2 }), c = document.createElement('canvas'); c.width = vp.width; c.height = vp.height;
+          return pg.render({ canvasContext: c.getContext('2d'), viewport: vp }).promise.then(function () { return ocr(c); });
+        });
+      });
+    });
+  }
+  function run(f) {
+    if (!f) return;
+    var b = pfEl('pfi-btn'); if (b) b.disabled = true;
+    st((f.name || '이미지') + ' 읽는 중...');
+    var p = /pdf/i.test(f.type) || /\.pdf$/i.test(f.name || '') ? pdfText(f) : prep(f).then(ocr);
+    p.then(function (t) { if (b) b.disabled = false; apply(t); })
+      .catch(function () { if (b) b.disabled = false; st('이미지를 읽지 못했어요. 다른 이미지로 해보거나 칸을 직접 채워주세요.', true); });
+  }
+
+  // ── 읽은 글자 → 값 찾기 ──
+  function nums(line) {
+    var out = [], m, re = /\d{1,3}(?:[,.]\s?\d{3})+(?!\d)|\d{4,}/g;
+    while ((m = re.exec(line))) { var n = Number(m[0].replace(/[,.\s]/g, '')); if (n >= 1000 && !/^20\d{2}$/.test(m[0])) out.push(n); }
+    var k = line.match(/\d[\d.]*\s*[억만천][\d억만천백\s]*원?/g); if (k) k.forEach(function (s) { var v = pmMoney(s.replace(/\s/g, '')); if (v >= 1000) out.push(v); });
+    return out;
+  }
+  function amount(lines) {
+    var max = function (a) { return a.length ? Math.max.apply(null, a) : 0; };
+    var sup = /공급\s*가\s*액|공급가|subtotal|sub\s*total|미\s*포\s*함|견적\s*금액|청구\s*금액|부가세\s*별도|vat\s*별도/i;
+    var inc = /total|포\s*함|최종|합\s*계\s*금액|총\s*액|총\s*금액/i;
+    var a = 0;
+    lines.forEach(function (l) { if (!a && sup.test(l) && !/최종/.test(l)) a = max(nums(l)); });
+    if (a) return a;
+    var all = []; lines.forEach(function (l) { all = all.concat(nums(l)); });
+    for (var i = 0; i < all.length; i++) for (var j = 0; j < all.length; j++) if (i !== j && Math.abs(all[j] - all[i] * 1.1) <= 2 && all[i] >= 10000) a = Math.max(a, all[i]);
+    if (a) return a;
+    lines.forEach(function (l) { if (!a && inc.test(l)) { var v = max(nums(l)); if (v) a = Math.round(v / 1.1); } });
+    return a || max(all);
+  }
+  function date(lines) {
+    var re = /(20\d{2})\s*[.\-\/년]\s*(\d{1,2})\s*[.\-\/월]\s*(\d{1,2})/, pick = null;
+    lines.forEach(function (l) { var m = l.match(re); if (m && (!pick || /작성|청구|발행|일자|견적일/.test(l))) pick = m; });
+    if (!pick) return '';
+    var mo = +pick[2], d = +pick[3]; if (mo < 1 || mo > 12 || d < 1 || d > 31) return '';
+    return pick[1] + '-' + ('0' + mo).slice(-2) + '-' + ('0' + d).slice(-2);
+  }
+  function best(list, names, flat) { // 글자 안에 이름이 들어 있는 항목 중 가장 긴 이름
+    var hit = null, len = 0;
+    list.forEach(function (x) { names(x).forEach(function (n) { n = nz(n); if (n.length >= 2 && n.length > len && flat.indexOf(n) >= 0) { hit = x; len = n.length; } }); });
+    return hit;
+  }
+  function parse(text) {
+    var lines = String(text || '').split(/\n/).map(function (l) { return l.trim(); }).filter(Boolean);
+    var flat = nz(text);
+    // 우리 회사 정보 줄은 빼고 이름 찾기 (발송처 = 핏치)
+    var flatX = flat.replace(/\(?주\)?핏치컴퍼니|pitch(company)?|김현수|박현아/g, '');
+    var alias = { '와플': 'YG PLUS', '와이지플러스': 'YG PLUS', '와이지': 'YG', '스타쉽': 'STARSHIP', '하이브': 'HYBE', '더블랙레이블': 'THE BLACK LABEL' };
+    var o = { amt: amount(lines), date: date(lines) };
+    o.client = best(PM.clients, function (c) { var a = [c.key, c.en, c.ko, c.disp, c.label]; Object.keys(alias).forEach(function (k) { if (nz(alias[k]) === nz(c.key) || nz(alias[k]) === nz(c.en)) a.push(k); }); return a.filter(Boolean); }, flatX);
+    var arts = PM.artists, cd = o.client && o.client.disp;
+    var aNames = function (a) { var n = [a.ko, a.en, a.label, a.disp]; Object.keys(window.TB_ALIAS || {}).forEach(function (k) { if (nz(TB_ALIAS[k]) === nz(a.ko) || nz(TB_ALIAS[k]) === nz(a.en)) n.push(k); }); return n.filter(Boolean); };
+    o.artist = (cd && best(arts.filter(function (a) { return pfAC(a).indexOf(cd) >= 0; }), aNames, flatX)) || best(arts, aNames, flatX);
+    if (!o.artist) { var mb = best(PM.members.filter(function (m) { return String(m.name || '').length >= 2; }), function (m) { return [m.name]; }, flatX); if (mb) o.artist = arts.filter(function (a) { return a.disp === mb.artist; })[0] || null; }
+    var cts = PM.contacts.filter(function (k) { return String(k.name || '').length >= 2; });
+    o.mgr = (cd && best(cts.filter(function (k) { return k.client === cd; }), function (k) { return [k.name]; }, flatX)) || best(cts, function (k) { return [k.name]; }, flatX);
+    if (!o.mgr && cd) { // 글자 하나 잘못 읽은 경우 (예: 신지애 → 신지매) — 그 거래처 담당자 중에서만, 3글자 이상 이름
+      var toks = (String(text).match(/[가-힣]{3,4}/g) || []);
+      o.mgr = cts.filter(function (k) { return k.client === cd && k.name.length >= 3; }).filter(function (k) {
+        return toks.some(function (t) { if (t.length !== k.name.length) return false; var d = 0; for (var i = 0; i < t.length; i++) if (t[i] !== k.name[i]) d++; return d <= 1; });
+      })[0] || null;
+    }
+    if (!o.client && o.mgr) o.client = pmClient(o.mgr.client);
+    if (!o.client && o.artist) o.client = pmClient(pfAC(o.artist)[0]);
+    o.vendor = best(PM.vendors.filter(function (v) { return !pmHidden(v.name); }), function (v) { return [v.name]; }, flat);
+    o.work = /리터칭|보정/.test(text) ? '리터칭' : (/디자인|타이포|로고|포스터/.test(text) ? '디자인' : '');
+    return o;
+  }
+
+  // ── 값 → 칸 채우기 ──
+  function mark(ids) { ids.forEach(function (id) { var e = pfEl(id); if (e) { e.classList.add('pfi-fill'); e.addEventListener('input', function () { e.classList.remove('pfi-fill'); }, { once: true }); } }); }
+  function apply(text) {
+    pfEl('pfi-txt').textContent = text || ''; pfEl('pfi-raw').hidden = !text;
+    if (!text || !text.replace(/\s/g, '')) { st('이미지에서 글자를 찾지 못했어요.', true); return; }
+    var o = parse(text), got = [], miss = [], filled = [];
+    pfEl('pf-quick').value = '';
+    if (PF.mode === 'tax') {
+      if (o.client) {
+        PF.artist = o.artist && pfAC(o.artist).indexOf(o.client.disp) >= 0 ? o.artist : null;
+        pfEl('pf-client').value = o.client.disp; pfSet('pf-mgr', o.mgr && o.mgr.client === o.client.disp ? o.mgr.name : '');
+        pfFillClient();
+        if (PF.artist) { pfEl('pf-artist-s').value = PF.artist.disp; pfSet('pf-artist', PF.artist.ko || PF.artist.disp); }
+        if (o.mgr && o.mgr.client === o.client.disp) { pfMgrOpts(o.client.disp, o.mgr.name); pfFillMgr(); }
+        got.push('거래처 ' + pmClientName(o.client)); filled.push('pf-client');
+        if (PF.artist) { got.push('아티스트 ' + (PF.artist.ko || PF.artist.disp)); filled.push('pf-artist-s'); } else miss.push('아티스트');
+        if (pfV('pf-mgr')) { got.push('담당자 ' + pfV('pf-mgr')); filled.push('pf-mgr-s', 'pf-email'); } else miss.push('담당자');
+      } else miss.push('거래처');
+      if (o.date) { pfSet('pf-date', o.date); got.push('청구일 ' + o.date); filled.push('pf-date'); }
+    } else {
+      if (o.vendor) { pfEl('pf-vendor').value = o.vendor.name; pfFillVendor(); got.push('지급처 ' + o.vendor.name); filled.push('pf-vendor'); } else miss.push('지급처');
+      if (o.artist) { pfSet('pf-artist', o.artist.ko || o.artist.disp); PF.artist = o.artist; got.push('아티스트 ' + (o.artist.ko || o.artist.disp)); filled.push('pf-artist'); } else miss.push('아티스트');
+    }
+    if (o.work && o.work !== '리터칭') { pfSet('pf-work', o.work); filled.push('pf-work'); }
+    if (o.amt) { pfSet('pf-amt', tbWon(o.amt)); got.push('공급가액 ' + tbWon(o.amt) + '원'); filled.push('pf-amt'); } else miss.push('공급가액');
+    pfBuild(); mark(filled);
+    st((got.length ? '읽었어요: ' + got.join(' · ') : '') + (miss.length ? (got.length ? '\n' : '') + '못 찾음: ' + miss.join(', ') + ' — 아래에서 직접 골라주세요' : '') + (got.length ? '\n파란 칸을 확인하고 확인을 눌러주세요.' : ''), !got.length || miss.length > 0);
+    pfEl('pfi-st').style.whiteSpace = 'pre-line';
+  }
+  window.pfImgRun = run; window.pfImgParse = parse; // 확인용
+  if (pfEl('pf-quick')) mount();
 })();
 </script>
 </body>
