@@ -7,7 +7,7 @@
 <meta name="theme-color" content="#f2f4f6">
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=3">
 <link rel="apple-touch-icon" href="apple-touch-icon.png?v=3">
-<meta name="pm-build" content="202610311200">
+<meta name="pm-build" content="202611031200">
 <link rel="manifest" href="manifest.webmanifest?v=3">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -7695,6 +7695,33 @@ td.rate-val{white-space:nowrap}
   }
   window.pfImgRun = run; window.pfImgParse = parse; // 확인용
   if (pfEl('pf-quick')) mount();
+})();
+</script>
+<script>
+// 2026-11-03 (현아): 빠른 작성 — 순서 상관없이 금액(숫자)·아티스트·담당자/외주처를 알아서 구분
+(function () {
+  var RE = /(?<!\d),|,(?!\d{3}(?!\d))|[，\t\/]|\s{2,}/;
+  function isMoney(p) { return /\d/.test(p) && pmMoney(p) > 0 && !/[A-Za-z가-힣]/.test(p.replace(/[억만천백원]/g, '')); }
+  function q2() {
+    var hint = pfEl('pf-hint'); if (!hint) return;
+    var parts = pfV('pf-quick').split(RE).map(function (x) { return (x || '').trim(); }).filter(Boolean);
+    if (!parts.length) { hint.classList.remove('warn'); hint.textContent = ''; pfBuild(); return; }
+    var money = parts.filter(isMoney), names = parts.filter(function (p) { return !isMoney(p); });
+    // 첫 이름이 아티스트가 아니고 둘째가 아티스트면 자리 바꿈 (예: 황미애, 베몬, 985만)
+    if (names.length > 1 && !pmFindArtist(names[0]) && pmFindArtist(names[1])) names = [names[1], names[0]].concat(names.slice(2));
+    var a = names[0] || '', b = names[1] || '', msg;
+    if (PF.mode === 'tax') { PF._q = a; PF._m = b; msg = pfFillArtist(); }
+    else {
+      pfSet('pf-artist', a); msg = pfFillArtist();
+      var sel = pfEl('pf-vendor'); if (b) sel.value = PM.vendors.some(function (v) { return v.name === b && !pmHidden(v.name); }) ? b : '';
+      pfFillVendor(); if (b && !pfV('pf-vendor')) msg += ' · "' + b + '" 지급처를 못 찾았어요';
+    }
+    var amt = money.length ? pmMoney(money[0]) : 0; pfSet('pf-amt', amt ? tbWon(amt) : '');
+    hint.classList.toggle('warn', /못 찾/.test(msg || '')); hint.textContent = msg || '';
+    pfBuild();
+  }
+  pfQuick = q2;
+  document.addEventListener('input', function (e) { if (e.target && e.target.id === 'pf-quick') { e.stopPropagation(); q2(); } }, true);
 })();
 </script>
 </body>
