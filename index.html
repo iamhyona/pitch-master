@@ -7,7 +7,7 @@
 <meta name="theme-color" content="#f2f4f6">
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=3">
 <link rel="apple-touch-icon" href="apple-touch-icon.png?v=3">
-<meta name="pm-build" content="202611031200">
+<meta name="pm-build" content="202611051200">
 <link rel="manifest" href="manifest.webmanifest?v=3">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -1357,7 +1357,7 @@ function onInvClientChange() {
   if (mg) mg.innerHTML = '<option value="">담당자 선택</option>' + PM.contacts.filter(function (k) { return c && k.client === c.disp; })
     .map(function (k) { return '<option value="' + esc(k.name) + '">' + esc(k.name) + (k.dept ? ' (' + esc(k.dept) + ')' : '') + '</option>'; }).join('') + '<option value="__direct__">직접 입력</option>';
   var ar = document.getElementById('inv-artist');
-  if (ar) ar.innerHTML = '<option value="">아티스트 선택</option>' + PM.artists.filter(function (a) { return c && a.client === c.disp; })
+  if (ar) ar.innerHTML = '<option value="">아티스트 선택</option>' + PM.artists.filter(function (a) { return c && pfAC(a).indexOf(c.disp) >= 0; })
     .map(function (a) { return '<option value="' + esc(a.disp) + '">' + esc(a.disp) + '</option>'; }).join('') + '<option value="__direct__">직접 입력</option>';
   var ag = document.getElementById('inv-agency');
   if (ag && c) { ag.value = c.rateTab || ''; onInvAgencyChange(); }
@@ -5039,7 +5039,7 @@ window.schSty = function (t, r, D) {
       if (/^긴급/.test(t)) { o.urgent = true; return; }
       if (/^고급/.test(t)) { o.prem = true; return; }
       if (!o.client) { var c = hit(PM.clients || [], t); if (c) { o.client = c; return; } }
-      if (!o.artist) { var a = hit((PM.artists || []).filter(function (x) { return !o.client || x.client === o.client.disp; }), t) || (!o.client && hit(PM.artists || [], t)); if (a) { o.artist = a; return; } }
+      if (!o.artist) { var a = hit((PM.artists || []).filter(function (x) { return !o.client || pfAC(x).indexOf(o.client.disp) >= 0; }), t) || (!o.client && hit(PM.artists || [], t)); if (a) { o.artist = a; return; } }
       if (!o.manager) { var k = (PM.contacts || []).filter(function (x) { return N(x.name) === N(t) && (!o.client || x.client === o.client.disp); })[0]; if (k) { o.manager = k; return; } }
       o.left.push(t);
     });
