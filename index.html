@@ -7,7 +7,7 @@
 <meta name="theme-color" content="#f2f4f6">
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=3">
 <link rel="apple-touch-icon" href="apple-touch-icon.png?v=3">
-<meta name="pm-build" content="202611051200">
+<meta name="pm-build" content="202611071200">
 <link rel="manifest" href="manifest.webmanifest?v=3">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -206,14 +206,15 @@ select.fi option{background:var(--sur2)}
   </header>
   <div class="tabs-wrapper">
     <div class="tabs">
-      <div class="tab" data-tab="taxbill" id="tab-btn-taxbill">기록</div>
-      <div class="tab" data-tab="invoice" id="tab-btn-invoice">견적서</div>
-      <div class="tab" data-tab="sch" id="tab-btn-sch">일정</div>
+      <div class="tab" data-tab="taxbill" id="tab-btn-taxbill">기록하기</div>
+      <div class="tab" data-tab="invoice" id="tab-btn-invoice">인보이스</div>
       <div class="tab active" data-tab="dash" id="tab-btn-dash">작업내역</div>
-      <div class="tab" data-tab="py">매입</div>
-      <div class="tab" data-tab="iv">매출</div>
+      <div class="tab" data-tab="tx">원천세신고</div>
+      <div class="tab" data-tab="sch" id="tab-btn-sch">일정</div>
+      <div class="tab" data-tab="reg" id="tab-btn-reg">등록정보</div>
+      <div class="tab" data-tab="py">지급내역</div>
+      <div class="tab" data-tab="iv">청구내역</div>
       <div class="tab" data-tab="rates-bill" id="tab-btn-rates-bill">단가</div>
-      <div class="tab" data-tab="tx">신고</div>
       <div class="tab" data-tab="agencies">거래처</div>
       <div class="tab" data-tab="litt">외주처</div>
     </div>
@@ -470,9 +471,7 @@ select.fi option{background:var(--sur2)}
         </div>
 
         <!-- 생성 버튼 -->
-        <button class="btn btn-p" style="width:100%;height:44px;font-size:14px" onclick="submitInvoice()">
-          견적서 구글시트 생성
-        </button>
+        <button class="btn btn-p" id="inv-submit" style="width:100%;height:44px;font-size:14px" onclick="submitInvoice()">대금청구서 만들기 (구글 시트)</button>
         <div id="inv-result" style="margin-top:12px;display:none"></div>
       </div>
 
@@ -1396,21 +1395,21 @@ function submitInvoice() {
   var btn = document.querySelector('#tab-invoice button[onclick="submitInvoice()"]');
   if (btn) { btn.disabled = true; btn.textContent = '생성 중...'; }
   var payload = { client: client, project: gv('inv-project'), manager: gv('inv-manager') === '__direct__' ? '' : gv('inv-manager'), artist: gv('inv-artist'),
-                  writeDate: gv('inv-write') || gv('inv-date') || tbToday(), workLink: gv('inv-link'), items: items };
+                  writeDate: gv('inv-write') || gv('inv-date') || tbToday(), workLink: gv('inv-link'), items: items, docType: (window.INV_DOC || 'bill') };
   fetch(AS_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ action: 'pm_create_invoice', data: payload, k: PM_K }) })
     .then(function (r) { return r.json(); })
     .then(function (res) {
-      if (btn) { btn.disabled = false; btn.textContent = '구글 시트로 견적서 생성'; }
+      if (btn) { btn.disabled = false; btn.textContent = invBtnLabel(); }
       var el = document.getElementById('inv-result'); if (!el) return; el.style.display = 'block';
       if (res.ok) {
-        toast('견적서 생성 완료!');
-        el.innerHTML = '<div style="background:rgba(52,211,153,.08);border:1px solid rgba(52,211,153,.2);border-radius:10px;padding:14px 16px"><div style="font-size:12px;font-weight:700;color:var(--grn);margin-bottom:8px">✓ 03_청구서/' + esc(res.folder) + ' 에 만들었어요</div><div style="font-size:11px;color:var(--txt2);margin-bottom:10px">' + esc(res.name) + '</div><a href="' + res.url + '" target="_blank" class="btn btn-p" style="display:inline-flex;text-decoration:none">구글 시트 열기 →</a></div>';
+        toast(invDocName() + ' 생성 완료!');
+        el.innerHTML = '<div style="background:rgba(52,211,153,.08);border:1px solid rgba(52,211,153,.2);border-radius:10px;padding:14px 16px"><div style="font-size:12px;font-weight:700;color:var(--grn);margin-bottom:8px">✓ 03_청구서/' + esc(res.folder) + ' 에 만들었어요</div><div style="font-size:11px;color:var(--txt2);margin-bottom:10px">' + esc(res.name) + '</div><a href="' + res.url + '" target="_blank" class="btn btn-p" style="display:inline-flex;text-decoration:none">구글 시트 열기 →</a></div>'; try { invMailPanel(res); } catch (e) {}
       } else {
         toast('생성 실패: ' + (res.error || ''));
         el.innerHTML = '<div style="background:rgba(255,95,95,.08);border:1px solid rgba(255,95,95,.2);border-radius:10px;padding:12px 16px;font-size:12px;color:var(--danger)">오류: ' + esc(res.error || '') + '</div>';
       }
     })
-    .catch(function () { if (btn) { btn.disabled = false; btn.textContent = '구글 시트로 견적서 생성'; } toast('연결 실패'); });
+    .catch(function () { if (btn) { btn.disabled = false; btn.textContent = invBtnLabel(); } toast('연결 실패'); });
 }
 
 /* ───── 발행·지급 문구 (카톡용) : 세금계산서 발행 / 외주용역 지급 ───── */
@@ -1482,7 +1481,7 @@ function pfLoadDoc(id) {
     pfBuild();
   }).catch(function () { hint.textContent = '읽기 실패'; });
 }
-(function () { var t = document.getElementById('tab-btn-taxbill'); if (t) t.textContent = '기록'; })();
+(function () { var t = document.getElementById('tab-btn-taxbill'); if (t) t.textContent = '기록하기'; })();
 
 </script>
 <script>
@@ -7485,7 +7484,7 @@ td.rate-val{white-space:nowrap}
 </script>
 <style>
 /* 2026-10-22 (현아): 메뉴 — 자주 쓰는 기록·작업내역·매입·매출만 보이고 나머지는 더보기 */
-.tabs:not(.tm-open) .tab:not([data-tab="taxbill"]):not([data-tab="dash"]):not([data-tab="py"]):not([data-tab="iv"]):not(.active){display:none!important}
+/* 2026-11-07 (현아): 더보기 없앰 — 모든 메뉴 보이기 */
 .tab-more{display:flex;align-items:center;gap:3px;padding:12px 0 10px;font-size:13px;font-weight:700;letter-spacing:.02em;color:var(--faint);border-bottom:2px solid transparent;margin-bottom:-1px;cursor:pointer;user-select:none;white-space:nowrap}
 .tab-more svg{width:13px;height:13px;transition:transform .2s}
 .tabs.tm-open .tab-more svg{transform:rotate(180deg)}
@@ -7724,6 +7723,242 @@ td.rate-val{white-space:nowrap}
   document.addEventListener('input', function (e) { if (e.target && e.target.id === 'pf-quick') { e.stopPropagation(); q2(); } }, true);
 })();
 </script>
+<style>
+/* 2026-11-07 (현아): 메뉴 개편 — 더보기 없앰 · 작업내역/등록정보 안에 하위 메뉴 · 팸 숨김 */
+.tab-more{display:none!important}
+.tab[data-tab="fam"]{display:none!important}
+.tab[data-tab="py"],.tab[data-tab="iv"],.tab[data-tab="agencies"],.tab[data-tab="litt"],.tab[data-tab="rates-bill"],.tab[data-tab="rates-pay"]{display:none!important}
+#pm-sub{margin:0 0 12px}
+#pm-sub:empty{display:none}
+#inv-doc{margin-bottom:10px}
+/* 입력 도구 (음성 · 이미지) */
+.ix-row{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:10px}
+.ix-btn{height:36px;border:0;border-radius:999px;background:var(--chip);color:var(--txt);font-family:inherit;font-size:13px;font-weight:600;padding:0 14px;display:inline-flex;align-items:center;gap:6px;cursor:pointer}
+.ix-btn svg{width:16px;height:16px}
+.ix-btn.rec{background:#ffe9e9;color:#f04452}
+.ix-btn:disabled{opacity:.5;cursor:default}
+.ix-st{font-size:12px;color:var(--txt2);line-height:1.5;width:100%}
+.ix-st:empty{display:none}
+.ix-st.warn{color:var(--danger)}
+/* 메일 초안 */
+.im-box{margin-top:10px;background:var(--sur);border:1px solid var(--bdr);border-radius:12px;padding:14px 16px}
+.im-box .fg{margin-bottom:8px}
+.im-box textarea{min-height:150px;line-height:1.55}
+.im-note{font-size:12px;color:var(--txt3);line-height:1.5;margin:4px 0 10px}
+</style>
+<script>
+(function () {
+  /* ── 1. 메뉴: 작업내역 = 작업내역서·지급내역·청구내역 / 등록정보 = 거래처·외주처·단가 ── */
+  var GRP = { dash: 'dash', py: 'dash', iv: 'dash', agencies: 'reg', litt: 'reg', 'rates-bill': 'reg', 'rates-pay': 'reg' };
+  var SUB = { dash: [['dash', '작업내역서'], ['py', '지급내역'], ['iv', '청구내역']], reg: [['agencies', '거래처'], ['litt', '외주처'], ['rates-bill', '단가']] };
+  var LAST = { dash: 'dash', reg: 'agencies' };
+  try { var s = JSON.parse(localStorage.getItem('pm_sub_last') || '{}'); if (GRP[s.reg] === 'reg') LAST.reg = s.reg; } catch (e) {}
+  function bar() {
+    var b = document.getElementById('pm-sub'); if (b) return b;
+    var ci = document.querySelector('.content .ci'); if (!ci) return null;
+    b = document.createElement('div'); b.id = 'pm-sub'; ci.insertBefore(b, ci.firstChild); return b;
+  }
+  function renderSub(t) {
+    var b = bar(); if (!b) return;
+    var g = GRP[t]; if (!g) { b.innerHTML = ''; b.className = ''; return; }
+    var cur = t === 'rates-pay' ? 'rates-bill' : t;
+    b.className = 'rt-seg';
+    b.innerHTML = SUB[g].map(function (x) { return '<button type="button" class="' + (x[0] === cur ? 'on' : '') + '" onclick="switchTab(\'' + x[0] + '\')">' + x[1] + '</button>'; }).join('');
+  }
+  var _sw = switchTab;
+  window.switchTab = switchTab = function (t) {
+    if (t === 'reg') t = LAST.reg;
+    if (t === 'fam') t = 'dash';
+    var args = [].slice.call(arguments); args[0] = t;
+    var r = _sw.apply(this, args);
+    var g = GRP[t];
+    if (g) {
+      LAST[g] = t === 'rates-pay' ? 'rates-bill' : t;
+      try { localStorage.setItem('pm_sub_last', JSON.stringify({ reg: LAST.reg })); } catch (e) {}
+      document.querySelectorAll('.tabs .tab').forEach(function (x) { x.classList.toggle('active', x.dataset.tab === g); });
+    }
+    renderSub(t);
+    return r;
+  };
+  // 통계는 일정 뒤 · 등록정보는 맨 끝
+  function order() {
+    var tabs = document.querySelector('.tabs'); if (!tabs) return;
+    var pf = tabs.querySelector('[data-tab="pf"]'), sch = tabs.querySelector('[data-tab="sch"]'), reg = tabs.querySelector('[data-tab="reg"]');
+    if (pf && sch && sch.nextSibling !== pf) tabs.insertBefore(pf, sch.nextSibling);
+    if (reg && reg !== tabs.lastElementChild) { var more = tabs.querySelector('.tab-more'); tabs.insertBefore(reg, more || null); }
+  }
+  order(); setTimeout(order, 300); setTimeout(order, 1500);
+  var _ar = window.applyRoleUI; if (typeof _ar === 'function') window.applyRoleUI = applyRoleUI = function () { var x = _ar.apply(this, arguments); order(); return x; };
+  renderSub(typeof CUR !== 'undefined' && CUR ? CUR : 'dash');
+
+  /* ── 2. 인보이스: 사전견적서 / 대금청구서 ── */
+  window.INV_DOC = 'bill';
+  try { if (localStorage.getItem('pm_inv_doc') === 'quote') INV_DOC = 'quote'; } catch (e) {}
+  window.invDocName = function () { return INV_DOC === 'quote' ? '사전견적서' : '대금청구서'; };
+  window.invBtnLabel = function () { return invDocName() + ' 만들기 (구글 시트)'; };
+  window.invDoc = function (d) {
+    INV_DOC = d === 'quote' ? 'quote' : 'bill';
+    try { localStorage.setItem('pm_inv_doc', INV_DOC); } catch (e) {}
+    document.querySelectorAll('#inv-doc button').forEach(function (b) { b.classList.toggle('on', b.getAttribute('data-d') === INV_DOC); });
+    var s = document.getElementById('inv-submit'); if (s && !s.disabled) s.textContent = invBtnLabel();
+    var r = document.getElementById('inv-result'); if (r) { r.style.display = 'none'; r.innerHTML = ''; }
+  };
+  (function () {
+    var p = document.getElementById('tab-invoice'); if (!p || document.getElementById('inv-doc')) return;
+    var d = document.createElement('div'); d.className = 'rt-seg'; d.id = 'inv-doc';
+    d.innerHTML = '<button type="button" data-d="quote" onclick="invDoc(\'quote\')">사전견적서</button><button type="button" data-d="bill" onclick="invDoc(\'bill\')">대금청구서</button>';
+    p.insertBefore(d, p.firstChild);
+    invDoc(INV_DOC);
+  })();
+
+  /* ── 3. 메일 초안 (지메일 임시보관함 · PDF 첨부) ── */
+  function g(id) { var e = document.getElementById(id); return e ? String(e.value || '').trim() : ''; }
+  function mgrMail() {
+    var c = g('inv-client'), m = g('inv-manager');
+    var k = (PM.contacts || []).filter(function (x) { return x.client === c && x.name === m; })[0];
+    return k && k.email ? String(k.email).split(/[,\s/]+/)[0] : '';
+  }
+  window.invMailPanel = function (res) {
+    var el = document.getElementById('inv-result'); if (!el || !res || !res.url) return;
+    var art = g('inv-artist'), pj = g('inv-project'), mg = g('inv-manager'); if (mg === '__direct__') mg = '';
+    var ko = (art.match(/\(([^)]*)\)$/) || [])[1] || art, nm = invDocName();
+    var subj = '[핏치컴퍼니] ' + [ko, pj].filter(Boolean).join(' ') + ' ' + nm.replace('대금', '');
+    var body = '안녕하세요' + (mg ? ', ' + mg + '님' : '') + '.\n핏치컴퍼니입니다.\n\n' + ([ko, pj].filter(Boolean).join(' ') || '작업') + ' ' +
+      (INV_DOC === 'quote' ? '견적서 보내드립니다.\n검토 후 진행 여부 알려주시면 감사하겠습니다.' : '작업이 완료되어 청구서 보내드립니다.\n첨부 파일 확인 부탁드립니다.') +
+      '\n\n감사합니다.\n핏치컴퍼니 드림';
+    var box = document.createElement('div'); box.className = 'im-box'; box.id = 'inv-mail';
+    box.innerHTML = '<div class="inv-sec" style="margin-bottom:6px">메일 보내기</div>' +
+      '<div class="im-note">바로 보내지 않고 지메일 임시보관함에 초안을 만들어요 (' + nm + ' PDF 첨부). 확인하고 직접 보내주세요.</div>' +
+      '<div class="fg"><label class="fl">받는 사람</label><input class="fi sm" id="im-to" placeholder="메일 주소"></div>' +
+      '<div class="fg"><label class="fl">참조</label><input class="fi sm" id="im-cc" placeholder="(선택)"></div>' +
+      '<div class="fg"><label class="fl">제목</label><input class="fi sm" id="im-sub"></div>' +
+      '<div class="fg"><label class="fl">내용</label><textarea class="fi" id="im-body"></textarea></div>' +
+      '<button type="button" class="btn btn-p" id="im-go" style="width:100%;height:44px">메일 초안 만들기</button><div class="ix-st" id="im-st" style="margin-top:8px"></div>';
+    el.appendChild(box);
+    document.getElementById('im-to').value = mgrMail();
+    document.getElementById('im-sub').value = subj;
+    document.getElementById('im-body').value = body;
+    document.getElementById('im-go').onclick = function () {
+      var b = this, st = document.getElementById('im-st'), to = g('im-to');
+      if (!to) { toast('받는 사람 메일을 적어주세요'); return; }
+      b.disabled = true; b.textContent = '초안 만드는 중...'; st.textContent = '';
+      fetch(AS_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ action: 'pm_mail_draft', k: PM_K,
+        data: { url: res.url, to: to, cc: g('im-cc'), subject: g('im-sub'), body: document.getElementById('im-body').value, fileName: res.name } }) })
+        .then(function (r) { return r.json(); })
+        .then(function (o) {
+          b.disabled = false; b.textContent = '메일 초안 만들기';
+          if (o && o.ok) { st.classList.remove('warn'); st.innerHTML = '✓ 지메일 임시보관함에 초안을 만들었어요 · <a href="' + (o.url || 'https://mail.google.com/mail/u/0/#drafts') + '" target="_blank">임시보관함 열기 →</a>'; toast('메일 초안 완료'); }
+          else { st.classList.add('warn'); st.textContent = '초안을 만들지 못했어요: ' + ((o && o.error) || '서버 응답 없음'); }
+        })
+        .catch(function () { b.disabled = false; b.textContent = '메일 초안 만들기'; st.classList.add('warn'); st.textContent = '연결 실패'; });
+    };
+  };
+
+  /* ── 4. 입력 도구: 음성 · 이미지 (기록하기 · 인보이스 빠른 작성) ── */
+  var MIC = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0"/><path d="M12 18v3"/></svg>';
+  var IMG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="11" r="2"/><path d="M21 17l-5-5-9 9"/></svg>';
+  var TESS = 'https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js';
+  var PDFJS = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+  function loadJs(src) { return new Promise(function (ok, no) { var s = document.createElement('script'); s.src = src; s.onload = ok; s.onerror = no; document.head.appendChild(s); }); }
+  function addText(ta, t) {
+    t = String(t || '').trim(); if (!t) return;
+    var v = ta.value.replace(/\s+$/, '');
+    ta.value = v ? v + (/[,\n]$/.test(v) ? ' ' : ', ') + t : t;
+    ta.dispatchEvent(new Event('input', { bubbles: true }));
+  }
+  function voice(btn, ta, st, done) {
+    var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SR) { st.classList.add('warn'); st.textContent = '이 브라우저는 음성 입력을 지원하지 않아요 (크롬·사파리에서 돼요)'; return; }
+    if (btn._rec) { btn._rec.stop(); return; }
+    var r = new SR(); r.lang = 'ko-KR'; r.interimResults = true; r.continuous = false;
+    btn._rec = r; btn.classList.add('rec'); btn.lastChild.textContent = '듣는 중... (누르면 끝)'; st.classList.remove('warn'); st.textContent = '말씀해 주세요. 예) 스타쉽 에이엔 박수현 개인 30컷';
+    var fin = '';
+    r.onresult = function (e) { var it = ''; for (var i = e.resultIndex; i < e.results.length; i++) { if (e.results[i].isFinal) fin += e.results[i][0].transcript; else it += e.results[i][0].transcript; } st.textContent = '🎙 ' + (fin + it); };
+    r.onerror = function (e) { st.classList.add('warn'); st.textContent = e.error === 'not-allowed' ? '마이크 사용을 허용해 주세요' : '음성을 듣지 못했어요. 다시 눌러주세요'; };
+    r.onend = function () {
+      btn._rec = null; btn.classList.remove('rec'); btn.lastChild.textContent = '음성으로 입력';
+      if (fin.trim()) { addText(ta, fin); st.classList.remove('warn'); st.textContent = '들은 내용: ' + fin.trim(); if (done) done(); }
+    };
+    r.start();
+  }
+  function prep(file) {
+    return new Promise(function (ok) {
+      var url = URL.createObjectURL(file), img = new Image();
+      img.onload = function () {
+        var s = Math.min(3, Math.max(1, 1800 / img.width)), c = document.createElement('canvas');
+        c.width = Math.round(img.width * s); c.height = Math.round(img.height * s);
+        var x = c.getContext('2d'); x.drawImage(img, 0, 0, c.width, c.height);
+        try {
+          var d = x.getImageData(0, 0, c.width, c.height), p = d.data, sum = 0, i;
+          for (i = 0; i < p.length; i += 4) { var gg = p[i] * .299 + p[i + 1] * .587 + p[i + 2] * .114; p[i] = p[i + 1] = p[i + 2] = gg; sum += gg; }
+          if (sum / (p.length / 4) < 110) for (i = 0; i < p.length; i += 4) { p[i] = p[i + 1] = p[i + 2] = 255 - p[i]; }
+          x.putImageData(d, 0, 0);
+        } catch (e) {}
+        URL.revokeObjectURL(url); ok(c);
+      };
+      img.onerror = function () { URL.revokeObjectURL(url); ok(file); };
+      img.src = url;
+    });
+  }
+  function ocr(src, st) {
+    return (window.Tesseract ? Promise.resolve() : loadJs(TESS)).then(function () {
+      return Tesseract.recognize(src, 'kor+eng', { logger: function (m) { if (m.status === 'recognizing text') st.textContent = '글자 읽는 중... ' + Math.round(m.progress * 100) + '%'; } });
+    }).then(function (r) { return r.data.text; });
+  }
+  function pdfText(f, st) {
+    return (window.pdfjsLib ? Promise.resolve() : loadJs(PDFJS)).then(function () {
+      pdfjsLib.GlobalWorkerOptions.workerSrc = PDFJS.replace('pdf.min.js', 'pdf.worker.min.js'); return f.arrayBuffer();
+    }).then(function (b) { return pdfjsLib.getDocument({ data: b }).promise; }).then(function (pdf) {
+      return pdf.getPage(1).then(function (pg) {
+        return pg.getTextContent().then(function (tc) {
+          var L = {}, Y = []; tc.items.forEach(function (it) { var y = Math.round(it.transform[5]); if (!(y in L)) { L[y] = []; Y.push(y); } L[y].push(it.str); });
+          var t = Y.sort(function (a, b) { return b - a; }).map(function (y) { return L[y].join(' '); }).join('\n');
+          if (t.replace(/\s/g, '').length > 20) return t;
+          var vp = pg.getViewport({ scale: 2 }), c = document.createElement('canvas'); c.width = vp.width; c.height = vp.height;
+          return pg.render({ canvasContext: c.getContext('2d'), viewport: vp }).promise.then(function () { return ocr(c, st); });
+        });
+      });
+    });
+  }
+  // 인보이스: 이미지 글자 → 빠른 작성 칸에 줄 단위로 넣고 '칸 채우기'
+  function invImage(f, btn, st) {
+    btn.disabled = true; st.classList.remove('warn'); st.textContent = (f.name || '이미지') + ' 읽는 중...';
+    var p = /pdf/i.test(f.type) || /\.pdf$/i.test(f.name || '') ? pdfText(f, st) : prep(f).then(function (c) { return ocr(c, st); });
+    p.then(function (t) {
+      btn.disabled = false;
+      var lines = String(t || '').split(/\n+/).map(function (s) { return s.replace(/[|]/g, ' ').replace(/\s{2,}/g, ' ').trim(); }).filter(function (s) { return s.length > 1; });
+      if (!lines.length) { st.classList.add('warn'); st.textContent = '글자를 찾지 못했어요. 다른 이미지로 해보거나 직접 입력해 주세요.'; return; }
+      var ta = document.getElementById('inv-quick'); ta.value = lines.join('\n'); ta.dispatchEvent(new Event('input', { bubbles: true }));
+      try { invQuickApply(); } catch (e) {}
+      st.textContent = '이미지에서 ' + lines.length + '줄을 읽어 칸을 채웠어요. 빠진 칸은 확인해서 채워주세요.';
+    }).catch(function () { btn.disabled = false; st.classList.add('warn'); st.textContent = '이미지를 읽지 못했어요. 다른 이미지로 해보거나 직접 입력해 주세요.'; });
+  }
+  function mountInv() {
+    var box = document.getElementById('inv-quick-box'); if (!box || document.getElementById('ix-inv')) return;
+    var w = document.createElement('div'); w.id = 'ix-inv';
+    w.innerHTML = '<div class="ix-row"><button type="button" class="ix-btn" id="ix-inv-mic">' + MIC + '<span>음성으로 입력</span></button>' +
+      '<button type="button" class="ix-btn" id="ix-inv-img">' + IMG + '<span>이미지로 채우기</span></button>' +
+      '<input type="file" id="ix-inv-file" accept="image/*,application/pdf" hidden></div><div class="ix-st" id="ix-inv-st"></div>';
+    var go = box.querySelector('.iq-go'); box.insertBefore(w, go || null);
+    var st = document.getElementById('ix-inv-st'), ta = document.getElementById('inv-quick');
+    document.getElementById('ix-inv-mic').onclick = function () { voice(this, ta, st, function () { try { invQuickApply(); } catch (e) {} }); };
+    var ib = document.getElementById('ix-inv-img'), fi = document.getElementById('ix-inv-file');
+    ib.onclick = function () { fi.click(); };
+    fi.onchange = function () { var f = this.files && this.files[0]; this.value = ''; if (f) invImage(f, ib, st); };
+  }
+  function mountRec() {
+    var q = document.getElementById('pf-quick'); if (!q || document.getElementById('ix-rec-mic')) return;
+    var row = document.querySelector('#pfi-btn') ? document.querySelector('#pfi-btn').parentNode : null;
+    var b = document.createElement('button'); b.type = 'button'; b.className = 'pfi-btn'; b.id = 'ix-rec-mic'; b.innerHTML = MIC + '<span>음성으로 입력</span>';
+    var st = document.createElement('div'); st.className = 'ix-st'; st.id = 'ix-rec-st';
+    if (row) { row.insertBefore(b, row.firstChild.nextSibling); row.parentNode.insertBefore(st, row.nextSibling); }
+    else { var w = document.createElement('div'); w.className = 'ix-row'; w.appendChild(b); q.parentNode.insertBefore(w, q.nextSibling); w.parentNode.insertBefore(st, w.nextSibling); }
+    b.onclick = function () { voice(b, q, st); };
+  }
+  mountInv(); mountRec(); setTimeout(function () { mountInv(); mountRec(); }, 800); setTimeout(mountRec, 3000);
+})();
+</script>
+
 </body>
 
 </html>
