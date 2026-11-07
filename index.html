@@ -7,7 +7,7 @@
 <meta name="theme-color" content="#f2f4f6">
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=3">
 <link rel="apple-touch-icon" href="apple-touch-icon.png?v=3">
-<meta name="pm-build" content="202611080245">
+<meta name="pm-build" content="202611080300">
 <link rel="manifest" href="manifest.webmanifest?v=3">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -8043,6 +8043,8 @@ td.rate-val{white-space:nowrap}
 .wo-item.xo>.wo-g{position:sticky;top:0;z-index:6;background:inherit;padding-top:8px;margin-top:-8px}
 .wo-item.xo>.wo-l3{position:sticky;top:var(--wxh,51px);z-index:6;background:inherit;padding-bottom:10px;margin-bottom:-10px;border-bottom:1px solid var(--line)}
 .wx-sum>.wx-info{margin-top:4px}
+.wo-item.xo>.wo-x{border-top:0!important}
+#wo-list .wx-ic .wx-ib.off[title="작업 폴더"]{opacity:1!important;pointer-events:auto!important}
 #wo-orph .ttl{display:flex;align-items:center;gap:8px;cursor:pointer;margin:0;user-select:none}
 #wo-orph .ttl span{margin-left:auto;font-size:12px;font-weight:500;color:var(--txt3)}
 #wo-orph .ttl i{width:8px;height:8px;border-right:2px solid #b0b8c1;border-bottom:2px solid #b0b8c1;transform:rotate(45deg);margin:0 4px 3px 4px;transition:transform .15s}
@@ -8260,6 +8262,19 @@ td.rate-val{white-space:nowrap}
     var tot = '<div class="wx-tot"><div><em>공급가액</em><span>' + won(tv(x, /Subtotal|공급가|소계/i)) + '</span></div><div><em>부가세</em><span>' + won(tv(x, /VAT|부가/i)) + '</span></div><div class="g"><em>합계 (VAT 포함)</em><span>' + won(tv(x, /Total|합계/i)) + '</span></div></div>';
     return '<div class="wx-g on"><div class="gb">' + (meta ? '<div class="wx-meta">' + meta + '</div>' : '') + (rows || '<div class="wx-ld">항목이 없어요</div>') + tot + '</div></div>';
   }
+  // 작업 폴더: 링크 칸에 주소가 없으면 폴더 이름으로 드라이브 검색 열기
+  setTimeout(function () {
+    var _xf = window.woXF;
+    window.woXF = function (id) {
+      var d = WO.xc && WO.xc[id];
+      if (d && d.tabs && !d.link) {
+        var nm = String((d.info || {})['링크'] || '').trim();
+        if (/^https?:\/\//.test(nm)) { window.open(nm, '_blank'); return; }
+        if (nm) { window.open('https://drive.google.com/drive/search?q=' + encodeURIComponent(nm), '_blank'); return; }
+      }
+      return _xf ? _xf(id) : undefined;
+    };
+  }, 0);
   function section(e, w, ok, L) {
     var id = w.id, x0 = e.querySelector('.wo-x');
     var pays = L.filter(function (d) { return d.k === 'pay'; }), invs = L.filter(function (d) { return d.k === 'invoice'; });
