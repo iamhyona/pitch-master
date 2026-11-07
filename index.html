@@ -7,7 +7,7 @@
 <meta name="theme-color" content="#f2f4f6">
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=3">
 <link rel="apple-touch-icon" href="apple-touch-icon.png?v=3">
-<meta name="pm-build" content="202611080200">
+<meta name="pm-build" content="202611080215">
 <link rel="manifest" href="manifest.webmanifest?v=3">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -8303,7 +8303,7 @@ td.rate-val{white-space:nowrap}
       '<div class="wx-pw wx-ivd"><div class="wx-tr h"><span>문서 · 구분</span><span class="r">수량</span><span class="r up">단가</span><span class="r">금액</span><span></span></div>' + invs.map(function (d) { return ivBlock(id, d, w); }).join('') + '</div>' +
       (IE[id] ? '<div class="wx-ieb" onclick="event.stopPropagation()"><button type="button" class="cn" onclick="wxIe(\'' + esc(id) + '\')">취소</button><button type="button" class="sv" onclick="wxIs(\'' + esc(id) + '\',this)">저장</button></div>' : '');
     var ivRight = (ok ? invs.length + '건' : '') + (ok && invs.length ? '</span><button type="button" class="ed' + (IE[id] ? ' on' : '') + '" title="청구내역 수정" onclick="event.stopPropagation();wxIe(\'' + esc(id) + '\')">' + SVE + '</button><span style="display:none">' : '');
-    var h = '<div class="wx-sum" data-sig="' + esc(sig) + '">' + projInfo(w, invs) +
+    var h = '<div class="wx-sum" data-sig="' + esc(sig) + '">' +
       tg(id, 'pw', '작업 · 정산', pwRight, pw) +
       tg(id, 'iv', '청구내역', ivRight, ivb) + kpi + '</div>';
     if (old) old.outerHTML = h; else x0.insertAdjacentHTML('afterbegin', h);
