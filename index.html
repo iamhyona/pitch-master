@@ -7,7 +7,7 @@
 <meta name="theme-color" content="#f2f4f6">
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=3">
 <link rel="apple-touch-icon" href="apple-touch-icon.png?v=3">
-<meta name="pm-build" content="202611071200">
+<meta name="pm-build" content="202611071930">
 <link rel="manifest" href="manifest.webmanifest?v=3">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -7727,7 +7727,7 @@ td.rate-val{white-space:nowrap}
 /* 2026-11-07 (현아): 메뉴 개편 — 더보기 없앰 · 작업내역/등록정보 안에 하위 메뉴 · 팸 숨김 */
 .tab-more{display:none!important}
 .tab[data-tab="fam"]{display:none!important}
-.tab[data-tab="py"],.tab[data-tab="iv"],.tab[data-tab="agencies"],.tab[data-tab="litt"],.tab[data-tab="rates-bill"],.tab[data-tab="rates-pay"]{display:none!important}
+.tab[data-tab="py"],.tab[data-tab="iv"],.tab[data-tab="agencies"],.tab[data-tab="litt"],.tab[data-tab="rates-pay"]{display:none!important}
 #pm-sub{margin:0 0 12px}
 #pm-sub:empty{display:none}
 #inv-doc{margin-bottom:10px}
@@ -7749,8 +7749,8 @@ td.rate-val{white-space:nowrap}
 <script>
 (function () {
   /* ── 1. 메뉴: 작업내역 = 작업내역서·지급내역·청구내역 / 등록정보 = 거래처·외주처·단가 ── */
-  var GRP = { dash: 'dash', py: 'dash', iv: 'dash', agencies: 'reg', litt: 'reg', 'rates-bill': 'reg', 'rates-pay': 'reg' };
-  var SUB = { dash: [['dash', '작업내역서'], ['py', '지급내역'], ['iv', '청구내역']], reg: [['agencies', '거래처'], ['litt', '외주처'], ['rates-bill', '단가']] };
+  var GRP = { py: 'dash', iv: 'dash', agencies: 'reg', litt: 'reg', 'rates-pay': 'rates-bill' };   // 2026-11-07 수정: 작업내역은 하위 탭 없이 한 화면 · 단가는 따로 메뉴
+  var SUB = { reg: [['agencies', '거래처'], ['litt', '외주처']] };
   var LAST = { dash: 'dash', reg: 'agencies' };
   try { var s = JSON.parse(localStorage.getItem('pm_sub_last') || '{}'); if (GRP[s.reg] === 'reg') LAST.reg = s.reg; } catch (e) {}
   function bar() {
@@ -7760,7 +7760,7 @@ td.rate-val{white-space:nowrap}
   }
   function renderSub(t) {
     var b = bar(); if (!b) return;
-    var g = GRP[t]; if (!g) { b.innerHTML = ''; b.className = ''; return; }
+    var g = GRP[t]; if (!g || !SUB[g]) { b.innerHTML = ''; b.className = ''; return; }
     var cur = t === 'rates-pay' ? 'rates-bill' : t;
     b.className = 'rt-seg';
     b.innerHTML = SUB[g].map(function (x) { return '<button type="button" class="' + (x[0] === cur ? 'on' : '') + '" onclick="switchTab(\'' + x[0] + '\')">' + x[1] + '</button>'; }).join('');
@@ -7786,6 +7786,7 @@ td.rate-val{white-space:nowrap}
     var pf = tabs.querySelector('[data-tab="pf"]'), sch = tabs.querySelector('[data-tab="sch"]'), reg = tabs.querySelector('[data-tab="reg"]');
     if (pf && sch && sch.nextSibling !== pf) tabs.insertBefore(pf, sch.nextSibling);
     if (reg && reg !== tabs.lastElementChild) { var more = tabs.querySelector('.tab-more'); tabs.insertBefore(reg, more || null); }
+    var rb = tabs.querySelector('[data-tab="rates-bill"]'); if (rb && reg && rb.nextSibling !== reg) tabs.insertBefore(rb, reg);   // 단가는 등록정보 바로 앞
   }
   order(); setTimeout(order, 300); setTimeout(order, 1500);
   var _ar = window.applyRoleUI; if (typeof _ar === 'function') window.applyRoleUI = applyRoleUI = function () { var x = _ar.apply(this, arguments); order(); return x; };
@@ -7956,6 +7957,139 @@ td.rate-val{white-space:nowrap}
     b.onclick = function () { voice(b, q, st); };
   }
   mountInv(); mountRec(); setTimeout(function () { mountInv(); mountRec(); }, 800); setTimeout(mountRec, 3000);
+})();
+</script>
+
+<style>
+/* 2026-11-07 (현아): 인보이스 빠른·상세 작성 한 화면 / 작업내역 = 프로젝트별로 작업자·정산·청구·폴더 한 번에 */
+#inv-seg{display:none!important}
+#inv-quick-box{display:block!important}
+.wx-sum{padding-top:14px}
+.wx-sum .lk{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
+.wx-sum .lk a,.wx-sum .lk button{display:inline-flex;align-items:center;gap:5px;height:30px;padding:0 12px;border-radius:999px;border:0;background:var(--chip);color:var(--txt2);font-family:inherit;font-size:12px;font-weight:600;text-decoration:none;cursor:pointer;white-space:nowrap}
+.wx-sum .lk svg{width:14px;height:14px}
+.wx-sum .lk .off{opacity:.4;pointer-events:none}
+.wx-kpi{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px}
+.wx-kpi>div{background:var(--chip);border-radius:14px;padding:10px 12px;min-width:0}
+.wx-kpi small{display:block;font-size:11px;color:var(--txt3);margin-bottom:3px}
+.wx-kpi b{font-size:15px;font-weight:800;color:var(--txt);white-space:nowrap}
+.wx-sec{font-size:12px;font-weight:700;color:var(--txt);padding:0 2px 6px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between}
+.wx-sec span{color:var(--txt3);font-weight:500}
+.wx-tb{margin-bottom:16px}
+.wx-tr{display:grid;grid-template-columns:minmax(64px,1.2fr) .7fr 1.2fr .9fr 30px;align-items:center;gap:6px;padding:9px 2px;border-bottom:1px solid #f2f4f6;font-size:13px;color:var(--txt)}
+.wx-tr.h{font-size:11px;color:var(--txt3);padding:6px 2px}
+.wx-tr .r{text-align:right;white-space:nowrap}
+.wx-tr .nm{font-weight:700;cursor:pointer;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.wx-tr .nm i{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:5px;vertical-align:1px}
+.wx-tr .mt{color:var(--txt3)}
+.wx-tr .op{width:28px;height:28px;border-radius:50%;border:0;background:var(--chip);color:var(--txt2);cursor:pointer;font-size:14px;line-height:28px;text-align:center;padding:0}
+.wx-tr .op.off{opacity:.3;pointer-events:none}
+.wx-tr.iv{grid-template-columns:minmax(64px,1fr) 1fr .9fr 1.1fr 30px}
+.wx-tag2{display:inline-block;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:700}
+.wx-tag2.iv{background:rgba(49,130,246,.12);color:#3182f6}
+.wx-tag2.q{background:rgba(130,80,223,.12);color:#8250df}
+.wx-sum .wx-ld{padding:8px 2px}
+#wo-orph{background:#fff;border-radius:20px;padding:16px 22px;margin-bottom:10px}
+#wo-orph:empty{display:none}
+#wo-orph .ttl{font-size:14px;font-weight:700;margin-bottom:4px;color:var(--txt)}
+#wo-orph .sub{font-size:12px;color:var(--txt3);margin-bottom:6px}
+.wx-doc{display:flex;align-items:center;gap:8px;padding:9px 2px;border-bottom:1px solid #f2f4f6;font-size:13px;cursor:pointer}
+.wx-doc:last-child{border-bottom:0}
+.wx-doc .t{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--txt)}
+.wx-doc .t small{color:var(--txt3);font-size:12px;margin-left:4px}
+.wx-doc .w{flex:none;font-size:12px;color:var(--txt3)}
+.wx-doc .go{flex:none;color:#c9ced4;font-size:16px}
+@media (max-width:520px){.wx-tr{grid-template-columns:minmax(56px,1fr) .6fr 1.2fr 30px}.wx-tr .dt{display:none}.wx-tr.iv{grid-template-columns:minmax(56px,1fr) 1.2fr 30px}.wx-tr.iv .s,.wx-tr.iv .dt{display:none}.wx-kpi b{font-size:13px}}
+</style>
+<script>
+(function () {
+  try { invMode('q'); } catch (e) {}
+  var SVF = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>';
+  var SVS = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M3 9h18M3 15h18M9 3v18"/></svg>';
+  var N = function (s) { return String(s || '').replace(/\s|·/g, '').toLowerCase(); }, P = function (t) { return N(String(t || '').split('·')[0]); };
+  var num = function (v) { var n = Number(String(v == null ? '' : v).replace(/[^\d.-]/g, '')); return isNaN(n) ? 0 : n; };
+  var won = function (n) { return Math.round(n).toLocaleString('ko-KR') + '원'; };
+  function hit(w, x) { return x.date6 === w.date6 && N(x.clientKey) === N(w.clientKey) && (P(x.title) === P(w.title) || N(x.artist) === N(w.artist)); }
+  function ready() { return typeof DC !== 'undefined' && DC.invoice && DC.pay && DC.invoice.loaded && DC.pay.loaded; }
+  function docs() { var a = []; ['invoice', 'pay'].forEach(function (k) { ((DC[k] && DC[k].items) || []).forEach(function (x) { a.push({ k: k, x: x }); }); }); return a; }
+  var D = window.WXD = window.WXD || {};
+  function det(id) {
+    if (D[id]) return D[id];
+    D[id] = 'ld';
+    woGet('&dv=' + encodeURIComponent(id), function (d) { D[id] = d && d.ok ? d : 'err'; sch(); });
+    return 'ld';
+  }
+  function iv(d, k) { var x = ((d && d.info) || []).filter(function (i) { return i.k === k; })[0]; return x ? x.v : ''; }
+  function tv(d, re) { var t = ((d && d.total) || []).filter(function (i) { return re.test(i.k); }); return t.length ? num(t[t.length - 1].v) : 0; }
+  function isQ(x) { return /견적/.test(x.title || ''); }
+  function ensure() { if (typeof PM_K === 'undefined' || !PM_K) return; ['invoice', 'pay'].forEach(function (k) { var S = DC[k]; if (S && !S.loaded && !S.loading) dcLoad(k); }); }
+  window.wxW = function (id, w) { var b = [].filter.call(document.querySelectorAll('#wo-list .wo-item.xo .wx-wc button'), function (x) { return x.getAttribute('data-id') === id && (x.getAttribute('data-w') || '') === w; })[0]; if (b) b.click(); };
+  function section(e, w, ok) {
+    var id = w.id, xc = (WO.xc || {})[id], L = ok ? docs().filter(function (d) { return hit(w, d.x); }) : [];
+    var pays = L.filter(function (d) { return d.k === 'pay'; }), invs = L.filter(function (d) { return d.k === 'invoice'; });
+    L.forEach(function (d) { det(d.x.id); });
+    // 작업자별 컷수: 위 작업자 단추(전체/이름 N컷)에서 읽음
+    var cuts = {}, total = 0, col = {};
+    e.querySelectorAll('.wx-wc button').forEach(function (b) { var nm = b.getAttribute('data-w') || '', bb = b.querySelector('b'), n = bb ? num(bb.textContent) : 0; if (nm) { cuts[nm] = n; var ic = b.querySelector('i'); if (ic) col[nm] = ic.style.background; } else total = n; });
+    var names = Object.keys(cuts); pays.forEach(function (d) { var n = d.x.worker; if (n && names.indexOf(n) < 0) names.push(n); });
+    var sig = [ok ? 1 : 0, L.map(function (d) { var x = D[d.x.id]; return d.x.id + (x && x !== 'ld' ? 1 : 0); }).join(','), names.join(','), total].join('|');
+    var old = e.querySelector('.wx-sum'); if (old && old.getAttribute('data-sig') === sig) return;
+    // 바로가기
+    var lk = '<div class="lk">' + (xc && xc.link ? '<a href="' + esc(xc.link) + '" target="_blank">' + SVF + '작업 폴더</a>' : '<button type="button" class="off">' + SVF + '작업 폴더</button>') +
+      '<a href="' + esc(xc && xc.url ? xc.url : 'https://docs.google.com/spreadsheets/d/' + id + '/edit') + '" target="_blank">' + SVS + '작업내역서</a>' +
+      invs.map(function (d) { var x = D[d.x.id]; return x && x.url ? '<a href="' + esc(x.url) + '" target="_blank">' + SVS + (isQ(d.x) ? '견적서' : '청구서') + '</a>' : ''; }).join('') +
+      pays.map(function (d) { var x = D[d.x.id]; return x && x.url ? '<a href="' + esc(x.url) + '" target="_blank">' + SVS + '지급 · ' + esc(d.x.worker || '') + '</a>' : ''; }).join('') + '</div>';
+    // 요약
+    var bill = 0, billOk = true; invs.filter(function (d) { return !isQ(d.x); }).forEach(function (d) { var x = D[d.x.id]; if (x && x !== 'ld' && x !== 'err') bill += tv(x, /Total|합계/i); else billOk = false; });
+    var paid = 0, paidOk = true; pays.forEach(function (d) { var x = D[d.x.id]; if (x && x !== 'ld' && x !== 'err') paid += tv(x, /실지급|지급액/); else paidOk = false; });
+    var kpi = '<div class="wx-kpi"><div><small>총 컷수</small><b>' + (total || 0) + '컷</b></div><div><small>청구 (VAT 포함)</small><b>' + (!ok ? '…' : invs.length ? (billOk ? won(bill) : '…') : '-') + '</b></div><div><small>지급 (실지급)</small><b>' + (!ok ? '…' : pays.length ? (paidOk ? won(paid) : '…') : '-') + '</b></div></div>';
+    // 작업자별
+    var tb = '<div class="wx-tb"><div class="wx-sec">작업자별 작업 · 정산<span>이름을 누르면 아래 세부내역이 그 사람만 보여요</span></div><div class="wx-tr h"><span>작업자</span><span class="r">컷수</span><span class="r">지급액</span><span class="r dt">지급일</span><span></span></div>' +
+      names.map(function (n) {
+        var pd = pays.filter(function (d) { return d.x.worker === n; }), amt = 0, dt = '', loading = false, pid = pd.length ? pd[0].x.id : '';
+        pd.forEach(function (d) { var x = D[d.x.id]; if (x && x !== 'ld' && x !== 'err') { amt += tv(x, /실지급|지급액/); dt = dt || iv(x, '지급일자'); } else loading = true; });
+        return '<div class="wx-tr"><span class="nm" onclick="event.stopPropagation();wxW(\'' + esc(id) + '\',\'' + esc(n) + '\')">' + (col[n] ? '<i style="background:' + col[n] + '"></i>' : '') + esc(n) + '</span><span class="r">' + (cuts[n] != null ? cuts[n] + '컷' : '-') + '</span>' +
+          '<span class="r' + (pd.length ? '' : ' mt') + '">' + (pd.length ? (loading ? '…' : won(amt)) : '지급내역서 없음') + '</span><span class="r dt mt">' + esc(String(dt || (pd.length && !loading ? '미지급' : '')).replace(/\(.\)$/, '')) + '</span>' +
+          '<button type="button" class="op' + (pid ? '' : ' off') + '" title="지급내역서 보기" onclick="event.stopPropagation();dcOpen(\'' + esc(pid) + '\')">›</button></div>';
+      }).join('') + '</div>';
+    // 청구내역
+    var ib = '<div class="wx-tb"><div class="wx-sec">청구내역<span>' + (ok ? invs.length + '건' : '') + '</span></div>' +
+      (!ok ? '<div class="wx-ld">불러오는 중…</div>' : !invs.length ? '<div class="wx-ld">아직 청구서가 없어요 · 인보이스 메뉴에서 만들 수 있어요</div>' :
+        '<div class="wx-tr iv h"><span>문서</span><span class="r">합계</span><span class="r s">부가세</span><span class="r dt">작성일</span><span></span></div>' +
+        invs.map(function (d) {
+          var x = D[d.x.id], ld = !x || x === 'ld' || x === 'err';
+          return '<div class="wx-tr iv"><span><span class="wx-tag2 ' + (isQ(d.x) ? 'q' : 'iv') + '">' + (isQ(d.x) ? '견적서' : '청구서') + '</span></span><span class="r">' + (ld ? '…' : won(tv(x, /Total|합계/i))) + '</span><span class="r s mt">' + (ld ? '' : won(tv(x, /VAT|부가/i))) + '</span>' +
+            '<span class="r dt mt">' + (ld ? '' : esc(String(iv(x, '작성일')).replace(/\(.\)$/, ''))) + '</span><button type="button" class="op" title="청구서 보기" onclick="event.stopPropagation();dcOpen(\'' + esc(d.x.id) + '\')">›</button></div>';
+        }).join('')) + '</div>';
+    var h = '<div class="wx-sum" data-sig="' + esc(sig) + '">' + lk + kpi + tb + ib + '<div class="wx-sec">세부내역</div></div>';
+    if (old) old.outerHTML = h; else e.querySelector('.wo-x').insertAdjacentHTML('afterbegin', h);
+  }
+  function fill() {
+    ensure();
+    var W = (typeof WO !== 'undefined' && WO.items) || [], ok = ready();
+    document.querySelectorAll('#wo-list .wo-item.xo').forEach(function (e) {
+      var x = e.querySelector('.wo-x'); if (!x) return;
+      if (!x.querySelector('.wx-r, .wx-wc')) return;   // 작업내역서 아직 불러오는 중
+      var id = e.getAttribute('data-id'), w = W.filter(function (i) { return i.id === id; })[0]; if (!w) return;
+      section(e, w, ok);
+    });
+    var l = document.getElementById('wo-list'); if (!l) return;
+    var o = document.getElementById('wo-orph'); if (!o) { o = document.createElement('div'); o.id = 'wo-orph'; l.parentNode.insertBefore(o, l.nextSibling); }
+    var html = '';
+    if (ok && W.length) {
+      var minD = W.map(function (w) { return w.date6; }).filter(Boolean).sort()[0] || '';
+      var R = docs().filter(function (d) { return d.x.date6 && d.x.date6 >= minD && !W.some(function (w) { return hit(w, d.x); }); });   // 작업내역 목록과 같은 기간만
+      if (R.length) html = '<div class="ttl">작업내역서 없는 청구서 · 지급내역</div><div class="sub">디자인 등 리터칭 외 작업이나 작업내역서와 연결되지 않은 문서예요 (작업내역과 같은 기간) · ' + R.length + '건</div>' +
+        R.map(function (d) { var x = d.x, q = d.k === 'invoice' && isQ(x); return '<div class="wx-doc" onclick="dcOpen(\'' + esc(x.id) + '\')"><span class="wx-tag2 ' + (d.k === 'pay' ? 'iv' : q ? 'q' : 'iv') + '" style="' + (d.k === 'pay' ? 'background:rgba(3,166,104,.12);color:#05a46b' : '') + '">' + (d.k === 'pay' ? '지급내역' : q ? '견적서' : '청구서') + '</span><span class="t">' + esc([x.clientKey, x.artist, x.title].filter(Boolean).join(' · ')) + (x.date6 ? '<small>' + esc(x.date6) + '</small>' : '') + '</span><span class="w">' + esc(x.worker || '') + '</span><span class="go">›</span></div>'; }).join('');
+    }
+    if (o._h !== html) { o._h = html; o.innerHTML = html; }
+  }
+  var tm; function sch() { clearTimeout(tm); tm = setTimeout(fill, 80); }
+  function obs() { var l = document.getElementById('wo-list'); if (!l || l._wxo) return; l._wxo = 1; new MutationObserver(function (m) { if (m.some(function (r) { return !(r.target.closest && r.target.closest('.wx-sum')) && ![].some.call(r.addedNodes, function (n) { return n.classList && n.classList.contains('wx-sum'); }); })) sch(); }).observe(l, { childList: true, subtree: true }); }
+  obs(); setTimeout(obs, 1000);
+  if (typeof dcRender === 'function') { var _dr = dcRender; window.dcRender = dcRender = function () { var r = _dr.apply(this, arguments); sch(); return r; }; }
+  var _sw = switchTab; window.switchTab = switchTab = function (t) { var r = _sw.apply(this, arguments); if (t === 'dash') { obs(); sch(); } return r; };
+  setTimeout(sch, 1500); setTimeout(sch, 5000);
 })();
 </script>
 
