@@ -7,7 +7,7 @@
 <meta name="theme-color" content="#f2f4f6">
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=3">
 <link rel="apple-touch-icon" href="apple-touch-icon.png?v=3">
-<meta name="pm-build" content="202611080130">
+<meta name="pm-build" content="202611080145">
 <link rel="manifest" href="manifest.webmanifest?v=3">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -8043,6 +8043,8 @@ td.rate-val{white-space:nowrap}
 .wo-item.xo>.wo-g{position:sticky;top:0;z-index:6;background:inherit;padding-top:8px;margin-top:-8px}
 .wo-item.xo>.wo-l3{position:sticky;top:var(--wxh,51px);z-index:6;background:inherit;padding-bottom:10px;margin-bottom:-10px;border-bottom:1px solid var(--line)}
 .wx-sum>.wx-info{margin-top:4px}
+.wo-item.xo>.wo-g,.wo-item.xo>.wo-l3{margin-left:calc(-1 * var(--wpl,18px));margin-right:calc(-1 * var(--wpr,40px));padding-left:var(--wpl,18px);padding-right:var(--wpr,40px)}
+.wo-item.xo>.wo-chev{z-index:7}
 .wx-sum>.wx-tg:first-child{border-top:0;margin-top:0}
 @media (max-width:520px){.wx-pw .wx-tr{grid-template-columns:minmax(0,1.7fr) .5fr 1fr}.wx-pw .up{display:none}.wx-gf{padding-right:0}}
 .wx-tr.fm .nm{padding-left:16px;font-weight:500;color:var(--txt2,#555)}
@@ -8313,6 +8315,7 @@ td.rate-val{white-space:nowrap}
       if (ok) cardIcons(e, w, L);
       if (!e.classList.contains('xo')) return;
       var hg = e.querySelector('.wo-g'); if (hg) e.style.setProperty('--wxh', hg.offsetHeight + 'px');
+      var ecs = getComputedStyle(e); e.style.setProperty('--wpl', ecs.paddingLeft); e.style.setProperty('--wpr', ecs.paddingRight);
       var x = e.querySelector('.wo-x'); if (!x || !x.querySelector('.wx-r, .wx-wc')) return;
       section(e, w, ok, L);
     });
