@@ -7,7 +7,7 @@
 <meta name="theme-color" content="#f2f4f6">
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=3">
 <link rel="apple-touch-icon" href="apple-touch-icon.png?v=3">
-<meta name="pm-build" content="202611072300">
+<meta name="pm-build" content="202611072330">
 <link rel="manifest" href="manifest.webmanifest?v=3">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -7995,6 +7995,7 @@ td.rate-val{white-space:nowrap}
 .wx-tg>.sm .ed{width:28px;height:28px;border-radius:50%;border:0;background:var(--chip);color:var(--txt2);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;padding:0;flex:none}
 .wx-tg>.sm .ed svg{width:13px;height:13px}
 .wx-kpi.bt{margin-top:14px;margin-bottom:0}
+.wx-sum>.wx-tg:first-child{border-top:0;margin-top:0}
 @media (max-width:520px){.wx-pw .wx-tr{grid-template-columns:minmax(0,1.6fr) .6fr 1fr 62px}.wx-pw .up{display:none}.wx-gf{padding-right:0}}
 .wx-tr.fm .nm{padding-left:16px;font-weight:500;color:var(--txt2,#555)}
 .wx-tr.fm .nm:before{content:"└";color:#bbb;margin-right:4px;font-size:11px}
@@ -8114,7 +8115,7 @@ td.rate-val{white-space:nowrap}
     var pw = '<div class="wx-pw"><div class="wx-tr h"><span>작업자 · 작업폴더</span><span class="r">컷수</span><span class="r up">컷당단가</span><span class="r">금액</span><span></span></div>' +
       G.map(function (g) {
         var wr = R.filter(function (r) { return g.mem.indexOf(r.w) >= 0; }), pr = [], loading = false, sub = 0, tax = 0, net = 0, dt = '', tk = '', hasSub = false;
-        g.pd.forEach(function (d) { var x = D[d.x.id]; if (okd(x)) { (x.rows || []).forEach(function (r) { var v = r.v || []; if (v[1]) pr.push({ f: v[1], c: num(v[2]), u: num(v[3]), a: num(v[4]) }); }); if ((x.total || []).some(function (t) { return /소계/.test(t.k); })) { sub += tv(x, /소계/); hasSub = true; } tax += tv(x, /세금/); net += tv(x, /실지급|지급액/); dt = dt || iv(x, '지급일자'); tk = tk || iv(x, '세금구분'); } else loading = true; });
+        g.pd.forEach(function (d) { var x = D[d.x.id]; if (okd(x)) { (x.rows || []).forEach(function (r) { var v = r.v || []; if (v[1]) pr.push({ f: v[1], c: num(v[2]), u: num(v[3]), a: num(v[4]) }); }); if ((x.total || []).some(function (t) { return /소계/.test(t.k); })) { sub += tv(x, /소계/); hasSub = true; } tax += tv(x, /세금|부가/); net += tv(x, /실지급|지급액/); dt = dt || iv(x, '지급일자'); tk = tk || iv(x, '세금구분'); } else loading = true; });
         if (!hasSub) sub = pr.reduce(function (s, p) { return s + p.a; }, 0);
         var has = g.pd.length > 0, multi = g.mem.length > 1;
         var rows = wr.map(function (r) {
@@ -8127,7 +8128,7 @@ td.rate-val{white-space:nowrap}
         var cs = wr.reduce(function (s, r) { return s + r.c; }, 0);
         var st = !has ? '<span class="st wn">지급내역서 없음</span>' : loading ? '' : '<span class="st">' + (dt ? '지급 ' + esc(String(dt).replace(/\(.\)$/, '')) : '미지급') + '</span>';
         var pid = has ? g.pd[0].x.id : '';
-        var foot = has && !loading ? '<div class="wx-gf">' + (/^-/.test(tk) ? '원천세' : '세금') + (tk ? ' (' + esc(tk) + ')' : '') + ' ' + won(tax) + ' · 실지급<b>' + won(net) + '</b></div>' : '';
+        var foot = has && !loading ? '<div class="wx-gf">' + (/^-/.test(tk) ? '원천세' : '부가세') + (tk ? ' (' + esc(tk) + ')' : '') + ' ' + (tax > 0 ? '+' : '') + won(tax) + ' · 실지급<b>' + won(net) + '</b></div>' : '';
         var on = OPEN[id + ':g:' + g.n] !== false;
         return '<div class="wx-g' + (on ? ' on' : '') + '"><div class="wx-tr gh" onclick="event.stopPropagation();wxG(this,\'' + esc(id) + '\',\'' + esc(g.n) + '\')"><span class="nm">' + (col[g.n] ? '<i style="background:' + col[g.n] + '"></i>' : '') + esc(g.n) + st + '</span><span class="r">' + cs + '컷</span><span class="r up"></span><span class="r b">' + (has ? (loading ? '…' : won(sub)) : '') + '</span>' +
           '<span class="ops"><a class="' + (pid ? '' : 'off') + '" href="' + (pid ? SH(pid) : '#') + '" target="_blank" title="' + esc(g.n) + ' 지급내역서 시트" onclick="event.stopPropagation()">' + SVP + '</a><button type="button" class="' + (pid ? '' : 'off') + '" title="' + esc(g.n) + ' 지급내역서 수정" onclick="event.stopPropagation();dcOpen(\'' + esc(pid) + '\')">' + SVE + '</button></span></div>' +
