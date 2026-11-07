@@ -7,7 +7,7 @@
 <meta name="theme-color" content="#f2f4f6">
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=3">
 <link rel="apple-touch-icon" href="apple-touch-icon.png?v=3">
-<meta name="pm-build" content="202611080100">
+<meta name="pm-build" content="202611080130">
 <link rel="manifest" href="manifest.webmanifest?v=3">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -8027,6 +8027,22 @@ td.rate-val{white-space:nowrap}
 .wx-ieb button{height:38px;padding:0 18px;border-radius:12px;border:0;font-size:13.5px;font-weight:700;cursor:pointer}
 .wx-ieb .cn{background:var(--chip);color:var(--txt2)}
 .wx-ieb .sv{background:#191f28;color:#fff}
+.wx-info{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 18px;margin:0 0 10px;padding:8px 12px;background:var(--chip);border-radius:12px;font-size:12.5px}
+.wx-info>div{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:4px 0;min-width:0}
+.wx-info em{font-style:normal;color:var(--txt3);flex:none}
+.wx-info span{color:var(--txt);text-align:right;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.wx-info a{color:#3182f6;text-decoration:none;font-weight:600}
+.wx-tot{border-top:1px solid var(--line);margin-top:6px;padding-top:8px}
+.wx-tot>div{display:flex;justify-content:flex-end;align-items:baseline;gap:18px;font-size:12.5px;color:var(--txt2);padding:2px}
+.wx-tot em{font-style:normal;color:var(--txt3)}
+.wx-tot span{min-width:120px;text-align:right}
+.wx-tot>.g{font-size:14.5px;font-weight:800;color:var(--txt);padding-top:6px}
+.wx-tot>.g em{color:var(--txt)}
+@media (max-width:520px){.wx-info{grid-template-columns:1fr}}
+.wo-list{overflow:clip!important}
+.wo-item.xo>.wo-g{position:sticky;top:0;z-index:6;background:inherit;padding-top:8px;margin-top:-8px}
+.wo-item.xo>.wo-l3{position:sticky;top:var(--wxh,51px);z-index:6;background:inherit;padding-bottom:10px;margin-bottom:-10px;border-bottom:1px solid var(--line)}
+.wx-sum>.wx-info{margin-top:4px}
 .wx-sum>.wx-tg:first-child{border-top:0;margin-top:0}
 @media (max-width:520px){.wx-pw .wx-tr{grid-template-columns:minmax(0,1.7fr) .5fr 1fr}.wx-pw .up{display:none}.wx-gf{padding-right:0}}
 .wx-tr.fm .nm{padding-left:16px;font-weight:500;color:var(--txt2,#555)}
@@ -8206,23 +8222,32 @@ td.rate-val{white-space:nowrap}
     })();
   };
   function ivIn(id, doc, a1, old, l) { var E = IE[id], c = E && E.c[doc + '|' + a1], val = c ? c.val : old, ch = String(val).trim() !== String(old).trim(); return '<input class="wx-in' + (l ? ' l' : '') + (ch ? ' ch' : '') + '" value="' + esc(val) + '" onclick="event.stopPropagation()" oninput="wxIv(\'' + esc(id) + '\',\'' + esc(doc) + '\',\'' + esc(a1) + '\',\'' + esc(String(old).replace(/'/g, '')) + '\',this)">'; }
-  function ivBlock(id, d) {
+  function projInfo(w, invs) {
+    var b = invs.filter(function (d) { return !isQ(d.x); })[0] || invs[0], x = b && D[b.x.id], I = {};
+    if (okd(x)) (x.info || []).forEach(function (i) { I[i.k] = i.v; });
+    var t6 = String(w.date6 || ''), req = t6.length === 6 ? '20' + t6.slice(0, 2) + '-' + t6.slice(2, 4) + '-' + t6.slice(4, 6) : '';
+    var dl = (w.dl || []).filter(Boolean).map(function (v) { return String(v.d || v.date || v).replace(/\(.\)$/, ''); }).join(' · ');
+    var c = function (k, v) { return '<div><em>' + k + '</em><span>' + (v ? v : '-') + '</span></div>'; }, dd = function (s) { return esc(String(s || '').replace(/\(.\)$/, '')); };
+    return '<div class="wx-info">' + c('거래처', esc(I['수신처'] || w.clientKey || '')) + c('아티스트', esc(I['아티스트명'] || w.artist || '')) +
+      c('프로젝트', esc(String(w.title || '').split('·')[0].trim())) + c('거래처 담당자', esc(I['담당자'] || String(w.title || '').split('·')[1] || '').trim()) +
+      c('의뢰일', req) + c('마감일', esc(dl)) + c('작업완료일 (검수)', dd(I['검수완료일'])) +
+      c('작업 폴더', w.folder ? '<a href="' + esc(w.folder) + '" target="_blank" onclick="event.stopPropagation()">바로가기</a>' : '') + '</div>';
+  }
+  function ivBlock(id, d, w) {
     var x = D[d.x.id], ld = !okd(x), q = isQ(d.x), ed = !!IE[id], did = d.x.id;
+    var I = {}; if (!ld) (x.info || []).forEach(function (i) { I[i.k] = i; });
     var head = '<div class="wx-tr gh"><span class="nm"><span class="wx-tag2 ' + (q ? 'q' : 'iv') + '">' + (q ? '견적서' : '청구서') + '</span>' +
-      (ld ? '' : '<span class="st">' + esc(String(iv(x, '작성일')).replace(/\(.\)$/, '')) + '</span>') +
-      '<a class="ps" href="' + SH(did) + '" target="_blank" title="' + (q ? '견적서' : '청구서') + ' 시트" onclick="event.stopPropagation()">' + SVI + '</a></span>' +
-      '<span class="r">' + (ld ? '' : esc(((x.total || []).filter(function (t) { return t.q; })[0] || {}).q || '')) + '</span><span class="r up"></span><span class="r b">' + (ld ? '…' : won(tv(x, /Subtotal|공급가|소계/i))) + '</span><span></span></div>';
-    if (ld) return '<div class="wx-g on">' + head + '</div>';
+      (ld || !I['작성일'] ? '' : '<span class="st">작성 ' + esc(String(I['작성일'].v || '').replace(/\(.\)$/, '')) + '</span>') +
+      '<a class="ps" href="' + SH(did) + '" target="_blank" title="' + (q ? '견적서' : '청구서') + ' 시트" onclick="event.stopPropagation()">' + SVI + '</a></span><span></span><span class="up"></span><span></span><span></span></div>';
+    if (ld) return '<div class="wx-g on">' + head + '<div class="wx-ld">불러오는 중…</div></div>';
     var ei = (x.edit && x.edit.info) || [];
-    var meta = (x.info || []).filter(function (i) { return /수신처|담당자|검수완료일/.test(i.k) || (ed && ei.indexOf(i.a1) >= 0); }).map(function (i) {
-      return '<span><em>' + esc(i.k) + '</em> ' + (ed && ei.indexOf(i.a1) >= 0 ? ivIn(id, did, i.a1, i.v, 1) : esc(i.v || '-')) + '</span>';
-    }).join('');
+    var meta = ed ? (x.info || []).filter(function (i) { return ei.indexOf(i.a1) >= 0; }).map(function (i) { return '<span><em>' + esc(i.k) + '</em> ' + ivIn(id, did, i.a1, i.v, 1) + '</span>'; }).join('') : '';
     var rows = (x.rows || []).filter(function (r) { return (r.v || []).some(function (y) { return String(y).trim(); }); }).map(function (r) {
       var v = r.v, up = ed && !(r.f && r.f[3]) ? ivIn(id, did, 'E' + r.r, v[3]) : esc(v[3] ? v[3] + '원' : '');
       return '<div class="wx-tr fr"><span class="fn">' + esc(v[1] || '-') + '</span><span class="r">' + esc(v[2]) + (v[2] ? '컷' : '') + '</span><span class="r up mt">' + up + '</span><span class="r">' + esc(v[4] ? v[4] + '원' : '') + '</span><span></span></div>';
     }).join('');
-    var foot = '<div class="wx-gf">부가세 +' + won(tv(x, /VAT|부가/i)) + ' · 합계 (VAT 포함)<b>' + won(tv(x, /Total|합계/i)) + '</b></div>';
-    return '<div class="wx-g on">' + head + '<div class="gb">' + (meta ? '<div class="wx-meta">' + meta + '</div>' : '') + (rows || '<div class="wx-ld">항목이 없어요</div>') + foot + '</div></div>';
+    var tot = '<div class="wx-tot"><div><em>공급가액</em><span>' + won(tv(x, /Subtotal|공급가|소계/i)) + '</span></div><div><em>부가세</em><span>' + won(tv(x, /VAT|부가/i)) + '</span></div><div class="g"><em>합계 (VAT 포함)</em><span>' + won(tv(x, /Total|합계/i)) + '</span></div></div>';
+    return '<div class="wx-g on">' + head + '<div class="gb">' + (meta ? '<div class="wx-meta">' + meta + '</div>' : '') + (rows || '<div class="wx-ld">항목이 없어요</div>') + tot + '</div></div>';
   }
   function section(e, w, ok, L) {
     var id = w.id, x0 = e.querySelector('.wo-x');
@@ -8271,10 +8296,10 @@ td.rate-val{white-space:nowrap}
     var pwRight = (ok ? people + '명 · 지급내역서 ' + pays.length + '개' : '') + '</span><button type="button" class="ed' + (ED[id] ? ' on' : '') + '" title="작업내역 수정" onclick="event.stopPropagation();wxEd(\'' + esc(id) + '\')">' + SVE + '</button><span style="display:none">';
     // 청구내역
     var ivb = !ok ? '<div class="wx-ld">불러오는 중…</div>' : !invs.length ? '<div class="wx-ld">아직 청구서가 없어요 · 인보이스 메뉴에서 만들 수 있어요</div>' :
-      '<div class="wx-pw wx-ivd"><div class="wx-tr h"><span>문서 · 구분</span><span class="r">수량</span><span class="r up">단가</span><span class="r">금액</span><span></span></div>' + invs.map(function (d) { return ivBlock(id, d); }).join('') + '</div>' +
+      '<div class="wx-pw wx-ivd"><div class="wx-tr h"><span>문서 · 구분</span><span class="r">수량</span><span class="r up">단가</span><span class="r">금액</span><span></span></div>' + invs.map(function (d) { return ivBlock(id, d, w); }).join('') + '</div>' +
       (IE[id] ? '<div class="wx-ieb" onclick="event.stopPropagation()"><button type="button" class="cn" onclick="wxIe(\'' + esc(id) + '\')">취소</button><button type="button" class="sv" onclick="wxIs(\'' + esc(id) + '\',this)">저장</button></div>' : '');
     var ivRight = (ok ? invs.length + '건' : '') + (ok && invs.length ? '</span><button type="button" class="ed' + (IE[id] ? ' on' : '') + '" title="청구내역 수정" onclick="event.stopPropagation();wxIe(\'' + esc(id) + '\')">' + SVE + '</button><span style="display:none">' : '');
-    var h = '<div class="wx-sum" data-sig="' + esc(sig) + '">' +
+    var h = '<div class="wx-sum" data-sig="' + esc(sig) + '">' + projInfo(w, invs) +
       tg(id, 'pw', '작업 · 정산', pwRight, pw) +
       tg(id, 'iv', '청구내역', ivRight, ivb) + kpi + '</div>';
     if (old) old.outerHTML = h; else x0.insertAdjacentHTML('afterbegin', h);
@@ -8287,6 +8312,7 @@ td.rate-val{white-space:nowrap}
       var L = ok ? all.filter(function (d) { return hit(w, d.x); }) : [];
       if (ok) cardIcons(e, w, L);
       if (!e.classList.contains('xo')) return;
+      var hg = e.querySelector('.wo-g'); if (hg) e.style.setProperty('--wxh', hg.offsetHeight + 'px');
       var x = e.querySelector('.wo-x'); if (!x || !x.querySelector('.wx-r, .wx-wc')) return;
       section(e, w, ok, L);
     });
