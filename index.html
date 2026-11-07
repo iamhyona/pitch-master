@@ -7,7 +7,7 @@
 <meta name="theme-color" content="#f2f4f6">
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=3">
 <link rel="apple-touch-icon" href="apple-touch-icon.png?v=3">
-<meta name="pm-build" content="202611072030">
+<meta name="pm-build" content="202611072130">
 <link rel="manifest" href="manifest.webmanifest?v=3">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -7977,6 +7977,8 @@ td.rate-val{white-space:nowrap}
 .wx-tg>.bd{display:none;padding-bottom:6px}
 .wx-tg.on>.bd{display:block}
 .wo-x.dt-off>:not(.wx-sum){display:none!important}
+.wx-tr.fm .nm{padding-left:16px;font-weight:500;color:var(--txt2,#555)}
+.wx-tr.fm .nm:before{content:"└";color:#bbb;margin-right:4px;font-size:11px}
 .wx-tr{display:grid;grid-template-columns:minmax(64px,1.2fr) .7fr 1.2fr .9fr 62px;align-items:center;gap:6px;padding:9px 2px;border-bottom:1px solid #f2f4f6;font-size:13px;color:var(--txt)}
 .wx-tr:last-child{border-bottom:0}
 .wx-tr.h{font-size:11px;color:var(--txt3);padding:4px 2px 6px;border-bottom:1px solid var(--line)}
@@ -8078,15 +8080,23 @@ td.rate-val{white-space:nowrap}
     var paid = 0, paidOk = true; pays.forEach(function (d) { var x = D[d.x.id]; if (okd(x)) paid += tv(x, /실지급|지급액/); else paidOk = false; });
     var kpi = '<div class="wx-kpi"><div><small>총 컷수</small><b>' + (total || 0) + '컷</b></div><div><small>청구 (VAT 포함)</small><b>' + (!ok ? '…' : invs.length ? (billOk ? won(bill) : '…') : '-') + '</b></div><div><small>지급 (실지급)</small><b>' + (!ok ? '…' : pays.length ? (paidOk ? won(paid) : '…') : '-') + '</b></div></div>';
     // 작업자별 작업 · 정산 (지급내역서 시트·보기는 작업자 줄에)
+    // PITCH_FAM: 박종배·박슬기는 강영순 지급내역서로 지급 → 강영순 아래에 묶어 표시
+    var FAMH = '강영순', FAMM = ['박종배', '박슬기'], famPd = pays.filter(function (d) { return d.x.worker === FAMH; });
+    var famOf = {}, famCut = 0, famHas = false;
+    if (famPd.length) FAMM.forEach(function (m) { if (names.indexOf(m) >= 0 && !pays.some(function (d) { return d.x.worker === m; })) { famOf[m] = 1; famHas = true; famCut += (cuts[m] || 0); } });
+    if (famHas) { if (cuts[FAMH] == null) cuts[FAMH] = famCut; names = names.filter(function (n) { return !famOf[n] && n !== FAMH; }); names.push(FAMH); FAMM.forEach(function (m) { if (famOf[m]) names.push(m); }); }
     var pw = '<div class="wx-tr h"><span>작업자</span><span class="r">컷수</span><span class="r">지급액</span><span class="r dt">지급일</span><span class="r">지급내역서</span></div>' +
       names.map(function (n) {
+        if (famOf[n]) { var fid = famPd[0].x.id;
+          return '<div class="wx-tr fm"><span class="nm" title="세부내역에서 이 사람만 보기" onclick="event.stopPropagation();wxW(\'' + esc(id) + '\',\'' + esc(n) + '\')">' + (col[n] ? '<i style="background:' + col[n] + '"></i>' : '') + esc(n) + '</span><span class="r">' + (cuts[n] != null ? cuts[n] + '컷' : '-') + '</span><span class="r mt">' + FAMH + ' 지급</span><span class="r dt mt"></span>' +
+            '<span class="ops"><a href="' + SH(fid) + '" target="_blank" title="' + FAMH + ' 지급내역서 시트" onclick="event.stopPropagation()">' + SVS + '</a><button type="button" title="' + FAMH + ' 지급내역 보기" onclick="event.stopPropagation();dcOpen(\'' + esc(fid) + '\')">›</button></span></div>'; }
         var pd = pays.filter(function (d) { return d.x.worker === n; }), amt = 0, dt = '', loading = false, pid = pd.length ? pd[0].x.id : '';
         pd.forEach(function (d) { var x = D[d.x.id]; if (okd(x)) { amt += tv(x, /실지급|지급액/); dt = dt || iv(x, '지급일자'); } else loading = true; });
         return '<div class="wx-tr"><span class="nm" title="세부내역에서 이 사람만 보기" onclick="event.stopPropagation();wxW(\'' + esc(id) + '\',\'' + esc(n) + '\')">' + (col[n] ? '<i style="background:' + col[n] + '"></i>' : '') + esc(n) + '</span><span class="r">' + (cuts[n] != null ? cuts[n] + '컷' : '-') + '</span>' +
           '<span class="r' + (pd.length ? '' : ' mt') + '">' + (pd.length ? (loading ? '…' : won(amt)) : '지급내역서 없음') + '</span><span class="r dt mt">' + esc(String(dt || (pd.length && !loading ? '미지급' : '')).replace(/\(.\)$/, '')) + '</span>' +
           '<span class="ops"><a class="' + (pid ? '' : 'off') + '" href="' + (pid ? SH(pid) : '#') + '" target="_blank" title="' + esc(n) + ' 지급내역서 시트" onclick="event.stopPropagation()">' + SVS + '</a><button type="button" class="' + (pid ? '' : 'off') + '" title="지급내역 보기·수정" onclick="event.stopPropagation();dcOpen(\'' + esc(pid) + '\')">›</button></span></div>';
       }).join('');
-    var pwRight = ok ? names.length + '명 · 지급내역서 ' + pays.length + '개' : '';
+    var pwRight = ok ? names.filter(function (n) { return n !== FAMH || !famHas; }).length + '명 · 지급내역서 ' + pays.length + '개' : '';
     // 청구내역
     var ivb = !ok ? '<div class="wx-ld">불러오는 중…</div>' : !invs.length ? '<div class="wx-ld">아직 청구서가 없어요 · 인보이스 메뉴에서 만들 수 있어요</div>' :
       '<div class="wx-tr iv h"><span>문서</span><span class="r">합계</span><span class="r s">부가세</span><span class="r dt">작성일</span><span class="r">시트</span></div>' +
