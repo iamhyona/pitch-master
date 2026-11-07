@@ -7,7 +7,7 @@
 <meta name="theme-color" content="#f2f4f6">
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=3">
 <link rel="apple-touch-icon" href="apple-touch-icon.png?v=3">
-<meta name="pm-build" content="202611072400">
+<meta name="pm-build" content="202611080030">
 <link rel="manifest" href="manifest.webmanifest?v=3">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -7998,6 +7998,25 @@ td.rate-val{white-space:nowrap}
 .wx-tg>.sm .ed{width:28px;height:28px;border-radius:50%;border:0;background:var(--chip);color:var(--txt2);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;padding:0;flex:none}
 .wx-tg>.sm .ed svg{width:13px;height:13px}
 .wx-kpi.bt{margin-top:14px;margin-bottom:0}
+.wx-ed{padding:4px 0 2px}
+.wx-ed .eg{padding:10px 0;border-bottom:1px solid var(--line)}
+.wx-ed .en{font-size:13px;font-weight:700;color:var(--txt);margin-bottom:6px}
+.wx-ed .en i{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:5px;vertical-align:1px}
+.wx-ed .er{display:flex;align-items:center;gap:6px;padding:3px 0}
+.wx-ed .er input,.wx-ed .er select{height:34px;border:1px solid var(--line);border-radius:10px;background:#fff;font:inherit;font-size:13px;color:var(--txt);padding:0 9px;min-width:0}
+.wx-ed .er .f{flex:1}
+.wx-ed .er select{flex:none;width:70px;padding:0 4px}
+.wx-ed .er .c{flex:none;width:56px;text-align:right}
+.wx-ed .er .u{flex:none;font-size:12px;color:var(--txt3)}
+.wx-ed .er .x{flex:none;width:28px;height:28px;border-radius:50%;border:0;background:var(--chip);color:var(--txt2);cursor:pointer;font-size:15px;line-height:1;padding:0}
+.wx-ed .er.ch input,.wx-ed .er.ch select{border-color:#3182f6;background:rgba(49,130,246,.05)}
+.wx-ed .er.del input,.wx-ed .er.del select{text-decoration:line-through;opacity:.45}
+.wx-ed .ea{margin-top:6px;border:0;background:none;color:#3182f6;font-size:12.5px;font-weight:600;cursor:pointer;padding:4px 0}
+.wx-ed .eb{display:flex;gap:8px;justify-content:flex-end;padding-top:12px}
+.wx-ed .eb button{height:38px;padding:0 18px;border-radius:12px;border:0;font-size:13.5px;font-weight:700;cursor:pointer}
+.wx-ed .eb .cn{background:var(--chip);color:var(--txt2)}
+.wx-ed .eb .sv{background:#191f28;color:#fff}
+.wx-tg>.sm .ed.on{background:#191f28;color:#fff}
 .wx-sum>.wx-tg:first-child{border-top:0;margin-top:0}
 @media (max-width:520px){.wx-pw .wx-tr{grid-template-columns:minmax(0,1.7fr) .5fr 1fr}.wx-pw .up{display:none}.wx-gf{padding-right:0}}
 .wx-tr.fm .nm{padding-left:16px;font-weight:500;color:var(--txt2,#555)}
@@ -8094,6 +8113,67 @@ td.rate-val{white-space:nowrap}
   var FK = function (s) { return N(String(s || '').replace(/\(\s*\d+\s*인\s*\)/g, '')); };
   window.wxG = function (el, id, n) { var g = el.parentNode, on = !g.classList.contains('on'); g.classList.toggle('on', on); OPEN[id + ':g:' + n] = on; };
   function rowsOf(e) { return [].map.call(e.querySelectorAll('.wo-x .wx-r'), function (r) { var t = r.querySelector('.wx-tag'), s = r.querySelector('.t'), b = r.querySelector('.a b'); return { w: t ? t.textContent.trim() : '', f: s ? s.textContent.trim() : '', c: b ? num(b.textContent) : 0 }; }); }
+  // 작업내역 수정: 팝업 없이 토글 안에서 바로 (작업자 탭별 작업폴더·구분·컷수)
+  var ED = window.WXE = window.WXE || {};
+  var KN = ['합성', '1인', '2인', '3인', '4인', '5인', '6인', '7인', '8인', '9인', '10인'];
+  function blank(v) { return !(v || []).some(function (x) { return String(x == null ? '' : x).trim(); }); }
+  function edRe(id) { var E = ED[id]; if (E) E.rev = (E.rev || 0) + 1; sch(); }
+  function edCalc(r) { var e = r.v.slice(); while (e.length < 13) e.push(''); if (r.del) return e.map(function () { return ''; }); e[0] = r.f; for (var j = 1; j <= 11; j++) e[j] = ''; if (String(r.c).trim() !== '') e[r.k] = String(r.c).trim(); return e; }
+  function edDirty(E) { return E && E.d && E.d.tabs.some(function (t) { return t.rows.some(function (r) { return r.init && edCalc(r).some(function (x, j) { return String(x).trim() !== String(r.v[j] == null ? '' : r.v[j]).trim(); }); }); }); }
+  window.wxEd = function (id) {
+    var E = ED[id];
+    if (E) { if (E.d && edDirty(E) && !confirm('저장하지 않은 수정이 있어요. 수정을 취소할까요?')) return; delete ED[id]; edRe(id); return; }
+    OPEN[id + ':pw'] = true; ED[id] = { rev: 0 }; edRe(id);
+    woGet('&wo=' + encodeURIComponent(id), function (d) {
+      if (!ED[id]) return;
+      if (!d || !d.ok) { toast((d && d.error) || '작업내역서를 불러오지 못했어요'); delete ED[id]; edRe(id); return; }
+      d.tabs.forEach(function (t) { t.rows.forEach(function (r) { r.v = r.v || []; if (blank(r.v)) return; r.init = 1; r.f = r.v[0] || ''; r.k = 2; for (var j = 1; j <= 11; j++) if (String(r.v[j] || '').trim()) { r.k = j; break; } r.c = r.v[r.k] || ''; }); });
+      ED[id].d = d; edRe(id);
+    });
+  };
+  window.wxEv = function (id, ti, ri, k, el) { var E = ED[id], r = E && E.d && E.d.tabs[ti].rows[ri]; if (!r) return; if (k === 'k') r.k = Number(el.value); else r[k] = el.value; var row = el.closest('.er'); if (row) row.classList.toggle('ch', edCalc(r).some(function (x, j) { return String(x).trim() !== String(r.v[j] == null ? '' : r.v[j]).trim(); })); };
+  window.wxEx = function (id, ti, ri) { var r = ED[id].d.tabs[ti].rows[ri]; if (r.add && !String(r.f).trim() && !String(r.c).trim()) { delete r.init; delete r.add; } else r.del = !r.del; edRe(id); };
+  window.wxEa = function (id, ti) {
+    var t = ED[id].d.tabs[ti], last = -1; t.rows.forEach(function (r, i) { if (r.init) last = i; });
+    var i = -1; for (var x = last + 1; x < t.rows.length; x++) if (!t.rows[x].init && blank(t.rows[x].v)) { i = x; break; }
+    if (i < 0) { toast('시트에 빈 줄이 없어요 · 시트에서 줄을 추가해 주세요'); return; }
+    var r = t.rows[i]; r.init = 1; r.add = 1; r.f = ''; r.k = 2; r.c = ''; edRe(id);
+  };
+  window.wxEs = function (id, btn) {
+    var E = ED[id], d = E && E.d; if (!d) return;
+    var jobs = []; d.tabs.forEach(function (t) { var rows = []; t.rows.forEach(function (r, i) { if (!r.init) return; var e = edCalc(r); if (e.some(function (x, j) { return String(x).trim() !== String(r.v[j] == null ? '' : r.v[j]).trim(); })) rows.push({ i: i, old: r.v, val: e }); }); if (rows.length) jobs.push({ tab: t.name, rows: rows }); });
+    if (!jobs.length) { toast('바뀐 칸이 없어요'); delete ED[id]; edRe(id); return; }
+    if (btn) { btn.disabled = true; btn.textContent = '저장 중…'; }
+    var n = 0, errs = [], skip = [];
+    (function next() {
+      var j = jobs.shift();
+      if (!j) {
+        if (errs.length) alert('일부 저장 실패:\n' + errs.join('\n'));
+        else if (skip.length) alert(n + '칸 저장했어요.\n아래 칸은 그 사이 시트에서 바뀌어서 덮어쓰지 않았어요:\n' + skip.join('\n'));
+        else toast(n + '칸 저장했어요 · 작업내역서 시트에 반영됨');
+        delete ED[id]; WO.loaded = false; try { woLoad(true); } catch (e) {} edRe(id); return;
+      }
+      woPost('pm_wo_save', { id: d.id, tab: j.tab, rows: j.rows }, function (res) {
+        if (!res || !res.ok) errs.push(j.tab + ': ' + ((res && res.error) || ''));
+        else { n += res.changed || 0; (res.skipped || []).forEach(function (s) { skip.push('· ' + j.tab + ' ' + (s.i + 1) + '번째 줄 → 지금 시트 값: ' + (s.now || '(빈칸)')); }); }
+        next();
+      });
+    })();
+  };
+  function edHtml(id, col) {
+    var E = ED[id]; if (!E.d) return '<div class="wx-ld">작업내역서 불러오는 중…</div>';
+    return '<div class="wx-ed" onclick="event.stopPropagation()">' + E.d.tabs.map(function (t, ti) {
+      return '<div class="eg"><div class="en">' + (col[t.name] ? '<i style="background:' + col[t.name] + '"></i>' : '') + esc(t.name) + '</div>' +
+        t.rows.map(function (r, ri) {
+          if (!r.init) return '';
+          var ch = edCalc(r).some(function (x, j) { return String(x).trim() !== String(r.v[j] == null ? '' : r.v[j]).trim(); });
+          return '<div class="er' + (r.del ? ' del' : '') + (ch ? ' ch' : '') + '"><input class="f" value="' + esc(r.f) + '" placeholder="작업 폴더명"' + (r.del ? ' disabled' : '') + ' oninput="wxEv(\'' + esc(id) + '\',' + ti + ',' + ri + ',\'f\',this)">' +
+            '<select' + (r.del ? ' disabled' : '') + ' onchange="wxEv(\'' + esc(id) + '\',' + ti + ',' + ri + ',\'k\',this)">' + KN.map(function (k, j) { return '<option value="' + (j + 1) + '"' + (r.k === j + 1 ? ' selected' : '') + '>' + k + '</option>'; }).join('') + '</select>' +
+            '<input class="c" type="number" inputmode="decimal" min="0" step="any" value="' + esc(r.c) + '" placeholder="0"' + (r.del ? ' disabled' : '') + ' oninput="wxEv(\'' + esc(id) + '\',' + ti + ',' + ri + ',\'c\',this)"><span class="u">컷</span>' +
+            '<button type="button" class="x" title="' + (r.del ? '되돌리기' : '이 줄 삭제') + '" onclick="wxEx(\'' + esc(id) + '\',' + ti + ',' + ri + ')">' + (r.del ? '↺' : '×') + '</button></div>';
+        }).join('') + '<button type="button" class="ea" onclick="wxEa(\'' + esc(id) + '\',' + ti + ')">+ 작업폴더 추가</button></div>';
+    }).join('') + '<div class="eb"><button type="button" class="cn" onclick="wxEd(\'' + esc(id) + '\')">취소</button><button type="button" class="sv" onclick="wxEs(\'' + esc(id) + '\',this)">저장</button></div></div>';
+  }
   function section(e, w, ok, L) {
     var id = w.id, x0 = e.querySelector('.wo-x');
     var pays = L.filter(function (d) { return d.k === 'pay'; }), invs = L.filter(function (d) { return d.k === 'invoice'; });
@@ -8102,7 +8182,7 @@ td.rate-val{white-space:nowrap}
     e.querySelectorAll('.wx-wc button').forEach(function (b) { var nm = b.getAttribute('data-w') || '', bb = b.querySelector('b'), n = bb ? num(bb.textContent) : 0; if (nm) { cuts[nm] = n; var ic = b.querySelector('i'); if (ic) col[nm] = ic.style.background; } else total = n; });
     var names = Object.keys(cuts); pays.forEach(function (d) { var n = d.x.worker; if (n && names.indexOf(n) < 0) names.push(n); });
     var R = rowsOf(e);
-    var sig = [ok ? 1 : 0, L.map(function (d) { return d.x.id + (okd(D[d.x.id]) ? 1 : 0); }).join(','), names.join(','), total, R.length].join('|');
+    var sig = [ok ? 1 : 0, L.map(function (d) { return d.x.id + (okd(D[d.x.id]) ? 1 : 0); }).join(','), names.join(','), total, R.length, ED[id] ? 'E' + ED[id].rev : ''].join('|');
     var old = e.querySelector('.wx-sum');
     x0.classList.add('dt-off');
     if (old && old.getAttribute('data-sig') === sig) return;
@@ -8137,7 +8217,8 @@ td.rate-val{white-space:nowrap}
           '<span class="ops"><a class="' + (pid ? '' : 'off') + '" href="' + (pid ? SH(pid) : '#') + '" target="_blank" title="' + esc(g.n) + ' 지급내역서 시트" onclick="event.stopPropagation()">' + SVP + '</a><button type="button" class="' + (pid ? '' : 'off') + '" title="' + esc(g.n) + ' 지급내역서 수정" onclick="event.stopPropagation();dcOpen(\'' + esc(pid) + '\')">' + SVE + '</button></span></div>' +
           '<div class="gb">' + (rows || '<div class="wx-ld">작업 내역이 없어요</div>') + foot + '</div></div>';
       }).join('') + '</div>';
-    var pwRight = (ok ? people + '명 · 지급내역서 ' + pays.length + '개' : '') + '</span><button type="button" class="ed" title="작업내역 수정" onclick="event.stopPropagation();woOpen(\'' + esc(id) + '\')">' + SVE + '</button><span style="display:none">';
+    if (ED[id]) pw = edHtml(id, col);
+    var pwRight = (ok ? people + '명 · 지급내역서 ' + pays.length + '개' : '') + '</span><button type="button" class="ed' + (ED[id] ? ' on' : '') + '" title="작업내역 수정" onclick="event.stopPropagation();wxEd(\'' + esc(id) + '\')">' + SVE + '</button><span style="display:none">';
     // 청구내역
     var ivb = !ok ? '<div class="wx-ld">불러오는 중…</div>' : !invs.length ? '<div class="wx-ld">아직 청구서가 없어요 · 인보이스 메뉴에서 만들 수 있어요</div>' :
       '<div class="wx-tr iv h"><span>문서</span><span class="r">합계</span><span class="r s">부가세</span><span class="r dt">작성일</span><span></span></div>' +
