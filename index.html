@@ -7,7 +7,7 @@
 <meta name="theme-color" content="#f2f4f6">
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=3">
 <link rel="apple-touch-icon" href="apple-touch-icon.png?v=3">
-<meta name="pm-build" content="202611072130">
+<meta name="pm-build" content="202611072200">
 <link rel="manifest" href="manifest.webmanifest?v=3">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -8014,8 +8014,9 @@ td.rate-val{white-space:nowrap}
 (function () {
   try { invMode('q'); } catch (e) {}
   var SVS = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M3 9h18M3 15h18M9 3v18"/></svg>';
-  var SVI = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2h9l5 5v15H6z"/><path d="M14 2v6h6"/><path d="M9 13h6M9 17h4"/></svg>';
-  var SVP = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="13" rx="2"/><circle cx="12" cy="12.5" r="2.5"/><path d="M6 10v5M18 10v5"/></svg>';
+  var SVI = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5.5" rx="7" ry="2.5"/><path d="M5 5.5v4.5c0 1.4 3.1 2.5 7 2.5s7-1.1 7-2.5V5.5"/><path d="M5 10v4.5c0 1.4 3.1 2.5 7 2.5s7-1.1 7-2.5V10"/><path d="M5 14.5V19c0 1.4 3.1 2.5 7 2.5s7-1.1 7-2.5v-4.5"/></svg>';
+  var SVP = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1"/><path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"/></svg>';
+  var SVL = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h13M8 12h13M8 18h13M3.5 6h.01M3.5 12h.01M3.5 18h.01"/></svg>';
   var N = function (s) { return String(s || '').replace(/\s|·/g, '').toLowerCase(); }, P = function (t) { return N(String(t || '').split('·')[0]); };
   var num = function (v) { var n = Number(String(v == null ? '' : v).replace(/[^\d.-]/g, '')); return isNaN(n) ? 0 : n; };
   var won = function (n) { return Math.round(n).toLocaleString('ko-KR') + '원'; };
@@ -8057,6 +8058,7 @@ td.rate-val{white-space:nowrap}
     var key = L.map(function (d) { return d.x.id; }).join(',');
     if (ic.getAttribute('data-k') === key && ic.querySelector('.wx-add, .wx-none')) return;
     ic.querySelectorAll('.wx-add').forEach(function (n) { n.remove(); });
+    var ws = ic.querySelector('a[title="작업내역서 시트"]'); if (ws && !ws._l) { ws.innerHTML = SVL; ws._l = 1; }
     var invs = L.filter(function (d) { return d.k === 'invoice'; }), pays = L.filter(function (d) { return d.k === 'pay'; });
     var h = invs.map(function (d) { return '<a class="wx-ib wx-add" href="' + SH(d.x.id) + '" target="_blank" title="' + (isQ(d.x) ? '견적서' : '청구서') + ' 시트" onclick="event.stopPropagation()">' + SVI + '</a>'; }).join('') +
       (pays.length ? '<button type="button" class="wx-ib wx-add" title="지급내역서 ' + pays.length + '개 (작업자별)" onclick="event.stopPropagation();wxPay(\'' + esc(w.id) + '\')">' + SVP + (pays.length > 1 ? '<sup>' + pays.length + '</sup>' : '') + '</button>' : '');
@@ -8089,12 +8091,12 @@ td.rate-val{white-space:nowrap}
       names.map(function (n) {
         if (famOf[n]) { var fid = famPd[0].x.id;
           return '<div class="wx-tr fm"><span class="nm" title="세부내역에서 이 사람만 보기" onclick="event.stopPropagation();wxW(\'' + esc(id) + '\',\'' + esc(n) + '\')">' + (col[n] ? '<i style="background:' + col[n] + '"></i>' : '') + esc(n) + '</span><span class="r">' + (cuts[n] != null ? cuts[n] + '컷' : '-') + '</span><span class="r mt">' + FAMH + ' 지급</span><span class="r dt mt"></span>' +
-            '<span class="ops"><a href="' + SH(fid) + '" target="_blank" title="' + FAMH + ' 지급내역서 시트" onclick="event.stopPropagation()">' + SVS + '</a><button type="button" title="' + FAMH + ' 지급내역 보기" onclick="event.stopPropagation();dcOpen(\'' + esc(fid) + '\')">›</button></span></div>'; }
+            '<span class="ops"><a href="' + SH(fid) + '" target="_blank" title="' + FAMH + ' 지급내역서 시트" onclick="event.stopPropagation()">' + SVP + '</a><button type="button" title="' + FAMH + ' 지급내역 보기" onclick="event.stopPropagation();dcOpen(\'' + esc(fid) + '\')">›</button></span></div>'; }
         var pd = pays.filter(function (d) { return d.x.worker === n; }), amt = 0, dt = '', loading = false, pid = pd.length ? pd[0].x.id : '';
         pd.forEach(function (d) { var x = D[d.x.id]; if (okd(x)) { amt += tv(x, /실지급|지급액/); dt = dt || iv(x, '지급일자'); } else loading = true; });
         return '<div class="wx-tr"><span class="nm" title="세부내역에서 이 사람만 보기" onclick="event.stopPropagation();wxW(\'' + esc(id) + '\',\'' + esc(n) + '\')">' + (col[n] ? '<i style="background:' + col[n] + '"></i>' : '') + esc(n) + '</span><span class="r">' + (cuts[n] != null ? cuts[n] + '컷' : '-') + '</span>' +
           '<span class="r' + (pd.length ? '' : ' mt') + '">' + (pd.length ? (loading ? '…' : won(amt)) : '지급내역서 없음') + '</span><span class="r dt mt">' + esc(String(dt || (pd.length && !loading ? '미지급' : '')).replace(/\(.\)$/, '')) + '</span>' +
-          '<span class="ops"><a class="' + (pid ? '' : 'off') + '" href="' + (pid ? SH(pid) : '#') + '" target="_blank" title="' + esc(n) + ' 지급내역서 시트" onclick="event.stopPropagation()">' + SVS + '</a><button type="button" class="' + (pid ? '' : 'off') + '" title="지급내역 보기·수정" onclick="event.stopPropagation();dcOpen(\'' + esc(pid) + '\')">›</button></span></div>';
+          '<span class="ops"><a class="' + (pid ? '' : 'off') + '" href="' + (pid ? SH(pid) : '#') + '" target="_blank" title="' + esc(n) + ' 지급내역서 시트" onclick="event.stopPropagation()">' + SVP + '</a><button type="button" class="' + (pid ? '' : 'off') + '" title="지급내역 보기·수정" onclick="event.stopPropagation();dcOpen(\'' + esc(pid) + '\')">›</button></span></div>';
       }).join('');
     var pwRight = ok ? names.filter(function (n) { return n !== FAMH || !famHas; }).length + '명 · 지급내역서 ' + pays.length + '개' : '';
     // 청구내역
@@ -8103,7 +8105,7 @@ td.rate-val{white-space:nowrap}
       invs.map(function (d) {
         var x = D[d.x.id], ld = !okd(x);
         return '<div class="wx-tr iv"><span><span class="wx-tag2 ' + (isQ(d.x) ? 'q' : 'iv') + '">' + (isQ(d.x) ? '견적서' : '청구서') + '</span></span><span class="r">' + (ld ? '…' : won(tv(x, /Total|합계/i))) + '</span><span class="r s mt">' + (ld ? '' : won(tv(x, /VAT|부가/i))) + '</span>' +
-          '<span class="r dt mt">' + (ld ? '' : esc(String(iv(x, '작성일')).replace(/\(.\)$/, ''))) + '</span><span class="ops"><a href="' + SH(d.x.id) + '" target="_blank" title="시트 열기" onclick="event.stopPropagation()">' + SVS + '</a><button type="button" title="보기·수정" onclick="event.stopPropagation();dcOpen(\'' + esc(d.x.id) + '\')">›</button></span></div>';
+          '<span class="r dt mt">' + (ld ? '' : esc(String(iv(x, '작성일')).replace(/\(.\)$/, ''))) + '</span><span class="ops"><a href="' + SH(d.x.id) + '" target="_blank" title="시트 열기" onclick="event.stopPropagation()">' + SVI + '</a><button type="button" title="보기·수정" onclick="event.stopPropagation();dcOpen(\'' + esc(d.x.id) + '\')">›</button></span></div>';
       }).join('');
     var h = '<div class="wx-sum" data-sig="' + esc(sig) + '">' + kpi +
       tg(id, 'pw', '작업자별 작업 · 정산', pwRight, pw) +
