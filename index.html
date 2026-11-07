@@ -7,7 +7,7 @@
 <meta name="theme-color" content="#f2f4f6">
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=3">
 <link rel="apple-touch-icon" href="apple-touch-icon.png?v=3">
-<meta name="pm-build" content="202611080145">
+<meta name="pm-build" content="202611080200">
 <link rel="manifest" href="manifest.webmanifest?v=3">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -8043,6 +8043,8 @@ td.rate-val{white-space:nowrap}
 .wo-item.xo>.wo-g{position:sticky;top:0;z-index:6;background:inherit;padding-top:8px;margin-top:-8px}
 .wo-item.xo>.wo-l3{position:sticky;top:var(--wxh,51px);z-index:6;background:inherit;padding-bottom:10px;margin-bottom:-10px;border-bottom:1px solid var(--line)}
 .wx-sum>.wx-info{margin-top:4px}
+.wx-ivd .wx-g .gb{padding-top:4px}
+.wx-ivd .wx-meta{padding-left:2px}
 .wo-item.xo>.wo-g,.wo-item.xo>.wo-l3{margin-left:calc(-1 * var(--wpl,18px));margin-right:calc(-1 * var(--wpr,40px));padding-left:var(--wpl,18px);padding-right:var(--wpr,40px)}
 .wo-item.xo>.wo-chev{z-index:7}
 .wx-sum>.wx-tg:first-child{border-top:0;margin-top:0}
@@ -8241,7 +8243,7 @@ td.rate-val{white-space:nowrap}
     var head = '<div class="wx-tr gh"><span class="nm"><span class="wx-tag2 ' + (q ? 'q' : 'iv') + '">' + (q ? '견적서' : '청구서') + '</span>' +
       (ld || !I['작성일'] ? '' : '<span class="st">작성 ' + esc(String(I['작성일'].v || '').replace(/\(.\)$/, '')) + '</span>') +
       '<a class="ps" href="' + SH(did) + '" target="_blank" title="' + (q ? '견적서' : '청구서') + ' 시트" onclick="event.stopPropagation()">' + SVI + '</a></span><span></span><span class="up"></span><span></span><span></span></div>';
-    if (ld) return '<div class="wx-g on">' + head + '<div class="wx-ld">불러오는 중…</div></div>';
+    if (ld) return '<div class="wx-g on"><div class="wx-ld">불러오는 중…</div></div>';
     var ei = (x.edit && x.edit.info) || [];
     var meta = ed ? (x.info || []).filter(function (i) { return ei.indexOf(i.a1) >= 0; }).map(function (i) { return '<span><em>' + esc(i.k) + '</em> ' + ivIn(id, did, i.a1, i.v, 1) + '</span>'; }).join('') : '';
     var rows = (x.rows || []).filter(function (r) { return (r.v || []).some(function (y) { return String(y).trim(); }); }).map(function (r) {
@@ -8249,7 +8251,7 @@ td.rate-val{white-space:nowrap}
       return '<div class="wx-tr fr"><span class="fn">' + esc(v[1] || '-') + '</span><span class="r">' + esc(v[2]) + (v[2] ? '컷' : '') + '</span><span class="r up mt">' + up + '</span><span class="r">' + esc(v[4] ? v[4] + '원' : '') + '</span><span></span></div>';
     }).join('');
     var tot = '<div class="wx-tot"><div><em>공급가액</em><span>' + won(tv(x, /Subtotal|공급가|소계/i)) + '</span></div><div><em>부가세</em><span>' + won(tv(x, /VAT|부가/i)) + '</span></div><div class="g"><em>합계 (VAT 포함)</em><span>' + won(tv(x, /Total|합계/i)) + '</span></div></div>';
-    return '<div class="wx-g on">' + head + '<div class="gb">' + (meta ? '<div class="wx-meta">' + meta + '</div>' : '') + (rows || '<div class="wx-ld">항목이 없어요</div>') + tot + '</div></div>';
+    return '<div class="wx-g on"><div class="gb">' + (meta ? '<div class="wx-meta">' + meta + '</div>' : '') + (rows || '<div class="wx-ld">항목이 없어요</div>') + tot + '</div></div>';
   }
   function section(e, w, ok, L) {
     var id = w.id, x0 = e.querySelector('.wo-x');
