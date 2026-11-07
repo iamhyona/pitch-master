@@ -7,7 +7,7 @@
 <meta name="theme-color" content="#f2f4f6">
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=3">
 <link rel="apple-touch-icon" href="apple-touch-icon.png?v=3">
-<meta name="pm-build" content="202611080340">
+<meta name="pm-build" content="202611080350">
 <link rel="manifest" href="manifest.webmanifest?v=3">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -8043,6 +8043,8 @@ td.rate-val{white-space:nowrap}
 .wo-item.xo>.wo-g{position:sticky;top:0;z-index:6;background:inherit;padding-top:8px;margin-top:-8px}
 .wo-item.xo>.wo-l3{position:sticky;top:var(--wxh,51px);z-index:6;background:inherit;padding-bottom:10px;margin-bottom:-10px;border-bottom:1px solid var(--line)}
 .wx-sum>.wx-info{margin-top:4px}
+.wx-tg>.sm .wx-hm{font-size:12px;font-weight:500;color:var(--txt2);margin-left:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.wx-tg>.sm .wx-hm em{font-style:normal;color:var(--txt3);margin:0 4px 0 8px}
 .wxb-sum{margin:6px 0 4px}
 .wxb-r{display:grid;grid-template-columns:minmax(52px,.8fr) 1.3fr 1.3fr 1.1fr;gap:6px;align-items:baseline;padding:9px 2px;border-bottom:1px solid #f2f4f6;font-size:13px;color:var(--txt)}
 .wxb-r:last-child{border-bottom:0}
@@ -8269,7 +8271,7 @@ td.rate-val{white-space:nowrap}
       '<a class="ps" href="' + SH(did) + '" target="_blank" title="' + (q ? '견적서' : '청구서') + ' 시트" onclick="event.stopPropagation()">' + SVI + '</a></span><span></span><span class="up"></span><span></span><span></span></div>';
     if (ld) return '<div class="wx-g on"><div class="wx-ld">불러오는 중…</div></div>';
     var ei = (x.edit && x.edit.info) || [];
-    var meta = (x.info || []).filter(function (i) { return /작성일|검수완료일/.test(i.k) || (ed && ei.indexOf(i.a1) >= 0); }).map(function (i) { return '<span><em>' + esc(i.k) + '</em> ' + (ed && ei.indexOf(i.a1) >= 0 ? ivIn(id, did, i.a1, i.v, 1) : (esc(String(i.v || '').replace(/\(.\)$/, '')) || '-')) + '</span>'; }).join('');
+    var meta = (x.info || []).filter(function (i) { return ed && ei.indexOf(i.a1) >= 0; }).map(function (i) { return '<span><em>' + esc(i.k) + '</em> ' + (ed && ei.indexOf(i.a1) >= 0 ? ivIn(id, did, i.a1, i.v, 1) : (esc(String(i.v || '').replace(/\(.\)$/, '')) || '-')) + '</span>'; }).join('');
     var rows = (x.rows || []).filter(function (r) { return (r.v || []).some(function (y) { return String(y).trim(); }); }).map(function (r) {
       var v = r.v, up = ed && !(r.f && r.f[3]) ? ivIn(id, did, 'E' + r.r, v[3]) : esc(v[3] ? v[3] + '원' : '');
       return '<div class="wx-tr fr"><span class="fn">' + esc(v[1] || '-') + '</span><span class="r">' + esc(v[2]) + (v[2] ? '컷' : '') + '</span><span class="r up mt">' + up + '</span><span class="r">' + esc(v[4] ? v[4] + '원' : '') + '</span><span></span></div>';
@@ -8372,9 +8374,11 @@ td.rate-val{white-space:nowrap}
       '<div class="wx-pw wx-ivd"><div class="wx-tr h"><span>문서 · 구분</span><span class="r">수량</span><span class="r up">단가</span><span class="r">금액</span><span></span></div>' + invs.map(function (d) { return ivBlock(id, d, w); }).join('') + '</div>' +
       (IE[id] ? '<div class="wx-ieb" onclick="event.stopPropagation()"><button type="button" class="cn" onclick="wxIe(\'' + esc(id) + '\')">취소</button><button type="button" class="sv" onclick="wxIs(\'' + esc(id) + '\',this)">저장</button></div>' : '');
     var ivRight = (ok ? invs.length + '건' : '') + (ok && invs.length ? '</span><button type="button" class="ed' + (IE[id] ? ' on' : '') + '" title="청구내역 수정" onclick="event.stopPropagation();wxIe(\'' + esc(id) + '\')">' + SVE + '</button><span style="display:none">' : '');
+    var bdoc = invs.filter(function (d) { return !isQ(d.x); })[0] || invs[0], bx = bdoc && D[bdoc.x.id], ivT = '청구내역';
+    if (okd(bx) && !IE[id]) { var gi = function (k) { var f = (bx.info || []).filter(function (i) { return i.k === k; })[0]; return f ? String(f.v || '').replace(/\(.\)$/, '') : ''; }; ivT += '<small class="wx-hm"><em>검수완료일</em>' + esc(gi('검수완료일') || '-') + '<em>작성일</em>' + esc(gi('작성일') || '-') + '</small>'; }
     var h = '<div class="wx-sum" data-sig="' + esc(sig) + '">' +
       tg(id, 'pw', '작업 · 정산', pwRight, pw) +
-      tg(id, 'iv', '청구내역', ivRight, ivb) + kpi + '</div>';
+      tg(id, 'iv', ivT, ivRight, ivb) + kpi + '</div>';
     if (old) old.outerHTML = h; else x0.insertAdjacentHTML('afterbegin', h);
   }
   function fill() {
