@@ -7,7 +7,7 @@
 <meta name="theme-color" content="#f2f4f6">
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=3">
 <link rel="apple-touch-icon" href="apple-touch-icon.png?v=3">
-<meta name="pm-build" content="202611080330">
+<meta name="pm-build" content="202611080340">
 <link rel="manifest" href="manifest.webmanifest?v=3">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -8304,7 +8304,8 @@ td.rate-val{white-space:nowrap}
       if (r.classList.contains('vd')) return;
       var m = String(r.getAttribute('title') || '').slice(0, 7); if (!/^\d{4}-\d{2}$/.test(m)) return;
       var a = r.querySelector('.a'); if (!a) return; var v = num(a.textContent), out = !!a.querySelector('.pf2-mn');
-      var o = M[m] = M[m] || { i: 0, o: 0, ni: 0, no: 0 }; if (out) { o.o += Math.abs(v); o.no++; } else { o.i += Math.abs(v); o.ni++; }
+      var o = M[m] = M[m] || { i: 0, o: 0, ni: 0, no: 0 }; var cc = (r.querySelector('.c') || {}).textContent || '';
+      if (out) { o.o += Math.abs(v); o.no++; } else if (/승인취소|정정/.test(cc)) { o.o -= Math.abs(v); } else { o.i += Math.abs(v); o.ni++; }
     });
     var ks = Object.keys(M).sort().reverse(), y0 = String(new Date().getFullYear());
     var sum = '<div class="wxb-sum"><div class="wxb-r h"><span>월</span><span class="r">입금</span><span class="r">출금</span><span class="r">증감</span></div>' +
