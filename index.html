@@ -7,7 +7,7 @@
 <meta name="theme-color" content="#f2f4f6">
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=3">
 <link rel="apple-touch-icon" href="apple-touch-icon.png?v=3">
-<meta name="pm-build" content="202611080230">
+<meta name="pm-build" content="202611080245">
 <link rel="manifest" href="manifest.webmanifest?v=3">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -8043,6 +8043,12 @@ td.rate-val{white-space:nowrap}
 .wo-item.xo>.wo-g{position:sticky;top:0;z-index:6;background:inherit;padding-top:8px;margin-top:-8px}
 .wo-item.xo>.wo-l3{position:sticky;top:var(--wxh,51px);z-index:6;background:inherit;padding-bottom:10px;margin-bottom:-10px;border-bottom:1px solid var(--line)}
 .wx-sum>.wx-info{margin-top:4px}
+#wo-orph .ttl{display:flex;align-items:center;gap:8px;cursor:pointer;margin:0;user-select:none}
+#wo-orph .ttl span{margin-left:auto;font-size:12px;font-weight:500;color:var(--txt3)}
+#wo-orph .ttl i{width:8px;height:8px;border-right:2px solid #b0b8c1;border-bottom:2px solid #b0b8c1;transform:rotate(45deg);margin:0 4px 3px 4px;transition:transform .15s}
+#wo-orph.on .ttl i{transform:rotate(-135deg);margin-bottom:-3px}
+#wo-orph .ob{display:none;margin-top:8px}
+#wo-orph.on .ob{display:block}
 #wo-list .wx-ic button.wx-add[title^="지급내역서"]{display:none!important}
 .wx-ivd .wx-g .gb{padding-top:4px}
 .wx-ivd .wx-meta{padding-left:2px}
@@ -8246,7 +8252,7 @@ td.rate-val{white-space:nowrap}
       '<a class="ps" href="' + SH(did) + '" target="_blank" title="' + (q ? '견적서' : '청구서') + ' 시트" onclick="event.stopPropagation()">' + SVI + '</a></span><span></span><span class="up"></span><span></span><span></span></div>';
     if (ld) return '<div class="wx-g on"><div class="wx-ld">불러오는 중…</div></div>';
     var ei = (x.edit && x.edit.info) || [];
-    var meta = ed ? (x.info || []).filter(function (i) { return ei.indexOf(i.a1) >= 0; }).map(function (i) { return '<span><em>' + esc(i.k) + '</em> ' + ivIn(id, did, i.a1, i.v, 1) + '</span>'; }).join('') : '';
+    var meta = (x.info || []).filter(function (i) { return /작성일|검수완료일/.test(i.k) || (ed && ei.indexOf(i.a1) >= 0); }).map(function (i) { return '<span><em>' + esc(i.k) + '</em> ' + (ed && ei.indexOf(i.a1) >= 0 ? ivIn(id, did, i.a1, i.v, 1) : (esc(String(i.v || '').replace(/\(.\)$/, '')) || '-')) + '</span>'; }).join('');
     var rows = (x.rows || []).filter(function (r) { return (r.v || []).some(function (y) { return String(y).trim(); }); }).map(function (r) {
       var v = r.v, up = ed && !(r.f && r.f[3]) ? ivIn(id, did, 'E' + r.r, v[3]) : esc(v[3] ? v[3] + '원' : '');
       return '<div class="wx-tr fr"><span class="fn">' + esc(v[1] || '-') + '</span><span class="r">' + esc(v[2]) + (v[2] ? '컷' : '') + '</span><span class="r up mt">' + up + '</span><span class="r">' + esc(v[4] ? v[4] + '원' : '') + '</span><span></span></div>';
@@ -8323,13 +8329,13 @@ td.rate-val{white-space:nowrap}
       section(e, w, ok, L);
     });
     var l = document.getElementById('wo-list'); if (!l) return;
-    var o = document.getElementById('wo-orph'); if (!o) { o = document.createElement('div'); o.id = 'wo-orph'; l.parentNode.insertBefore(o, l.nextSibling); }
+    var o = document.getElementById('wo-orph'); if (!o) { o = document.createElement('div'); o.id = 'wo-orph'; l.parentNode.insertBefore(o, l); }
     var html = '';
     if (ok && W.length) {
       var minD = W.map(function (w) { return w.date6; }).filter(Boolean).sort()[0] || '';
       var R = all.filter(function (d) { return d.x.date6 && d.x.date6 >= minD && !W.some(function (w) { return hit(w, d.x); }); });
-      if (R.length) html = '<div class="ttl">작업내역서 없는 청구서 · 지급내역</div><div class="sub">디자인 등 리터칭 외 작업이나 작업내역서와 연결되지 않은 문서예요 (작업내역과 같은 기간) · ' + R.length + '건</div>' +
-        R.map(function (d) { var x = d.x, q = d.k === 'invoice' && isQ(x); return '<div class="wx-doc" onclick="dcOpen(\'' + esc(x.id) + '\')"><span class="wx-tag2 ' + (d.k === 'pay' ? 'py' : q ? 'q' : 'iv') + '">' + (d.k === 'pay' ? '지급내역' : q ? '견적서' : '청구서') + '</span><span class="t">' + esc([x.clientKey, x.artist, x.title].filter(Boolean).join(' · ')) + (x.date6 ? '<small>' + esc(x.date6) + '</small>' : '') + '</span><span class="w">' + esc(x.worker || '') + '</span><span class="go">›</span></div>'; }).join('');
+      if (R.length) html = '<div class="ttl" onclick="this.parentNode.classList.toggle(\'on\')">작업내역서 없는 청구서 · 지급내역<span>' + R.length + '건</span><i></i></div><div class="ob"><div class="sub">디자인 등 리터칭 외 작업이나 작업내역서와 연결되지 않은 문서예요 (작업내역과 같은 기간)</div>' +
+        R.map(function (d) { var x = d.x, q = d.k === 'invoice' && isQ(x); return '<div class="wx-doc" onclick="dcOpen(\'' + esc(x.id) + '\')"><span class="wx-tag2 ' + (d.k === 'pay' ? 'py' : q ? 'q' : 'iv') + '">' + (d.k === 'pay' ? '지급내역' : q ? '견적서' : '청구서') + '</span><span class="t">' + esc([x.clientKey, x.artist, x.title].filter(Boolean).join(' · ')) + (x.date6 ? '<small>' + esc(x.date6) + '</small>' : '') + '</span><span class="w">' + esc(x.worker || '') + '</span><span class="go">›</span></div>'; }).join('') + '</div>';
     }
     if (o._h !== html) { o._h = html; o.innerHTML = html; }
   }
