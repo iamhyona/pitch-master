@@ -7,7 +7,7 @@
 <meta name="theme-color" content="#f2f4f6">
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=3">
 <link rel="apple-touch-icon" href="apple-touch-icon.png?v=3">
-<meta name="pm-build" content="202611081240">
+<meta name="pm-build" content="202611081300">
 <link rel="manifest" href="manifest.webmanifest?v=3">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -8456,40 +8456,66 @@ td.rate-val{white-space:nowrap}
 </script>
 
 <style>
-/* 2026-11-08 메일 보내기 (pitch@pitchpitch.kr) */
-.ml-tg>.bd{padding:2px 0 10px}
-.wo-x.dt-off>.ml-tg.wx-tg{display:block!important}
-.ml-box .rt-seg{margin-bottom:10px}
-.ml-box .fg{margin-bottom:9px}
-.ml-box textarea.fi{min-height:180px;line-height:1.6}
-.ml-chips{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 6px}
-.ml-chips button{height:30px;border:1px solid var(--bdr);background:#fff;border-radius:15px;padding:0 11px;font-family:inherit;font-size:13px;color:var(--txt2);cursor:pointer;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.ml-chips button.on{background:#191f28;border-color:#191f28;color:#fff}
-.ml-chips button small{opacity:.6;margin-left:4px;font-size:11px}
-.ml-at{display:flex;align-items:center;gap:8px;padding:8px 10px;border:1px solid var(--bdr);border-radius:10px;margin-bottom:6px;font-size:13px}
+/* 2026-11-08 메일 보내기 (pitch@pitchpitch.kr) — 팝업 */
+#mo-mail .md{max-width:640px}
+#mo-mail .md-h{position:sticky;top:0;z-index:3;background:#fff;padding-bottom:10px}
+.ml-box .rt-seg{margin-bottom:12px}
+.ml-box .fg{margin-bottom:12px}
+.ml-box .fl{display:flex;align-items:center;gap:6px}
+.ml-box textarea.fi{min-height:200px;line-height:1.6}
+.ml-row{display:flex;gap:8px;align-items:center}
+.ml-row>*{min-width:0}
+.ml-dd{position:relative}
+.ml-ddb{width:100%;display:flex;align-items:center;justify-content:space-between;gap:8px;text-align:left;cursor:pointer;background:var(--sur2,#f2f4f6);border:1px solid var(--bdr);border-radius:8px;padding:10px 12px;min-height:42px;font-family:inherit;font-size:15px;color:var(--txt)}
+.ml-ddb span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ml-ddb span.ph{color:var(--txt3)}
+.ml-ddb i{flex:none;width:7px;height:7px;border-right:2px solid #8b95a1;border-bottom:2px solid #8b95a1;transform:rotate(45deg);margin:0 4px 4px}
+.ml-ddl{margin-top:6px;border:1px solid var(--bdr);border-radius:10px;background:#fff;max-height:260px;overflow-y:auto;padding:4px 0}
+.ml-ddl label{display:flex;align-items:center;gap:10px;padding:9px 12px;font-size:14px;cursor:pointer}
+.ml-ddl label:hover{background:#f7f8fa}
+.ml-ddl input[type=checkbox]{width:18px;height:18px;flex:none;accent-color:#191f28}
+.ml-ddl label small{color:var(--txt3);font-size:12px;margin-left:auto;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ml-ddl .tx{font-size:11px;font-weight:700;color:var(--acc);margin-right:2px}
+.ml-ddl .ad{padding:6px 10px 6px}
+.ml-at{border:1px solid var(--bdr);border-radius:12px;padding:10px 12px;margin-bottom:8px}
+.ml-at .r1{display:flex;align-items:center;gap:8px}
 .ml-at input[type=checkbox]{width:18px;height:18px;flex:none;accent-color:#191f28}
-.ml-at .n{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--txt)}
-.ml-at .n em{font-style:normal;font-size:11px;font-weight:700;color:var(--acc);margin-right:5px}
-.ml-at select{flex:none;max-width:42%;height:30px;border:1px solid var(--bdr);border-radius:8px;background:#fff;font-family:inherit;font-size:12px;padding:0 6px}
+.ml-at .r1 em{flex:none;font-style:normal;font-size:11px;font-weight:700;color:var(--acc)}
+.ml-at .r1 .t{flex:1;min-width:0;font-size:13px;color:var(--txt2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ml-at .r2{display:flex;gap:8px;align-items:center;margin-top:8px}
+.ml-at .fn{flex:1;min-width:0;display:flex;align-items:center;background:var(--sur2,#f2f4f6);border:1px solid var(--bdr);border-radius:8px;padding:0 10px}
+.ml-at .fn input{flex:1;min-width:0;border:0;background:none;font-family:inherit;font-size:14px;padding:9px 0;outline:none;color:var(--txt)}
+.ml-at .fn b{flex:none;font-size:13px;font-weight:500;color:var(--txt3)}
+.ml-at select{flex:none;height:38px;border:1px solid var(--bdr);border-radius:8px;background:#fff;font-family:inherit;font-size:13px;padding:0 8px;max-width:34%}
+.ml-at .pv{flex:none;height:38px;border:0;border-radius:8px;background:#191f28;color:#fff;font-family:inherit;font-size:13px;font-weight:600;padding:0 12px;cursor:pointer}
+.ml-at .pv:disabled{opacity:.5}
+.ml-pvw{margin-top:10px;border-radius:8px;overflow:hidden;border:1px solid var(--bdr);background:#f2f4f6}
+.ml-pvw iframe{display:block;width:100%;height:480px;border:0;background:#fff}
+.ml-pvw .pb{display:flex;justify-content:space-between;align-items:center;padding:6px 10px;font-size:12px;color:var(--txt3);background:#fff;border-top:1px solid var(--bdr)}
+.ml-pvw .pb a{color:var(--acc);font-weight:600;text-decoration:none}
 .ml-none{font-size:12px;color:var(--txt3);padding:2px 2px 6px}
 .ml-act{display:flex;gap:8px;margin-top:4px}
-.ml-act .btn{flex:1;height:44px;font-size:14px;border-radius:10px}
+.ml-act .btn{flex:1;height:48px;font-size:15px;border-radius:12px}
 .ml-act .btn-g{background:var(--chip);color:var(--txt)}
 .ml-act .btn-k{background:#191f28;color:#fff}
 .ml-act .btn-k.cf{background:#f04452}
 .ml-st{font-size:12px;color:var(--txt3);line-height:1.55;margin-top:8px;word-break:break-all}
 .ml-st.ok{color:#05a46b}.ml-st.warn{color:var(--danger,#f04452)}
 .ml-st a{color:var(--acc);font-weight:600}
-.ml-note{font-size:12px;color:var(--txt3);line-height:1.5;margin:0 2px 10px}
+.ml-note{font-size:12px;color:var(--txt3);line-height:1.5;margin:0 2px 12px}
+.ml-ibtn{display:inline-flex;align-items:center;gap:6px;height:40px;padding:0 14px;border:0;border-radius:10px;background:#191f28;color:#fff;font-family:inherit;font-size:14px;font-weight:600;cursor:pointer}
+.ml-ibtn svg{width:16px;height:16px}
+@media (max-width:520px){.ml-at .r2{flex-wrap:wrap}.ml-at .fn{flex-basis:100%}.ml-at select{max-width:none;flex:1}.ml-pvw iframe{height:380px}}
 </style>
+<div class="mo" id="mo-mail" onclick="if(event.target===this)mlClose()"><div class="md"><div class="md-h"><span class="md-t" id="ml-ttl">메일 보내기</span><button class="xb" onclick="mlClose()">✕</button></div><div class="md-b"><div class="ml-host" id="ml-host"></div></div></div></div>
 <script>
-// 2026-11-08 (현아): 메일 보내기 — pitch@pitchpitch.kr 계정 스크립트로 Gmail 초안 → 확인 후 발송
-//  · 사전견적서 · 대금청구서 (시트를 PDF로 첨부) · 리터칭 작업완료 안내 (작업 폴더 링크)
-//  · 받는 사람: 거래처마스터 담당자 탭 · 보내는 주소: pitch@ + Gmail에 등록된 별칭
+// 2026-11-08 (현아): 메일 보내기 — pitch@pitchpitch.kr 계정 스크립트로 Gmail 초안 → 확인 후 발송 (팝업)
+//  · 사전견적서 · 대금청구서 (시트를 PDF로 첨부, 파일명 확인·미리보기) · 작업전달 (작업 폴더 링크)
+//  · 받는 사람: 담당자 드롭다운 · 참조: 드롭다운 체크박스 · 보내는 주소: pitch@ + Gmail에 등록된 별칭
 //  · 바로 보내지 않음: 초안 만들기 → [보내기]를 두 번 눌러야 발송
 var ML_URL = 'https://script.google.com/macros/s/AKfycbx2jTEAyzqei0LjXg6YnMZsoFNvCHTr2Y0D0i4MrCbc1B32AvaCS2BPcPSH1FlRAOMbzg/exec'; // [PITCH]메일 웹앱 (pitch@ 계정)
 (function () {
-  var ML = window.MLS = window.MLS || {}, INFO = null, INFO_WAIT = [], TABS = {};
+  var ML = window.MLS = window.MLS || {}, INFO = null, INFO_WAIT = [], TABS = {}, CUR = '';
   var KIND = { quote: '사전견적서', bill: '대금청구서', done: '작업전달' };
   function post(action, data) {
     return fetch(ML_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ action: action, data: data || {}, k: PM_K }) })
@@ -8504,10 +8530,10 @@ var ML_URL = 'https://script.google.com/macros/s/AKfycbx2jTEAyzqei0LjXg6YnMZsoFN
   function short(a) { a = String(a || '').trim(); var m = a.match(/^(.*?)\s*\(([^)]*)\)\s*$/); return m ? (m[2] || m[1]) : a; }
   function client(key) { var k = N(key); return (PM.clients || []).filter(function (c) { return N(c.disp) === k || N(c.key) === k || N(c.ko) === k || N(c.en) === k; })[0] || null; }
   function mails(s) { return String(s || '').split(/[,;\s/]+/).filter(function (x) { return /@/.test(x); }); }
-  function contacts(c) { if (!c) return []; return (PM.contacts || []).filter(function (k) { return k.client === c.disp && mails(k.email).length; }); }
+  function contacts(c) { if (!c) return []; var o = []; (PM.contacts || []).forEach(function (k) { if (k.client === c.disp) mails(k.email).forEach(function (m) { o.push({ n: k.name, m: m }); }); }); return o; }
+  function taxMail(S, c) { var t = c ? (pmTaxMail(c) || '') : ''; try { var aa = (PM.artists || []).filter(function (x) { return N(x.en) === N(short(S.artist)) || N(x.ko) === N(short(S.artist)) || N(x.disp) === N(S.artist); })[0]; t = (aa && pmArtistTaxMail(c, aa)) || t; } catch (e) {} return t; }
   function tpl(S) {
-    var a = short(S.artist), p = String(S.project || '').trim(), what = [a, p].filter(Boolean).join(' ') || '작업', m = S.mgrName;
-    var hi = '안녕하세요' + (m ? ', ' + m + '님' : '') + '.\n핏치컴퍼니입니다.\n\n', sign = '\n\n감사합니다.\n핏치컴퍼니 드림\n\nPITCH | pitch@pitchpitch.kr';
+    var a = short(S.artist), p = String(S.project || '').trim(), what = [a, p].filter(Boolean).join(' ') || '작업';
     if (S.kind === 'quote') return { s: '[PITCH] ' + what + ' 사전견적서', b: '안녕하세요, 핏치입니다.\n요청하신 사전 견적서를 PDF 파일로 첨부드립니다.\n첨부파일 확인 부탁드리며, \n검토 중 궁금하신 점이나 \n추가 요청 사항이 있으시면 편하게 말씀 부탁드립니다.\n감사합니다. :)\n\n핏치 드림' };
     if (S.kind === 'bill') return { s: '[PITCH] ' + what + ' 청구서', b: '안녕하세요, 핏치입니다.\n작업이 마무리되어 청구서를 PDF 파일로 첨부드립니다.\n첨부파일 확인 부탁드리며,\n검토 중 궁금하신 점이나\n수정이 필요한 부분이 있으시면 편하게 말씀 부탁드립니다.\n감사합니다. :)\n\n핏치 드림' };
     return { s: '[PITCH] ' + what + ' 작업 전달', b: '안녕하세요, 핏치입니다.\n요청하신 작업이 완료되어 아래 링크로 전달드립니다.\n\n' + (S.link || '(작업 폴더 링크)') + '\n\n확인 부탁드리며,\n수정이 필요한 부분이나\n추가 요청 사항이 있으시면 편하게 말씀 부탁드립니다.\n감사합니다. :)\n\n핏치 드림' };
@@ -8517,9 +8543,9 @@ var ML_URL = 'https://script.google.com/macros/s/AKfycbx2jTEAyzqei0LjXg6YnMZsoFN
   function state(ctx) {
     var S = ML[ctx.key];
     if (S) { ['client', 'artist', 'project', 'manager', 'link'].forEach(function (k) { if (ctx[k] && !S[k]) S[k] = ctx[k]; }); if (ctx.docs) S.docs = ctx.docs; return S; }
-    var c = client(ctx.client), ks = contacts(c), mg = ks.filter(function (k) { return N(k.name) === N(ctx.manager); })[0];
+    var c = client(ctx.client), ks = contacts(c), mg = ks.filter(function (k) { return N(k.n) === N(ctx.manager); })[0];
     S = ML[ctx.key] = { key: ctx.key, kind: ctx.kind || 'bill', client: ctx.client, artist: ctx.artist, project: ctx.project, manager: ctx.manager, link: ctx.link || '', docs: ctx.docs || [],
-      to: mg ? mails(mg.email)[0] : '', cc: '', from: '', att: {}, mgrName: mg ? mg.name : (ctx.manager || ''), draft: null, dirty: false, edited: false };
+      to: mg ? mg.m : '', toDirect: false, cc: [], ccOpen: false, from: '', att: {}, pv: {}, draft: null, dirty: false, edited: false };
     var t = tpl(S); S.subject = t.s; S.body = t.b; autoAtt(S);
     return S;
   }
@@ -8527,154 +8553,166 @@ var ML_URL = 'https://script.google.com/macros/s/AKfycbx2jTEAyzqei0LjXg6YnMZsoFN
     S.att = {};
     if (S.kind === 'done') return;
     var m = S.docs.filter(function (d) { return S.kind === 'quote' ? isQ(d.title) : !isQ(d.title); });
-    if (m[0]) S.att[m[0].id] = { gid: null };
+    if (m[0]) S.att[m[0].id] = { gid: null, name: '' };
   }
-  function seg(S) { return '<div class="rt-seg">' + Object.keys(KIND).map(function (k) { return '<button type="button" class="' + (S.kind === k ? 'on' : '') + '" onclick="mlKind(\'' + esc(S.key) + '\',\'' + k + '\')">' + KIND[k] + '</button>'; }).join('') + '</div>'; }
+  function q(k) { return '\'' + esc(k) + '\''; }
   function html(S) {
-    var c = client(S.client), ks = contacts(c), to = mails(S.to), cc = mails(S.cc), k = esc(S.key);
-    var tax = c ? (pmTaxMail(c) || '') : ''; try { var aa = (PM.artists || []).filter(function (x) { return N(x.en) === N(short(S.artist)) || N(x.ko) === N(short(S.artist)) || N(x.disp) === N(S.artist); })[0]; tax = (aa && pmArtistTaxMail(c, aa)) || tax; } catch (e) {}
+    var c = client(S.client), ks = contacts(c), k = q(S.key), tax = taxMail(S, c);
     var froms = (INFO && INFO.from) || ['pitch@pitchpitch.kr'];
-    var chip = function (m, nm, fld) { var on = (fld === 'to' ? to : cc).indexOf(m) >= 0; return '<button type="button" class="' + (on ? 'on' : '') + '" onclick="mlPick(\'' + k + '\',\'' + fld + '\',\'' + esc(m) + '\',\'' + esc(nm || '') + '\')">' + esc(nm || m) + (nm ? '<small>' + esc(m) + '</small>' : '') + '</button>'; };
-    var toChips = ks.map(function (x) { return mails(x.email).map(function (m) { return chip(m, x.name, 'to'); }).join(''); }).join('');
-    var ccChips = (tax ? chip(tax, '계산서 메일', 'cc') : '') + ks.map(function (x) { return mails(x.email).filter(function (m) { return to.indexOf(m) < 0; }).map(function (m) { return chip(m, x.name, 'cc'); }).join(''); }).join('');
+    // 받는 사람: 드롭다운
+    var inList = ks.some(function (x) { return x.m === S.to; }), direct = S.toDirect || (S.to && !inList);
+    var toSel = '<select class="fi sm" onchange="mlTo(' + k + ',this.value)">' + (ks.length ? '' : '<option value="">등록된 담당자 메일이 없어요</option>') +
+      ks.map(function (x) { return '<option value="' + esc(x.m) + '"' + (!direct && x.m === S.to ? ' selected' : '') + '>' + esc(x.n) + ' · ' + esc(x.m) + '</option>'; }).join('') +
+      '<option value="__direct"' + (direct ? ' selected' : '') + '>직접 입력</option></select>' +
+      (direct ? '<input class="fi sm" style="margin-top:8px" value="' + esc(S.to) + '" placeholder="메일 주소 (여러 명은 쉼표로)" oninput="mlSet(' + k + ',\'to\',this.value)">' : '');
+    // 참조: 드롭다운 + 체크박스
+    var opts = (tax ? [{ n: '계산서 메일', m: tax, tx: 1 }] : []).concat(ks.filter(function (x) { return x.m !== S.to && x.m !== tax; }));
+    var extra = S.cc.filter(function (m) { return !opts.some(function (o) { return o.m === m; }); });
+    var ccLabel = S.cc.length ? S.cc.map(function (m) { var o = opts.filter(function (x) { return x.m === m; })[0]; return o ? o.n : m; }).join(', ') : '';
+    var ccHtml = '<div class="ml-dd"><button type="button" class="ml-ddb" onclick="mlCcT(' + k + ')"><span class="' + (ccLabel ? '' : 'ph') + '">' + esc(ccLabel || '참조 선택 (선택사항)') + '</span><i></i></button>' +
+      (S.ccOpen ? '<div class="ml-ddl">' + opts.concat(extra.map(function (m) { return { n: m, m: m }; })).map(function (o) {
+        return '<label><input type="checkbox"' + (S.cc.indexOf(o.m) >= 0 ? ' checked' : '') + ' onchange="mlCc(' + k + ',' + q(o.m) + ',this.checked)">' + (o.tx ? '<span class="tx">계산서</span>' : '') + esc(o.tx ? '' : o.n) + '<small>' + esc(o.m) + '</small></label>';
+      }).join('') + '<div class="ad"><input class="fi sm" placeholder="다른 주소 입력 후 Enter" onkeydown="if(event.key===\'Enter\'){event.preventDefault();mlCcAdd(' + k + ',this.value)}"></div></div>' : '') + '</div>';
+    // 첨부
     var docs = S.kind === 'done' ? '' : (S.docs.length ? S.docs.map(function (d) {
-      var a = S.att[d.id], T = TABS[d.id];
-      var sel = a ? (T && T.tabs ? '<select onchange="mlTab(\'' + k + '\',\'' + esc(d.id) + '\',this.value)">' + T.tabs.map(function (t) { return '<option value="' + t.gid + '"' + (String(a.gid) === String(t.gid) ? ' selected' : '') + '>' + esc(t.name) + ' 탭</option>'; }).join('') + '</select>' : '<select disabled><option>' + (T === 'err' ? '탭 못 읽음' : '탭 확인 중…') + '</option></select>') : '';
-      return '<label class="ml-at"><input type="checkbox"' + (a ? ' checked' : '') + ' onchange="mlAtt(\'' + k + '\',\'' + esc(d.id) + '\',this.checked)"><span class="n"><em>' + (isQ(d.title) ? '견적서' : '청구서') + '</em>' + esc(d.title || d.id) + '</span>' + sel + '</label>';
+      var a = S.att[d.id], T = TABS[d.id], pv = S.pv[d.id];
+      var head = '<div class="r1"><input type="checkbox"' + (a ? ' checked' : '') + ' onchange="mlAtt(' + k + ',' + q(d.id) + ',this.checked)"><em>' + (isQ(d.title) ? '견적서' : '청구서') + '</em><span class="t">' + esc((T && T.name) || d.title || '') + '</span></div>';
+      if (!a) return '<div class="ml-at">' + head + '</div>';
+      var tabSel = T && T.tabs ? '<select onchange="mlTab(' + k + ',' + q(d.id) + ',this.value)">' + T.tabs.map(function (t) { return '<option value="' + t.gid + '"' + (String(a.gid) === String(t.gid) ? ' selected' : '') + '>' + esc(t.name) + ' 탭</option>'; }).join('') + '</select>' : '<select disabled><option>' + (T === 'err' ? '탭 못 읽음' : '탭 확인 중…') + '</option></select>';
+      var fn = '<div class="fn"><input value="' + esc(a.name || (T && T.name) || '') + '" placeholder="파일명" oninput="mlFn(' + k + ',' + q(d.id) + ',this.value)"><b>.pdf</b></div>';
+      var pb = '<button type="button" class="pv"' + (T && T.tabs && !(pv && pv.ld) ? '' : ' disabled') + ' onclick="mlPv(' + k + ',' + q(d.id) + ')">' + (pv && pv.ld ? '불러오는 중…' : pv && pv.url ? '다시 보기' : '미리보기') + '</button>';
+      var w = pv && pv.url ? '<div class="ml-pvw"><iframe src="' + pv.url + '#toolbar=0&view=FitH"></iframe><div class="pb"><span>' + esc(pv.name) + ' · ' + Math.max(1, Math.round(pv.size / 1024)) + 'KB</span><a href="' + pv.url + '" target="_blank">새 창으로 크게 보기 →</a></div></div>' : pv && pv.err ? '<div class="ml-st warn">⚠ ' + esc(pv.err) + '</div>' : '';
+      return '<div class="ml-at">' + head + '<div class="r2">' + fn + tabSel + pb + '</div>' + w + '</div>';
     }).join('') : '<div class="ml-none">첨부할 ' + (S.kind === 'quote' ? '견적서' : '청구서') + '가 없어요 · 인보이스 메뉴에서 먼저 만들어 주세요</div>');
-    return '<div class="ml-box">' + seg(S) +
-      '<div class="ml-note">바로 보내지 않고 <b>pitch@ Gmail 임시보관함</b>에 초안을 먼저 만들어요. 확인한 뒤 보내기를 눌러주세요.</div>' +
-      '<div class="fg"><label class="fl">보내는 주소</label><select class="fi sm" onchange="mlSet(\'' + k + '\',\'from\',this.value)">' + froms.map(function (f) { return '<option' + ((S.from || froms[0]) === f ? ' selected' : '') + '>' + esc(f) + '</option>'; }).join('') + '</select></div>' +
-      '<div class="fg"><label class="fl">받는 사람</label>' + (toChips ? '<div class="ml-chips">' + toChips + '</div>' : '') + '<input class="fi sm" value="' + esc(S.to) + '" placeholder="메일 주소 (여러 명은 쉼표로)" oninput="mlSet(\'' + k + '\',\'to\',this.value)" onchange="mlRe(\'' + k + '\')"></div>' +
-      '<div class="fg"><label class="fl">참조</label>' + (ccChips ? '<div class="ml-chips">' + ccChips + '</div>' : '') + '<input class="fi sm" value="' + esc(S.cc) + '" placeholder="(선택)" oninput="mlSet(\'' + k + '\',\'cc\',this.value)" onchange="mlRe(\'' + k + '\')"></div>' +
-      '<div class="fg"><label class="fl">제목</label><input class="fi sm" value="' + esc(S.subject) + '" oninput="mlSet(\'' + k + '\',\'subject\',this.value,1)"></div>' +
-      '<div class="fg"><label class="fl">내용</label><textarea class="fi" oninput="mlSet(\'' + k + '\',\'body\',this.value,1)">' + esc(S.body) + '</textarea></div>' +
+    return '<div class="ml-box"><div class="rt-seg">' + Object.keys(KIND).map(function (x) { return '<button type="button" class="' + (S.kind === x ? 'on' : '') + '" onclick="mlKind(' + k + ',\'' + x + '\')">' + KIND[x] + '</button>'; }).join('') + '</div>' +
+      '<div class="fg"><label class="fl">받는 사람</label>' + toSel + '</div>' +
+      '<div class="fg"><label class="fl">참조</label>' + ccHtml + '</div>' +
+      '<div class="fg"><label class="fl">제목</label><input class="fi sm" value="' + esc(S.subject) + '" oninput="mlSet(' + k + ',\'subject\',this.value,1)"></div>' +
+      '<div class="fg"><label class="fl">내용</label><textarea class="fi" oninput="mlSet(' + k + ',\'body\',this.value,1)">' + esc(S.body) + '</textarea></div>' +
       (S.kind === 'done' ? '' : '<div class="fg"><label class="fl">첨부 (PDF)</label>' + docs + '</div>') +
+      '<div class="fg"><label class="fl">보내는 주소</label><select class="fi sm" onchange="mlSet(' + k + ',\'from\',this.value)">' + froms.map(function (f) { return '<option' + ((S.from || froms[0]) === f ? ' selected' : '') + '>' + esc(f) + '</option>'; }).join('') + '</select></div>' +
+      '<div class="ml-note">바로 보내지 않고 pitch@ Gmail 임시보관함에 초안을 먼저 만들어요. 확인한 뒤 보내기를 눌러주세요.</div>' +
       '<div class="ml-foot">' + foot(S) + '</div></div>';
   }
   function foot(S) {
-    var k = esc(S.key), dr = S.draft;
-    var act = !dr ? '<button type="button" class="btn btn-p" onclick="mlDraft(\'' + k + '\',this)">초안 만들기</button>' :
-      (S.dirty ? '<button type="button" class="btn btn-p" onclick="mlDraft(\'' + k + '\',this)">초안 다시 저장</button>' :
-        '<button type="button" class="btn btn-g" onclick="mlDrop(\'' + k + '\',this)">초안 지우기</button><button type="button" class="btn btn-k' + (S.cf ? ' cf' : '') + '" onclick="mlSend(\'' + k + '\',this)">' + (S.cf ? '한 번 더 누르면 발송' : '보내기') + '</button>');
+    var k = q(S.key), dr = S.draft;
+    var act = !dr ? '<button type="button" class="btn btn-p" onclick="mlDraft(' + k + ',this)">초안 만들기</button>' :
+      (S.dirty ? '<button type="button" class="btn btn-p" onclick="mlDraft(' + k + ',this)">초안 다시 저장</button>' :
+        '<button type="button" class="btn btn-g" onclick="mlDrop(' + k + ',this)">초안 지우기</button><button type="button" class="btn btn-k' + (S.cf ? ' cf' : '') + '" onclick="mlSend(' + k + ',this)">' + (S.cf ? '한 번 더 누르면 발송' : '보내기') + '</button>');
     return '<div class="ml-act">' + act + '</div><div class="ml-st' + (S.stc ? ' ' + S.stc : '') + '">' + (S.st || '') + '</div>';
   }
-  function paintFoot(key) { var S = ML[key]; document.querySelectorAll('[data-ml="' + key + '"] .ml-foot').forEach(function (el) { el.innerHTML = foot(S); }); }
-  function paint(key) { var S = ML[key]; if (!S) return; document.querySelectorAll('[data-ml="' + key.replace(/"/g, '') + '"]').forEach(function (el) { el.innerHTML = html(S); }); }
+  function host() { return document.getElementById('ml-host'); }
+  function paintFoot(key) { var h = host(); if (CUR !== key || !h) return; var f = h.querySelector('.ml-foot'); if (f) f.innerHTML = foot(ML[key]); }
+  function paint(key) { var h = host(); if (CUR !== key || !h) return; var y = h.closest('.md').scrollTop; h.innerHTML = html(ML[key]); h.closest('.md').scrollTop = y; }
   function loadTabs(key, id) {
     if (TABS[id] && TABS[id] !== 'err') { pickTab(ML[key], id); return; }
     TABS[id] = 'ld';
     post('ml_tabs', { id: id }).then(function (d) { TABS[id] = d && d.ok ? d : 'err'; if (d && !d.ok && d.error) { var S = ML[key]; S.st = '⚠ ' + esc(d.error); S.stc = 'warn'; } pickTab(ML[key], id); paint(key); });
   }
   function pickTab(S, id) {
-    var a = S && S.att[id], T = TABS[id]; if (!a || !T || !T.tabs || a.gid != null) return;
+    var a = S && S.att[id], T = TABS[id]; if (!a || !T || !T.tabs) return;
+    if (!a.name) a.name = T.name;
+    if (a.gid != null) return;
     var t = T.tabs.filter(function (x) { return /수정|사본/.test(x.name); }).pop() || T.tabs.filter(function (x) { return /청구|견적/.test(x.name); })[0] || T.tabs[0];
-    a.gid = t ? t.gid : ''; a.name = T.name;
+    a.gid = t ? t.gid : '';
   }
   function stale(S) { if (S.draft) { S.dirty = true; S.cf = false; } }
-  window.mlMount = function (el, ctx) {
-    var S = state(ctx); el.setAttribute('data-ml', S.key); el.innerHTML = html(S);
+  function dropPv(S, id) { var p = S.pv[id]; if (p && p.url) try { URL.revokeObjectURL(p.url); } catch (e) {} delete S.pv[id]; }
+  // ── 팝업 열기·닫기 ──
+  window.mlShow = function (ctx) {
+    var S = state(ctx); CUR = S.key;
+    document.getElementById('ml-ttl').textContent = '메일 보내기 · ' + [short(S.artist), S.project].filter(Boolean).join(' ');
+    host().innerHTML = html(S); openMo('mo-mail'); host().closest('.md').scrollTop = 0;
     Object.keys(S.att).forEach(function (id) { loadTabs(S.key, id); });
     if (!INFO) info(function () { paint(S.key); });
   };
+  window.mlClose = function () { closeMo('mo-mail'); };
   window.mlKind = function (key, kind) {
     var S = ML[key]; if (!S || S.kind === kind) return;
-    if (S.edited && !S._kw) { S._kw = 1; S.st = '내용을 고친 상태예요 · 한 번 더 누르면 ' + KIND[kind] + ' 문구로 바꿔요'; S.stc = 'warn'; paint(key); setTimeout(function () { S._kw = 0; }, 4000); return; }
+    if (S.edited && !S._kw) { S._kw = 1; S.st = '내용을 고친 상태예요 · 한 번 더 누르면 ' + KIND[kind] + ' 문구로 바꿔요'; S.stc = 'warn'; paintFoot(key); setTimeout(function () { S._kw = 0; }, 4000); return; }
     S._kw = 0; S.kind = kind; var t = tpl(S); S.subject = t.s; S.body = t.b; S.edited = false; autoAtt(S); stale(S); S.st = ''; S.stc = '';
     Object.keys(S.att).forEach(function (id) { loadTabs(key, id); });
     paint(key);
   };
   window.mlSet = function (key, f, v, typed) { var S = ML[key]; if (!S) return; S[f] = v; if (typed) S.edited = true; var was = S.dirty; stale(S); if (S.draft && !was) { S.st = '고친 내용이 있어요 · 초안을 다시 저장해 주세요'; S.stc = ''; paintFoot(key); } };
-  window.mlRe = function (key) { paint(key); };
-  window.mlPick = function (key, f, m, nm) {
-    var S = ML[key]; var L = mails(S[f]), i = L.indexOf(m);
-    if (i >= 0) L.splice(i, 1); else L.push(m);
-    S[f] = L.join(', ');
-    if (f === 'to' && nm && nm !== '계산서 메일' && !S.edited) { var first = (PM.contacts || []).filter(function (k) { return mails(k.email).indexOf(L[0]) >= 0; })[0]; S.mgrName = first ? first.name : ''; var t = tpl(S); S.subject = t.s; S.body = t.b; }
-    stale(S); paint(key);
+  window.mlTo = function (key, v) { var S = ML[key]; if (v === '__direct') { S.toDirect = true; S.to = ''; } else { S.toDirect = false; S.to = v; S.cc = S.cc.filter(function (m) { return m !== v; }); } stale(S); paint(key); };
+  window.mlCcT = function (key) { var S = ML[key]; S.ccOpen = !S.ccOpen; paint(key); };
+  window.mlCc = function (key, m, on) { var S = ML[key]; var i = S.cc.indexOf(m); if (on && i < 0) S.cc.push(m); if (!on && i >= 0) S.cc.splice(i, 1); stale(S); paint(key); };
+  window.mlCcAdd = function (key, v) { var S = ML[key]; mails(v).forEach(function (m) { if (S.cc.indexOf(m) < 0) S.cc.push(m); }); stale(S); paint(key); };
+  window.mlAtt = function (key, id, on) { var S = ML[key]; if (on) { S.att[id] = { gid: null, name: '' }; loadTabs(key, id); } else { delete S.att[id]; dropPv(S, id); } stale(S); paint(key); };
+  window.mlTab = function (key, id, gid) { var S = ML[key]; if (S.att[id]) S.att[id].gid = gid; dropPv(S, id); stale(S); paint(key); };
+  window.mlFn = function (key, id, v) { var S = ML[key]; if (S.att[id]) S.att[id].name = v; var p = S.pv[id]; if (p && p.url) { p.name = v.replace(/\.pdf$/i, '') + '.pdf'; } stale(S); paintFoot(key); };
+  window.mlPv = function (key, id) {
+    var S = ML[key], a = S.att[id]; if (!a) return;
+    dropPv(S, id); S.pv[id] = { ld: 1 }; paint(key);
+    post('ml_pdf', { id: id, gid: a.gid == null ? '' : a.gid, name: a.name || '' }).then(function (d) {
+      if (!d || !d.ok) { S.pv[id] = { err: (d && d.error) || 'PDF를 만들지 못했어요' }; paint(key); return; }
+      var bin = atob(d.b64), u8 = new Uint8Array(bin.length); for (var i = 0; i < bin.length; i++) u8[i] = bin.charCodeAt(i);
+      var url = URL.createObjectURL(new Blob([u8], { type: 'application/pdf' }));
+      S.pv[id] = { url: url, name: d.name, size: u8.length }; paint(key);
+    });
   };
-  window.mlAtt = function (key, id, on) { var S = ML[key]; if (on) { S.att[id] = { gid: null }; loadTabs(key, id); } else delete S.att[id]; stale(S); paint(key); };
-  window.mlTab = function (key, id, gid) { var S = ML[key]; if (S.att[id]) S.att[id].gid = gid; stale(S); };
   window.mlDraft = function (key, b) {
-    var S = ML[key]; if (!mails(S.to).length) { toast('받는 사람 메일을 적어주세요'); return; }
-    var att = Object.keys(S.att).map(function (id) { var a = S.att[id], T = TABS[id]; return { id: id, gid: a.gid == null ? '' : a.gid, name: (T && T.name) || '' }; });
+    var S = ML[key]; if (!mails(S.to).length) { toast('받는 사람 메일을 골라주세요'); return; }
+    var att = Object.keys(S.att).map(function (id) { var a = S.att[id], T = TABS[id]; return { id: id, gid: a.gid == null ? '' : a.gid, name: a.name || (T && T.name) || '' }; });
     if (att.some(function (a) { return TABS[a.id] === 'ld'; })) { toast('첨부 시트 탭을 확인하는 중이에요 · 잠시 후 다시 눌러주세요'); return; }
     b.disabled = true; b.textContent = att.length ? 'PDF 만들고 초안 저장 중…' : '초안 저장 중…';
-    post('ml_draft', { draftId: S.draft && S.draft.draftId, from: S.from || ((INFO && INFO.from) || [])[0] || '', to: S.to, cc: S.cc, subject: S.subject, body: S.body, attach: att }).then(function (d) {
+    post('ml_draft', { draftId: S.draft && S.draft.draftId, from: S.from || ((INFO && INFO.from) || [])[0] || '', to: S.to, cc: S.cc.join(','), subject: S.subject, body: S.body, attach: att }).then(function (d) {
       if (d && d.ok) { S.draft = d; S.dirty = false; S.cf = false; S.stc = 'ok'; S.st = '✓ 초안 저장됨' + (d.files && d.files.length ? ' · 첨부 ' + d.files.map(esc).join(', ') : '') + ' · <a href="' + esc(d.url) + '" target="_blank">Gmail에서 보기 →</a>'; toast('메일 초안 저장'); }
       else { S.stc = 'warn'; S.st = '⚠ 초안을 만들지 못했어요: ' + esc((d && d.error) || ''); }
-      paint(key);
+      paintFoot(key);
     });
   };
   window.mlSend = function (key, b) {
     var S = ML[key]; if (!S.draft || S.dirty) return;
-    if (!S.cf) { S.cf = true; S.st = mails(S.to).map(esc).join(', ') + ' 에게 보내요 · 확인했으면 한 번 더 눌러주세요'; S.stc = 'warn'; paintFoot(key); clearTimeout(S._cft); S._cft = setTimeout(function () { if (S.cf) { S.cf = false; S.st = ''; S.stc = ''; paintFoot(key); } }, 6000); return; }
+    if (!S.cf) { S.cf = true; S.st = [S.to].concat(S.cc).map(esc).join(', ') + ' 에게 보내요 · 확인했으면 한 번 더 눌러주세요'; S.stc = 'warn'; paintFoot(key); clearTimeout(S._cft); S._cft = setTimeout(function () { if (S.cf) { S.cf = false; S.st = ''; S.stc = ''; paintFoot(key); } }, 6000); return; }
     clearTimeout(S._cft); b.disabled = true; b.textContent = '보내는 중…';
     post('ml_send', { draftId: S.draft.draftId }).then(function (d) {
       S.cf = false;
       if (d && d.ok) { var to = S.to; S.draft = null; S.st = '✓ ' + esc(to) + ' 에게 보냈어요 (' + new Date().toTimeString().slice(0, 5) + ') · <a href="https://mail.google.com/mail/?authuser=pitch@pitchpitch.kr#sent" target="_blank">보낸편지함 →</a>'; S.stc = 'ok'; toast('메일을 보냈어요'); }
       else { S.st = '⚠ 보내지 못했어요: ' + esc((d && d.error) || ''); S.stc = 'warn'; }
-      paint(key);
+      paintFoot(key);
     });
   };
   window.mlDrop = function (key, b) {
     var S = ML[key]; if (!S.draft) return; b.disabled = true;
-    post('ml_drop', { draftId: S.draft.draftId }).then(function () { S.draft = null; S.dirty = false; S.st = '초안을 지웠어요'; S.stc = ''; paint(key); });
+    post('ml_drop', { draftId: S.draft.draftId }).then(function () { S.draft = null; S.dirty = false; S.st = '초안을 지웠어요'; S.stc = ''; paintFoot(key); });
   };
+  var SVM = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>';
 
-  // ── 1) 인보이스: 만든 직후 그 문서로 메일 ──
+  // ── 1) 인보이스: 만든 직후 [메일 보내기] 버튼 → 팝업 ──
   window.invMailPanel = function (res) {
     var el = document.getElementById('inv-result'); if (!el || !res || !res.url) return;
     var g = function (id) { var e = document.getElementById(id); return e ? String(e.value || '').trim() : ''; };
     var id = (String(res.url).match(/\/d\/([\w-]{20,})/) || [])[1] || res.id || ''; if (!id) return;
     var mg = g('inv-manager'); if (mg === '__direct__') mg = '';
-    var q = (window.INV_DOC || 'bill') === 'quote';
-    var box = document.createElement('div'); box.className = 'im-box'; box.id = 'inv-mail';
-    box.innerHTML = '<div class="inv-sec" style="margin-bottom:8px">메일 보내기</div><div class="ml-host"></div>';
+    var qq = (window.INV_DOC || 'bill') === 'quote';
+    var ctx = { key: 'inv:' + id, kind: qq ? 'quote' : 'bill', client: g('inv-client'), artist: g('inv-artist'), project: g('inv-project'), manager: mg, link: g('inv-link'), docs: [{ id: id, title: (qq ? '견적서 ' : '청구서 ') + (res.name || '') }] };
     var old = document.getElementById('inv-mail'); if (old) old.remove();
+    var box = document.createElement('div'); box.id = 'inv-mail'; box.style.marginTop = '10px';
+    box.innerHTML = '<button type="button" class="ml-ibtn">' + SVM + '메일 보내기</button>';
+    box.firstChild.onclick = function () { mlShow(ctx); };
     el.appendChild(box);
-    mlMount(box.querySelector('.ml-host'), { key: 'inv:' + id, kind: q ? 'quote' : 'bill', client: g('inv-client'), artist: g('inv-artist'), project: g('inv-project'), manager: mg,
-      link: g('inv-link'), docs: [{ id: id, title: (q ? '견적서 ' : '청구서 ') + (res.name || '') }] });
   };
 
-  // ── 2) 프로젝트 카드 펼침: '메일' 토글 ──
-  var OPEN = {};
+  // ── 2) 프로젝트 카드 아이콘 줄: 봉투 아이콘 → 팝업 ──
   function P(t) { return N(String(t || '').split('·')[0]); }
   function hit(w, x) { return x.date6 === w.date6 && N(x.clientKey) === N(w.clientKey) && (P(x.title) === P(w.title) || N(x.artist) === N(w.artist)); }
   function pdocs(w) { var I = (typeof DC !== 'undefined' && DC.invoice && DC.invoice.items) || []; return I.filter(function (x) { return hit(w, x); }).map(function (x) { return { id: x.id, title: x.title || x.name || '' }; }); }
-  window.mlTg = function (el, id) { OPEN[id] = !OPEN[id]; var g = el.parentNode; g.classList.toggle('on', OPEN[id]); if (OPEN[id]) fillOne(g, id); };
   function ctxOf(id) {
     var w = (WO.items || []).filter(function (x) { return x.id === id; })[0]; if (!w) return null;
     var d = WO.xc && WO.xc[id], I = (d && d.info) || {};
-    var docs = pdocs(w);
-    var anyBill = docs.some(function (x) { return !isQ(x.title); }), anyQ = docs.some(function (x) { return isQ(x.title); });
+    var docs = pdocs(w), anyBill = docs.some(function (x) { return !isQ(x.title); }), anyQ = docs.some(function (x) { return isQ(x.title); });
     return { key: 'wo:' + id, kind: anyBill ? 'bill' : anyQ ? 'quote' : 'done', client: I['거래처'] || w.clientKey, artist: I['아티스트명'] || w.artist,
       project: String(w.title || '').split('·')[0].trim(), manager: I['담당자'] || String(w.title || '').split('·')[1] || '', link: (d && d.link) || '', docs: docs };
   }
-  function fillOne(g, id) {
-    var host = g.querySelector('.ml-host'); if (!host) return;
-    var c = ctxOf(id); if (!c) return;
-    var S = ML[c.key]; if (S) { S.docs = c.docs; if (c.link && !S.link) S.link = c.link; }
-    if (host.getAttribute('data-ml') === c.key && host.firstChild) return;
-    mlMount(host, c);
-  }
-  function deco() {
-    document.querySelectorAll('#wo-list .wo-item.xo').forEach(function (e) {
-      var id = e.getAttribute('data-id'), x = e.querySelector('.wo-x'), sum = x && x.querySelector('.wx-sum'); if (!sum) return;
-      var g = x.querySelector('.ml-tg');
-      if (g && g.previousElementSibling === sum) { if (OPEN[id]) fillOne(g, id); return; }
-      if (g) g.remove();
-      sum.insertAdjacentHTML('afterend', '<div class="wx-tg ml-tg' + (OPEN[id] ? ' on' : '') + '" data-k="ml"><div class="sm" onclick="event.stopPropagation();mlTg(this,\'' + esc(id) + '\')">메일 보내기<span>사전견적서 · 대금청구서 · 작업전달</span><i></i></div><div class="bd" onclick="event.stopPropagation()"><div class="ml-host"></div></div></div>');
-      if (OPEN[id]) fillOne(x.querySelector('.ml-tg'), id);
-    });
-  }
-  // 카드 아이콘 줄(폴더·작업내역서·청구서 옆)에 메일 아이콘
-  var SVM = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>';
   window.mlOpen = function (id) {
-    OPEN[id] = true;
-    var e = [].filter.call(document.querySelectorAll('#wo-list .wo-item'), function (x) { return x.getAttribute('data-id') === id; })[0]; if (!e) return;
-    if (!e.classList.contains('xo')) woX(id); else sch();
-    var n = 0; (function go() { var g = e.querySelector('.ml-tg'); if (g) { g.classList.add('on'); fillOne(g, id); g.scrollIntoView({ behavior: 'smooth', block: 'start' }); } else if (n++ < 30) setTimeout(go, 300); })();
+    var d = WO.xc && WO.xc[id];
+    var go = function () { var c = ctxOf(id); if (!c) return; var S = ML[c.key]; if (S) { S.docs = c.docs; if (c.link && !S.link) { S.link = c.link; if (!S.edited) { var t = tpl(S); S.subject = t.s; S.body = t.b; } } } mlShow(c); };
+    if (d && d.tabs) { go(); return; }
+    // 작업 폴더 링크·담당자를 작업내역서에서 먼저 읽어옴
+    toast('작업내역서 정보를 불러오는 중…');
+    woGet('&wo=' + encodeURIComponent(id), function (r) { if (r && r.ok && r.tabs) { WO.xc = WO.xc || {}; WO.xc[id] = r; } go(); });
   };
   function icons() {
     document.querySelectorAll('#wo-list .wo-item[data-id] .wx-ic').forEach(function (ic) {
@@ -8683,8 +8721,8 @@ var ML_URL = 'https://script.google.com/macros/s/AKfycbx2jTEAyzqei0LjXg6YnMZsoFN
       ic.insertAdjacentHTML('beforeend', '<button type="button" class="wx-ib ml-ic" title="메일 보내기" onclick="event.stopPropagation();mlOpen(\'' + esc(id) + '\')">' + SVM + '</button>');
     });
   }
-  var tm; function sch() { clearTimeout(tm); tm = setTimeout(function () { deco(); icons(); }, 120); }
-  (function obs() { var l = document.getElementById('wo-list'); if (!l) { setTimeout(obs, 1000); return; } new MutationObserver(function (m) { if (m.some(function (r) { var t = r.target; return !(t.closest && t.closest('.ml-tg')); })) sch(); }).observe(l, { childList: true, subtree: true }); sch(); })();
+  var tm; function sch() { clearTimeout(tm); tm = setTimeout(icons, 120); }
+  (function obs() { var l = document.getElementById('wo-list'); if (!l) { setTimeout(obs, 1000); return; } new MutationObserver(function (m) { if (m.some(function (r) { return ![].some.call(r.addedNodes, function (n) { return n.nodeType === 1 && n.classList.contains('ml-ic'); }); })) sch(); }).observe(l, { childList: true, subtree: true }); sch(); })();
 })();
 </script>
 
