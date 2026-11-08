@@ -7,7 +7,7 @@
 <meta name="theme-color" content="#f2f4f6">
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=3">
 <link rel="apple-touch-icon" href="apple-touch-icon.png?v=3">
-<meta name="pm-build" content="202611081300">
+<meta name="pm-build" content="202611081320">
 <link rel="manifest" href="manifest.webmanifest?v=3">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -8503,6 +8503,19 @@ td.rate-val{white-space:nowrap}
 .ml-st.ok{color:#05a46b}.ml-st.warn{color:var(--danger,#f04452)}
 .ml-st a{color:var(--acc);font-weight:600}
 .ml-note{font-size:12px;color:var(--txt3);line-height:1.5;margin:0 2px 12px}
+.ml-mp{border:1px solid var(--bdr);border-radius:12px;overflow:hidden;margin:0 0 12px;background:#fff}
+.ml-mp .hd{padding:12px 14px;background:#f7f8fa;border-bottom:1px solid var(--bdr)}
+.ml-mp .r{display:flex;gap:10px;font-size:12px;line-height:1.7}
+.ml-mp .r span{flex:none;width:62px;color:var(--txt3)}
+.ml-mp .r b{font-weight:500;color:var(--txt);word-break:break-all}
+.ml-mp .sj{margin-top:8px;font-size:16px;font-weight:700;color:var(--txt)}
+.ml-mp .bd{padding:16px 14px;font-size:14px;line-height:1.7;color:#222;word-break:break-all}
+.ml-mp .bd a{color:var(--acc)}
+.ml-mp .at{display:flex;flex-wrap:wrap;gap:6px;padding:0 14px 14px}
+.ml-mp .at .f{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--bdr);border-radius:8px;padding:6px 10px;font-size:12px;color:var(--txt);max-width:100%}
+.ml-mp .at em{font-style:normal;font-size:10px;font-weight:800;color:#fff;background:#f04452;border-radius:4px;padding:1px 4px}
+.ml-mp .at small{color:var(--txt3)}
+.ml-mp i{color:var(--txt3)}
 .ml-ibtn{display:inline-flex;align-items:center;gap:6px;height:40px;padding:0 14px;border:0;border-radius:10px;background:#191f28;color:#fff;font-family:inherit;font-size:14px;font-weight:600;cursor:pointer}
 .ml-ibtn svg{width:16px;height:16px}
 @media (max-width:520px){.ml-at .r2{flex-wrap:wrap}.ml-at .fn{flex-basis:100%}.ml-at select{max-width:none;flex:1}.ml-pvw iframe{height:380px}}
@@ -8596,11 +8609,23 @@ var ML_URL = 'https://script.google.com/macros/s/AKfycbx2jTEAyzqei0LjXg6YnMZsoFN
   }
   function foot(S) {
     var k = q(S.key), dr = S.draft;
-    var act = !dr ? '<button type="button" class="btn btn-p" onclick="mlDraft(' + k + ',this)">초안 만들기</button>' :
+    var pvb = '<button type="button" class="btn btn-g" onclick="mlMp(' + k + ')">' + (S.mp ? '미리보기 닫기' : '메일 미리보기') + '</button>';
+    var act = !dr ? pvb + '<button type="button" class="btn btn-p" onclick="mlDraft(' + k + ',this)">초안 만들기</button>' :
       (S.dirty ? '<button type="button" class="btn btn-p" onclick="mlDraft(' + k + ',this)">초안 다시 저장</button>' :
         '<button type="button" class="btn btn-g" onclick="mlDrop(' + k + ',this)">초안 지우기</button><button type="button" class="btn btn-k' + (S.cf ? ' cf' : '') + '" onclick="mlSend(' + k + ',this)">' + (S.cf ? '한 번 더 누르면 발송' : '보내기') + '</button>');
-    return '<div class="ml-act">' + act + '</div><div class="ml-st' + (S.stc ? ' ' + S.stc : '') + '">' + (S.st || '') + '</div>';
+    return (S.mp ? mailPv(S) : '') + '<div class="ml-act">' + act + '</div><div class="ml-st' + (S.stc ? ' ' + S.stc : '') + '">' + (S.st || '') + '</div>';
   }
+  // 메일 미리보기: 받는 쪽에서 보이는 모양 그대로 (보내는 사람·받는 사람·참조·제목·본문·첨부)
+  function mailPv(S) {
+    var froms = (INFO && INFO.from) || ['pitch@pitchpitch.kr'], from = S.from || froms[0];
+    var body = esc(S.body).replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" target="_blank">$1</a>').replace(/\n/g, '<br>');
+    var at = S.kind === 'done' ? [] : Object.keys(S.att).map(function (id) { var a = S.att[id], T = TABS[id], tb = T && T.tabs ? T.tabs.filter(function (t) { return String(t.gid) === String(a.gid); })[0] : null; return { n: String(a.name || (T && T.name) || '첨부').replace(/\.pdf$/i, '') + '.pdf', t: tb ? tb.name : '' }; });
+    var row = function (l, v) { return '<div class="r"><span>' + l + '</span><b>' + v + '</b></div>'; };
+    return '<div class="ml-mp"><div class="hd">' + row('보내는 사람', '핏치컴퍼니 &lt;' + esc(from) + '&gt;') + row('받는 사람', esc(mails(S.to).join(', ')) || '<i>없음</i>') + (S.cc.length ? row('참조', esc(S.cc.join(', '))) : '') +
+      '<div class="sj">' + (esc(S.subject) || '<i>제목 없음</i>') + '</div></div><div class="bd">' + body + '</div>' +
+      (at.length ? '<div class="at">' + at.map(function (x) { return '<span class="f"><em>PDF</em>' + esc(x.n) + (x.t ? '<small>' + esc(x.t) + ' 탭</small>' : '') + '</span>'; }).join('') + '</div>' : '') + '</div>';
+  }
+  window.mlMp = function (key) { var S = ML[key]; S.mp = !S.mp; paintFoot(key); if (S.mp) { var e = host() && host().querySelector('.ml-mp'); if (e) e.scrollIntoView({ behavior: 'smooth', block: 'start' }); } };
   function host() { return document.getElementById('ml-host'); }
   function paintFoot(key) { var h = host(); if (CUR !== key || !h) return; var f = h.querySelector('.ml-foot'); if (f) f.innerHTML = foot(ML[key]); }
   function paint(key) { var h = host(); if (CUR !== key || !h) return; var y = h.closest('.md').scrollTop; h.innerHTML = html(ML[key]); h.closest('.md').scrollTop = y; }
@@ -8634,7 +8659,7 @@ var ML_URL = 'https://script.google.com/macros/s/AKfycbx2jTEAyzqei0LjXg6YnMZsoFN
     Object.keys(S.att).forEach(function (id) { loadTabs(key, id); });
     paint(key);
   };
-  window.mlSet = function (key, f, v, typed) { var S = ML[key]; if (!S) return; S[f] = v; if (typed) S.edited = true; var was = S.dirty; stale(S); if (S.draft && !was) { S.st = '고친 내용이 있어요 · 초안을 다시 저장해 주세요'; S.stc = ''; paintFoot(key); } };
+  window.mlSet = function (key, f, v, typed) { var S = ML[key]; if (!S) return; S[f] = v; if (typed) S.edited = true; var was = S.dirty; stale(S); if (S.draft && !was) { S.st = '고친 내용이 있어요 · 초안을 다시 저장해 주세요'; S.stc = ''; paintFoot(key); } else if (S.mp) paintFoot(key); };
   window.mlTo = function (key, v) { var S = ML[key]; if (v === '__direct') { S.toDirect = true; S.to = ''; } else { S.toDirect = false; S.to = v; S.cc = S.cc.filter(function (m) { return m !== v; }); } stale(S); paint(key); };
   window.mlCcT = function (key) { var S = ML[key]; S.ccOpen = !S.ccOpen; paint(key); };
   window.mlCc = function (key, m, on) { var S = ML[key]; var i = S.cc.indexOf(m); if (on && i < 0) S.cc.push(m); if (!on && i >= 0) S.cc.splice(i, 1); stale(S); paint(key); };
