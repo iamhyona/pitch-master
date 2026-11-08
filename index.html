@@ -7,7 +7,7 @@
 <meta name="theme-color" content="#f2f4f6">
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=3">
 <link rel="apple-touch-icon" href="apple-touch-icon.png?v=3">
-<meta name="pm-build" content="202611081150">
+<meta name="pm-build" content="202611081210">
 <link rel="manifest" href="manifest.webmanifest?v=3">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -8490,7 +8490,7 @@ td.rate-val{white-space:nowrap}
 var ML_URL = 'https://script.google.com/macros/s/AKfycbx2jTEAyzqei0LjXg6YnMZsoFNvCHTr2Y0D0i4MrCbc1B32AvaCS2BPcPSH1FlRAOMbzg/exec'; // [PITCH]메일 웹앱 (pitch@ 계정)
 (function () {
   var ML = window.MLS = window.MLS || {}, INFO = null, INFO_WAIT = [], TABS = {};
-  var KIND = { quote: '사전견적서', bill: '대금청구서', done: '작업완료' };
+  var KIND = { quote: '사전견적서', bill: '대금청구서', done: '작업전달' };
   function post(action, data) {
     return fetch(ML_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ action: action, data: data || {}, k: PM_K }) })
       .then(function (r) { return r.json(); }).catch(function () { return { ok: false, error: '메일 서버 연결 실패 — 잠시 후 다시 시도해주세요' }; })
@@ -8508,7 +8508,7 @@ var ML_URL = 'https://script.google.com/macros/s/AKfycbx2jTEAyzqei0LjXg6YnMZsoFN
   function tpl(S) {
     var a = short(S.artist), p = String(S.project || '').trim(), what = [a, p].filter(Boolean).join(' ') || '작업', m = S.mgrName;
     var hi = '안녕하세요' + (m ? ', ' + m + '님' : '') + '.\n핏치컴퍼니입니다.\n\n', sign = '\n\n감사합니다.\n핏치컴퍼니 드림\n\nPITCH | pitch@pitchpitch.kr';
-    if (S.kind === 'quote') return { s: '[핏치컴퍼니] ' + what + ' 견적서 송부', b: hi + what + ' 리터칭 견적서 보내드립니다.\n첨부 파일 확인해 주시고, 진행 여부 알려주시면 감사하겠습니다.' + sign };
+    if (S.kind === 'quote') return { s: '[PITCH] ' + what + ' 사전견적서', b: '안녕하세요, 핏치입니다.\n요청하신 사전 견적서를 PDF 파일로 첨부드립니다.\n첨부파일 확인 부탁드리며, \n검토 중 궁금하신 점이나 \n추가 요청 사항이 있으시면 편하게 말씀 부탁드립니다.\n감사합니다. :)\n\n핏치 드림' };
     if (S.kind === 'bill') return { s: '[핏치컴퍼니] ' + what + ' 청구서 송부', b: hi + what + ' 작업 청구서 보내드립니다.\n첨부 파일 확인 부탁드립니다.' + sign };
     return { s: '[핏치컴퍼니] ' + what + ' 리터칭 작업 완료 안내', b: hi + what + ' 리터칭 작업이 완료되어 안내드립니다.\n아래 링크에서 확인 부탁드립니다.\n\n' + (S.link || '(작업 폴더 링크)') + '\n\n수정이 필요한 부분이 있으시면 편하게 말씀해 주세요.' + sign };
   }
@@ -8664,7 +8664,7 @@ var ML_URL = 'https://script.google.com/macros/s/AKfycbx2jTEAyzqei0LjXg6YnMZsoFN
       var g = x.querySelector('.ml-tg');
       if (g && g.previousElementSibling === sum) { if (OPEN[id]) fillOne(g, id); return; }
       if (g) g.remove();
-      sum.insertAdjacentHTML('afterend', '<div class="wx-tg ml-tg' + (OPEN[id] ? ' on' : '') + '" data-k="ml"><div class="sm" onclick="event.stopPropagation();mlTg(this,\'' + esc(id) + '\')">메일 보내기<span>견적서 · 청구서 · 작업완료</span><i></i></div><div class="bd" onclick="event.stopPropagation()"><div class="ml-host"></div></div></div>');
+      sum.insertAdjacentHTML('afterend', '<div class="wx-tg ml-tg' + (OPEN[id] ? ' on' : '') + '" data-k="ml"><div class="sm" onclick="event.stopPropagation();mlTg(this,\'' + esc(id) + '\')">메일 보내기<span>사전견적서 · 대금청구서 · 작업전달</span><i></i></div><div class="bd" onclick="event.stopPropagation()"><div class="ml-host"></div></div></div>');
       if (OPEN[id]) fillOne(x.querySelector('.ml-tg'), id);
     });
   }
