@@ -7,7 +7,7 @@
 <meta name="theme-color" content="#f2f4f6">
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=3">
 <link rel="apple-touch-icon" href="apple-touch-icon.png?v=3">
-<meta name="pm-build" content="202611081320">
+<meta name="pm-build" content="202611081340">
 <link rel="manifest" href="manifest.webmanifest?v=3">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -8530,6 +8530,7 @@ var ML_URL = 'https://script.google.com/macros/s/AKfycbx2jTEAyzqei0LjXg6YnMZsoFN
 (function () {
   var ML = window.MLS = window.MLS || {}, INFO = null, INFO_WAIT = [], TABS = {}, CUR = '';
   var KIND = { quote: '사전견적서', bill: '대금청구서', done: '작업전달' };
+  var FROM_LB = { pitch: '핏치', kim: '김현수', tax: '세금계산서' };
   function post(action, data) {
     return fetch(ML_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ action: action, data: data || {}, k: PM_K }) })
       .then(function (r) { return r.json(); }).catch(function () { return { ok: false, error: '메일 서버 연결 실패 — 잠시 후 다시 시도해주세요' }; })
@@ -8598,12 +8599,12 @@ var ML_URL = 'https://script.google.com/macros/s/AKfycbx2jTEAyzqei0LjXg6YnMZsoFN
       return '<div class="ml-at">' + head + '<div class="r2">' + fn + tabSel + pb + '</div>' + w + '</div>';
     }).join('') : '<div class="ml-none">첨부할 ' + (S.kind === 'quote' ? '견적서' : '청구서') + '가 없어요 · 인보이스 메뉴에서 먼저 만들어 주세요</div>');
     return '<div class="ml-box"><div class="rt-seg">' + Object.keys(KIND).map(function (x) { return '<button type="button" class="' + (S.kind === x ? 'on' : '') + '" onclick="mlKind(' + k + ',\'' + x + '\')">' + KIND[x] + '</button>'; }).join('') + '</div>' +
+      '<div class="fg"><label class="fl">보내는 사람</label><select class="fi sm" onchange="mlSet(' + k + ',\'from\',this.value)">' + froms.map(function (f) { return '<option value="' + esc(f) + '"' + ((S.from || froms[0]) === f ? ' selected' : '') + '>' + esc((FROM_LB[f.split('@')[0]] ? FROM_LB[f.split('@')[0]] + ' · ' : '') + f) + '</option>'; }).join('') + '</select></div>' +
       '<div class="fg"><label class="fl">받는 사람</label>' + toSel + '</div>' +
       '<div class="fg"><label class="fl">참조</label>' + ccHtml + '</div>' +
       '<div class="fg"><label class="fl">제목</label><input class="fi sm" value="' + esc(S.subject) + '" oninput="mlSet(' + k + ',\'subject\',this.value,1)"></div>' +
       '<div class="fg"><label class="fl">내용</label><textarea class="fi" oninput="mlSet(' + k + ',\'body\',this.value,1)">' + esc(S.body) + '</textarea></div>' +
       (S.kind === 'done' ? '' : '<div class="fg"><label class="fl">첨부 (PDF)</label>' + docs + '</div>') +
-      '<div class="fg"><label class="fl">보내는 주소</label><select class="fi sm" onchange="mlSet(' + k + ',\'from\',this.value)">' + froms.map(function (f) { return '<option' + ((S.from || froms[0]) === f ? ' selected' : '') + '>' + esc(f) + '</option>'; }).join('') + '</select></div>' +
       '<div class="ml-note">바로 보내지 않고 pitch@ Gmail 임시보관함에 초안을 먼저 만들어요. 확인한 뒤 보내기를 눌러주세요.</div>' +
       '<div class="ml-foot">' + foot(S) + '</div></div>';
   }
