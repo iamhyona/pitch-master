@@ -7,7 +7,7 @@
 <meta name="theme-color" content="#f2f4f6">
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=3">
 <link rel="apple-touch-icon" href="apple-touch-icon.png?v=3">
-<meta name="pm-build" content="202611080350">
+<meta name="pm-build" content="202611081100">
 <link rel="manifest" href="manifest.webmanifest?v=3">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -8107,6 +8107,17 @@ td.rate-val{white-space:nowrap}
 .wx-doc .w{flex:none;font-size:12px;color:var(--txt3)}
 .wx-doc .go{flex:none;color:#c9ced4;font-size:16px}
 @media (max-width:520px){.wx-tr{grid-template-columns:minmax(56px,1fr) .6fr 1.1fr 62px}.wx-tr .dt{display:none}.wx-tr.iv{grid-template-columns:minmax(56px,1fr) 1.2fr 62px}.wx-tr.iv .s,.wx-tr.iv .dt{display:none}.wx-kpi b{font-size:13px}}
+#wo-orph .wo-og{border:1px solid var(--line,#eef0f3);border-radius:14px;padding:4px 12px;margin-bottom:8px}
+#wo-orph .ogh{display:flex;align-items:center;gap:8px;padding:9px 0 5px;font-size:13px;flex-wrap:wrap}
+#wo-orph .ogh .ck{font-size:11px;font-weight:700;color:var(--txt2);background:var(--chip);border-radius:6px;padding:2px 7px}
+#wo-orph .ogh b{color:var(--txt);font-weight:700}
+#wo-orph .ogh small{margin-left:auto;font-size:11px;color:var(--txt3)}
+#wo-orph .wx-doc .dpb{flex:none;font-size:11px;font-weight:700;color:#f04452;background:rgba(240,68,82,.1);border-radius:6px;padding:2px 6px}
+.wo-dup{background:rgba(240,68,82,.05);border:1px solid rgba(240,68,82,.25);border-radius:14px;padding:10px 12px;margin-bottom:12px}
+.wo-dup .dh{font-size:13px;font-weight:700;color:#f04452;margin-bottom:4px}
+.wo-dup .dh small{display:block;font-size:11px;font-weight:500;color:var(--txt3);margin-top:2px}
+.wo-dup .dg{background:#fff;border-radius:10px;padding:0 10px;margin-top:6px}
+#wo-orph:has(.wo-dup:only-child){padding-bottom:6px}
 </style>
 <script>
 (function () {
@@ -8400,8 +8411,37 @@ td.rate-val{white-space:nowrap}
     if (ok && W.length) {
       var minD = W.map(function (w) { return w.date6; }).filter(Boolean).sort()[0] || '';
       var R = all.filter(function (d) { return d.x.date6 && d.x.date6 >= minD && !W.some(function (w) { return hit(w, d.x); }); });
-      if (R.length) html = '<div class="ttl" onclick="this.parentNode.classList.toggle(\'on\')">작업내역서 없는 청구서 · 지급내역<span>' + R.length + '건</span><i></i></div><div class="ob"><div class="sub">디자인 등 리터칭 외 작업이나 작업내역서와 연결되지 않은 문서예요 (작업내역과 같은 기간)</div>' +
-        R.map(function (d) { var x = d.x, q = d.k === 'invoice' && isQ(x); return '<div class="wx-doc" onclick="dcOpen(\'' + esc(x.id) + '\')"><span class="wx-tag2 ' + (d.k === 'pay' ? 'py' : q ? 'q' : 'iv') + '">' + (d.k === 'pay' ? '지급내역' : q ? '견적서' : '청구서') + '</span><span class="t">' + esc([x.clientKey, x.artist, x.title].filter(Boolean).join(' · ')) + (x.date6 ? '<small>' + esc(x.date6) + '</small>' : '') + '</span><span class="w">' + esc(x.worker || '') + '</span><span class="go">›</span></div>'; }).join('') + '</div>';
+      // 2026-11-08 (현아): 작업내역서 없어도 아티스트·프로젝트로 묶고, 같은 문서가 두 번 잡히면 '중복 의심'으로 알려줌
+      var DK = function (d) { var x = d.x; return [d.k, N(x.clientKey), N(x.artist), N(x.title), x.date6, N(x.worker)].join('|'); };
+      var DC_ = {}; all.forEach(function (d) { if (d.x.date6 && d.x.date6 >= minD) { var k = DK(d); (DC_[k] = DC_[k] || []).push(d); } });
+      var DUP = Object.keys(DC_).filter(function (k) { return DC_[k].length > 1; }).map(function (k) { return DC_[k]; });
+      var dupOf = {}; DUP.forEach(function (L) { L.forEach(function (d) { dupOf[d.x.id] = 1; }); });
+      var tag = function (d) { var q = d.k === 'invoice' && isQ(d.x); return '<span class="wx-tag2 ' + (d.k === 'pay' ? 'py' : q ? 'q' : 'iv') + '">' + (d.k === 'pay' ? '지급내역' : q ? '견적서' : '청구서') + '</span>'; };
+      var row = function (d, full) { var x = d.x, t = full ? [x.clientKey, x.artist, x.title] : [x.title]; return '<div class="wx-doc' + (dupOf[x.id] ? ' dp' : '') + '" onclick="dcOpen(\'' + esc(x.id) + '\')">' + tag(d) + '<span class="t">' + esc(t.filter(Boolean).join(' · ')) + (x.date6 ? '<small>' + esc(x.date6) + '</small>' : '') + '</span>' + (dupOf[x.id] ? '<span class="dpb">중복?</span>' : '') + '<span class="w">' + esc(x.worker || '') + '</span><span class="go">›</span></div>'; };
+      if (DUP.length) html += '<div class="wo-dup"><div class="dh">⚠ 중복 의심 ' + DUP.length + '건<small>같은 거래처·아티스트·프로젝트·날짜·작업자 문서가 2개 이상이에요. 열어서 하나가 사본이면 지워주세요</small></div>' +
+        DUP.map(function (L) { return '<div class="dg">' + L.map(function (d) { return row(d, true); }).join('') + '</div>'; }).join('') + '</div>';
+      if (R.length) {
+        var G = [];
+        R.forEach(function (d) {
+          var x = d.x, a = N(x.artist), p = P(x.title), c = N(x.clientKey);
+          var g = G.filter(function (g) { return (a ? g.a === a : (!g.a && g.c === c)) && (p && g.p ? (g.p.indexOf(p) === 0 || p.indexOf(g.p) === 0) : g.p === p); })[0];
+          if (!g) { g = { a: a, p: p, c: c, L: [] }; G.push(g); }
+          if (p && p.length < g.p.length) g.p = p;
+          g.L.push(d);
+        });
+        G.forEach(function (g) {
+          g.L.sort(function (u, v) { return String(v.x.date6).localeCompare(String(u.x.date6)) || (u.k === v.k ? 0 : u.k === 'invoice' ? -1 : 1); });
+          var iv = g.L.filter(function (d) { return d.k === 'invoice'; })[0] || g.L[0], x = iv.x, pt = g.L.map(function (d) { return String(d.x.title || '').split('·')[0].trim(); }).filter(Boolean).sort(function (u, v) { return u.length - v.length; })[0] || '';
+          g.top = g.L[0].x.date6 || ''; g.ck = x.clientKey; g.ar = x.artist; g.pt = pt;
+          var ds = g.L.map(function (d) { return d.x.date6; }).filter(Boolean).sort(); g.dr = ds.length ? (ds[0] === ds[ds.length - 1] ? ds[0] : ds[0] + '~' + ds[ds.length - 1]) : '';
+          g.ni = g.L.filter(function (d) { return d.k === 'invoice'; }).length; g.np = g.L.length - g.ni;
+        });
+        G.sort(function (u, v) { return String(v.top).localeCompare(String(u.top)); });
+        html += '<div class="ttl" onclick="this.parentNode.classList.toggle(\'on\')">작업내역서 없는 프로젝트<span>' + G.length + '개 · 문서 ' + R.length + '건</span><i></i></div><div class="ob"><div class="sub">디자인 등 리터칭 외 작업이나 작업내역서와 연결되지 않은 문서를 아티스트·프로젝트별로 묶었어요 (작업내역과 같은 기간)</div>' +
+          G.map(function (g) {
+            return '<div class="wo-og"><div class="ogh"><span class="ck">' + esc(g.ck || '') + '</span><b>' + esc([g.ar, g.pt].filter(Boolean).join(' · ') || '(프로젝트명 없음)') + '</b><small>' + esc(g.dr) + ' · ' + [g.ni ? (g.ni + '청구') : '', g.np ? (g.np + '지급') : ''].filter(Boolean).join(' ') + '</small></div>' + g.L.map(function (d) { return row(d, false); }).join('') + '</div>';
+          }).join('') + '</div>';
+      }
     }
     if (o._h !== html) { o._h = html; o.innerHTML = html; }
   }
@@ -8412,6 +8452,223 @@ td.rate-val{white-space:nowrap}
   if (typeof dcRender === 'function') { var _dr = dcRender; window.dcRender = dcRender = function () { var r = _dr.apply(this, arguments); sch(); return r; }; }
   var _sw = switchTab; window.switchTab = switchTab = function (t) { var r = _sw.apply(this, arguments); if (t === 'dash') { obs(); sch(); } return r; };
   setTimeout(sch, 1500); setTimeout(sch, 5000);
+})();
+</script>
+
+<style>
+/* 2026-11-08 메일 보내기 (pitch@pitchpitch.kr) */
+.ml-tg>.bd{padding:2px 0 10px}
+.ml-box .rt-seg{margin-bottom:10px}
+.ml-box .fg{margin-bottom:9px}
+.ml-box textarea.fi{min-height:180px;line-height:1.6}
+.ml-chips{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 6px}
+.ml-chips button{height:30px;border:1px solid var(--bdr);background:#fff;border-radius:15px;padding:0 11px;font-family:inherit;font-size:13px;color:var(--txt2);cursor:pointer;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ml-chips button.on{background:#191f28;border-color:#191f28;color:#fff}
+.ml-chips button small{opacity:.6;margin-left:4px;font-size:11px}
+.ml-at{display:flex;align-items:center;gap:8px;padding:8px 10px;border:1px solid var(--bdr);border-radius:10px;margin-bottom:6px;font-size:13px}
+.ml-at input[type=checkbox]{width:18px;height:18px;flex:none;accent-color:#191f28}
+.ml-at .n{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--txt)}
+.ml-at .n em{font-style:normal;font-size:11px;font-weight:700;color:var(--acc);margin-right:5px}
+.ml-at select{flex:none;max-width:42%;height:30px;border:1px solid var(--bdr);border-radius:8px;background:#fff;font-family:inherit;font-size:12px;padding:0 6px}
+.ml-none{font-size:12px;color:var(--txt3);padding:2px 2px 6px}
+.ml-act{display:flex;gap:8px;margin-top:4px}
+.ml-act .btn{flex:1;height:44px;font-size:14px;border-radius:10px}
+.ml-act .btn-g{background:var(--chip);color:var(--txt)}
+.ml-act .btn-k{background:#191f28;color:#fff}
+.ml-act .btn-k.cf{background:#f04452}
+.ml-st{font-size:12px;color:var(--txt3);line-height:1.55;margin-top:8px;word-break:break-all}
+.ml-st.ok{color:#05a46b}.ml-st.warn{color:var(--danger,#f04452)}
+.ml-st a{color:var(--acc);font-weight:600}
+.ml-note{font-size:12px;color:var(--txt3);line-height:1.5;margin:0 2px 10px}
+</style>
+<script>
+// 2026-11-08 (현아): 메일 보내기 — pitch@pitchpitch.kr 계정 스크립트로 Gmail 초안 → 확인 후 발송
+//  · 사전견적서 · 대금청구서 (시트를 PDF로 첨부) · 리터칭 작업완료 안내 (작업 폴더 링크)
+//  · 받는 사람: 거래처마스터 담당자 탭 · 보내는 주소: pitch@ + Gmail에 등록된 별칭
+//  · 바로 보내지 않음: 초안 만들기 → [보내기]를 두 번 눌러야 발송
+var ML_URL = 'https://script.google.com/macros/s/AKfycbx2jTEAyzqei0LjXg6YnMZsoFNvCHTr2Y0D0i4MrCbc1B32AvaCS2BPcPSH1FlRAOMbzg/exec'; // [PITCH]메일 웹앱 (pitch@ 계정)
+(function () {
+  var ML = window.MLS = window.MLS || {}, INFO = null, INFO_WAIT = [], TABS = {};
+  var KIND = { quote: '사전견적서', bill: '대금청구서', done: '작업완료' };
+  function post(action, data) {
+    return fetch(ML_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ action: action, data: data || {}, k: PM_K }) })
+      .then(function (r) { return r.json(); }).catch(function () { return { ok: false, error: '메일 서버 연결 실패 — 잠시 후 다시 시도해주세요' }; })
+      .then(function (d) { if (d && d.auth === false) { toast('메일 서버 비밀번호 확인 실패 — 다시 로그인해주세요'); } return d || { ok: false, error: '응답 없음' }; });
+  }
+  function info(cb) {
+    if (INFO) { cb(INFO); return; } INFO_WAIT.push(cb); if (INFO_WAIT.length > 1) return;
+    post('ml_info').then(function (d) { INFO = d && d.ok ? d : { ok: false, from: ['pitch@pitchpitch.kr'], error: d && d.error }; if (!d || !d.ok) setTimeout(function () { INFO = null; }, 30000); var w = INFO_WAIT; INFO_WAIT = []; w.forEach(function (f) { f(INFO); }); });
+  }
+  var N = function (s) { return String(s || '').replace(/\s|·/g, '').toLowerCase(); };
+  function short(a) { a = String(a || '').trim(); var m = a.match(/^(.*?)\s*\(([^)]*)\)\s*$/); return m ? (m[2] || m[1]) : a; }
+  function client(key) { var k = N(key); return (PM.clients || []).filter(function (c) { return N(c.disp) === k || N(c.key) === k || N(c.ko) === k || N(c.en) === k; })[0] || null; }
+  function mails(s) { return String(s || '').split(/[,;\s/]+/).filter(function (x) { return /@/.test(x); }); }
+  function contacts(c) { if (!c) return []; return (PM.contacts || []).filter(function (k) { return k.client === c.disp && mails(k.email).length; }); }
+  function tpl(S) {
+    var a = short(S.artist), p = String(S.project || '').trim(), what = [a, p].filter(Boolean).join(' ') || '작업', m = S.mgrName;
+    var hi = '안녕하세요' + (m ? ', ' + m + '님' : '') + '.\n핏치컴퍼니입니다.\n\n', sign = '\n\n감사합니다.\n핏치컴퍼니 드림\n\nPITCH | pitch@pitchpitch.kr';
+    if (S.kind === 'quote') return { s: '[핏치컴퍼니] ' + what + ' 견적서 송부', b: hi + what + ' 리터칭 견적서 보내드립니다.\n첨부 파일 확인해 주시고, 진행 여부 알려주시면 감사하겠습니다.' + sign };
+    if (S.kind === 'bill') return { s: '[핏치컴퍼니] ' + what + ' 청구서 송부', b: hi + what + ' 작업 청구서 보내드립니다.\n첨부 파일 확인 부탁드립니다.' + sign };
+    return { s: '[핏치컴퍼니] ' + what + ' 리터칭 작업 완료 안내', b: hi + what + ' 리터칭 작업이 완료되어 안내드립니다.\n아래 링크에서 확인 부탁드립니다.\n\n' + (S.link || '(작업 폴더 링크)') + '\n\n수정이 필요한 부분이 있으시면 편하게 말씀해 주세요.' + sign };
+  }
+  function isQ(t) { return /견적/.test(t || ''); }
+  // ctx: { key, kind, client, artist, project, manager, link, docs:[{id,title}] }
+  function state(ctx) {
+    var S = ML[ctx.key];
+    if (S) { ['client', 'artist', 'project', 'manager', 'link'].forEach(function (k) { if (ctx[k] && !S[k]) S[k] = ctx[k]; }); if (ctx.docs) S.docs = ctx.docs; return S; }
+    var c = client(ctx.client), ks = contacts(c), mg = ks.filter(function (k) { return N(k.name) === N(ctx.manager); })[0];
+    S = ML[ctx.key] = { key: ctx.key, kind: ctx.kind || 'bill', client: ctx.client, artist: ctx.artist, project: ctx.project, manager: ctx.manager, link: ctx.link || '', docs: ctx.docs || [],
+      to: mg ? mails(mg.email)[0] : '', cc: '', from: '', att: {}, mgrName: mg ? mg.name : (ctx.manager || ''), draft: null, dirty: false, edited: false };
+    var t = tpl(S); S.subject = t.s; S.body = t.b; autoAtt(S);
+    return S;
+  }
+  function autoAtt(S) {
+    S.att = {};
+    if (S.kind === 'done') return;
+    var m = S.docs.filter(function (d) { return S.kind === 'quote' ? isQ(d.title) : !isQ(d.title); });
+    if (m[0]) S.att[m[0].id] = { gid: null };
+  }
+  function seg(S) { return '<div class="rt-seg">' + Object.keys(KIND).map(function (k) { return '<button type="button" class="' + (S.kind === k ? 'on' : '') + '" onclick="mlKind(\'' + esc(S.key) + '\',\'' + k + '\')">' + KIND[k] + '</button>'; }).join('') + '</div>'; }
+  function html(S) {
+    var c = client(S.client), ks = contacts(c), to = mails(S.to), cc = mails(S.cc), k = esc(S.key);
+    var tax = c ? (pmTaxMail(c) || '') : ''; try { var aa = (PM.artists || []).filter(function (x) { return N(x.en) === N(short(S.artist)) || N(x.ko) === N(short(S.artist)) || N(x.disp) === N(S.artist); })[0]; tax = (aa && pmArtistTaxMail(c, aa)) || tax; } catch (e) {}
+    var froms = (INFO && INFO.from) || ['pitch@pitchpitch.kr'];
+    var chip = function (m, nm, fld) { var on = (fld === 'to' ? to : cc).indexOf(m) >= 0; return '<button type="button" class="' + (on ? 'on' : '') + '" onclick="mlPick(\'' + k + '\',\'' + fld + '\',\'' + esc(m) + '\',\'' + esc(nm || '') + '\')">' + esc(nm || m) + (nm ? '<small>' + esc(m) + '</small>' : '') + '</button>'; };
+    var toChips = ks.map(function (x) { return mails(x.email).map(function (m) { return chip(m, x.name, 'to'); }).join(''); }).join('');
+    var ccChips = (tax ? chip(tax, '계산서 메일', 'cc') : '') + ks.map(function (x) { return mails(x.email).filter(function (m) { return to.indexOf(m) < 0; }).map(function (m) { return chip(m, x.name, 'cc'); }).join(''); }).join('');
+    var docs = S.kind === 'done' ? '' : (S.docs.length ? S.docs.map(function (d) {
+      var a = S.att[d.id], T = TABS[d.id];
+      var sel = a ? (T && T.tabs ? '<select onchange="mlTab(\'' + k + '\',\'' + esc(d.id) + '\',this.value)">' + T.tabs.map(function (t) { return '<option value="' + t.gid + '"' + (String(a.gid) === String(t.gid) ? ' selected' : '') + '>' + esc(t.name) + ' 탭</option>'; }).join('') + '</select>' : '<select disabled><option>' + (T === 'err' ? '탭 못 읽음' : '탭 확인 중…') + '</option></select>') : '';
+      return '<label class="ml-at"><input type="checkbox"' + (a ? ' checked' : '') + ' onchange="mlAtt(\'' + k + '\',\'' + esc(d.id) + '\',this.checked)"><span class="n"><em>' + (isQ(d.title) ? '견적서' : '청구서') + '</em>' + esc(d.title || d.id) + '</span>' + sel + '</label>';
+    }).join('') : '<div class="ml-none">첨부할 ' + (S.kind === 'quote' ? '견적서' : '청구서') + '가 없어요 · 인보이스 메뉴에서 먼저 만들어 주세요</div>');
+    return '<div class="ml-box">' + seg(S) +
+      '<div class="ml-note">바로 보내지 않고 <b>pitch@ Gmail 임시보관함</b>에 초안을 먼저 만들어요. 확인한 뒤 보내기를 눌러주세요.</div>' +
+      '<div class="fg"><label class="fl">보내는 주소</label><select class="fi sm" onchange="mlSet(\'' + k + '\',\'from\',this.value)">' + froms.map(function (f) { return '<option' + ((S.from || froms[0]) === f ? ' selected' : '') + '>' + esc(f) + '</option>'; }).join('') + '</select></div>' +
+      '<div class="fg"><label class="fl">받는 사람</label>' + (toChips ? '<div class="ml-chips">' + toChips + '</div>' : '') + '<input class="fi sm" value="' + esc(S.to) + '" placeholder="메일 주소 (여러 명은 쉼표로)" oninput="mlSet(\'' + k + '\',\'to\',this.value)" onchange="mlRe(\'' + k + '\')"></div>' +
+      '<div class="fg"><label class="fl">참조</label>' + (ccChips ? '<div class="ml-chips">' + ccChips + '</div>' : '') + '<input class="fi sm" value="' + esc(S.cc) + '" placeholder="(선택)" oninput="mlSet(\'' + k + '\',\'cc\',this.value)" onchange="mlRe(\'' + k + '\')"></div>' +
+      '<div class="fg"><label class="fl">제목</label><input class="fi sm" value="' + esc(S.subject) + '" oninput="mlSet(\'' + k + '\',\'subject\',this.value,1)"></div>' +
+      '<div class="fg"><label class="fl">내용</label><textarea class="fi" oninput="mlSet(\'' + k + '\',\'body\',this.value,1)">' + esc(S.body) + '</textarea></div>' +
+      (S.kind === 'done' ? '' : '<div class="fg"><label class="fl">첨부 (PDF)</label>' + docs + '</div>') +
+      '<div class="ml-foot">' + foot(S) + '</div></div>';
+  }
+  function foot(S) {
+    var k = esc(S.key), dr = S.draft;
+    var act = !dr ? '<button type="button" class="btn btn-p" onclick="mlDraft(\'' + k + '\',this)">초안 만들기</button>' :
+      (S.dirty ? '<button type="button" class="btn btn-p" onclick="mlDraft(\'' + k + '\',this)">초안 다시 저장</button>' :
+        '<button type="button" class="btn btn-g" onclick="mlDrop(\'' + k + '\',this)">초안 지우기</button><button type="button" class="btn btn-k' + (S.cf ? ' cf' : '') + '" onclick="mlSend(\'' + k + '\',this)">' + (S.cf ? '한 번 더 누르면 발송' : '보내기') + '</button>');
+    return '<div class="ml-act">' + act + '</div><div class="ml-st' + (S.stc ? ' ' + S.stc : '') + '">' + (S.st || '') + '</div>';
+  }
+  function paintFoot(key) { var S = ML[key]; document.querySelectorAll('[data-ml="' + key + '"] .ml-foot').forEach(function (el) { el.innerHTML = foot(S); }); }
+  function paint(key) { var S = ML[key]; if (!S) return; document.querySelectorAll('[data-ml="' + key.replace(/"/g, '') + '"]').forEach(function (el) { el.innerHTML = html(S); }); }
+  function loadTabs(key, id) {
+    if (TABS[id] && TABS[id] !== 'err') { pickTab(ML[key], id); return; }
+    TABS[id] = 'ld';
+    post('ml_tabs', { id: id }).then(function (d) { TABS[id] = d && d.ok ? d : 'err'; if (d && !d.ok && d.error) { var S = ML[key]; S.st = '⚠ ' + esc(d.error); S.stc = 'warn'; } pickTab(ML[key], id); paint(key); });
+  }
+  function pickTab(S, id) {
+    var a = S && S.att[id], T = TABS[id]; if (!a || !T || !T.tabs || a.gid != null) return;
+    var t = T.tabs.filter(function (x) { return /수정|사본/.test(x.name); }).pop() || T.tabs.filter(function (x) { return /청구|견적/.test(x.name); })[0] || T.tabs[0];
+    a.gid = t ? t.gid : ''; a.name = T.name;
+  }
+  function stale(S) { if (S.draft) { S.dirty = true; S.cf = false; } }
+  window.mlMount = function (el, ctx) {
+    var S = state(ctx); el.setAttribute('data-ml', S.key); el.innerHTML = html(S);
+    Object.keys(S.att).forEach(function (id) { loadTabs(S.key, id); });
+    if (!INFO) info(function () { paint(S.key); });
+  };
+  window.mlKind = function (key, kind) {
+    var S = ML[key]; if (!S || S.kind === kind) return;
+    if (S.edited && !S._kw) { S._kw = 1; S.st = '내용을 고친 상태예요 · 한 번 더 누르면 ' + KIND[kind] + ' 문구로 바꿔요'; S.stc = 'warn'; paint(key); setTimeout(function () { S._kw = 0; }, 4000); return; }
+    S._kw = 0; S.kind = kind; var t = tpl(S); S.subject = t.s; S.body = t.b; S.edited = false; autoAtt(S); stale(S); S.st = ''; S.stc = '';
+    Object.keys(S.att).forEach(function (id) { loadTabs(key, id); });
+    paint(key);
+  };
+  window.mlSet = function (key, f, v, typed) { var S = ML[key]; if (!S) return; S[f] = v; if (typed) S.edited = true; var was = S.dirty; stale(S); if (S.draft && !was) { S.st = '고친 내용이 있어요 · 초안을 다시 저장해 주세요'; S.stc = ''; paintFoot(key); } };
+  window.mlRe = function (key) { paint(key); };
+  window.mlPick = function (key, f, m, nm) {
+    var S = ML[key]; var L = mails(S[f]), i = L.indexOf(m);
+    if (i >= 0) L.splice(i, 1); else L.push(m);
+    S[f] = L.join(', ');
+    if (f === 'to' && nm && nm !== '계산서 메일' && !S.edited) { var first = (PM.contacts || []).filter(function (k) { return mails(k.email).indexOf(L[0]) >= 0; })[0]; S.mgrName = first ? first.name : ''; var t = tpl(S); S.subject = t.s; S.body = t.b; }
+    stale(S); paint(key);
+  };
+  window.mlAtt = function (key, id, on) { var S = ML[key]; if (on) { S.att[id] = { gid: null }; loadTabs(key, id); } else delete S.att[id]; stale(S); paint(key); };
+  window.mlTab = function (key, id, gid) { var S = ML[key]; if (S.att[id]) S.att[id].gid = gid; stale(S); };
+  window.mlDraft = function (key, b) {
+    var S = ML[key]; if (!mails(S.to).length) { toast('받는 사람 메일을 적어주세요'); return; }
+    var att = Object.keys(S.att).map(function (id) { var a = S.att[id], T = TABS[id]; return { id: id, gid: a.gid == null ? '' : a.gid, name: (T && T.name) || '' }; });
+    if (att.some(function (a) { return TABS[a.id] === 'ld'; })) { toast('첨부 시트 탭을 확인하는 중이에요 · 잠시 후 다시 눌러주세요'); return; }
+    b.disabled = true; b.textContent = att.length ? 'PDF 만들고 초안 저장 중…' : '초안 저장 중…';
+    post('ml_draft', { draftId: S.draft && S.draft.draftId, from: S.from || ((INFO && INFO.from) || [])[0] || '', to: S.to, cc: S.cc, subject: S.subject, body: S.body, attach: att }).then(function (d) {
+      if (d && d.ok) { S.draft = d; S.dirty = false; S.cf = false; S.stc = 'ok'; S.st = '✓ 초안 저장됨' + (d.files && d.files.length ? ' · 첨부 ' + d.files.map(esc).join(', ') : '') + ' · <a href="' + esc(d.url) + '" target="_blank">Gmail에서 보기 →</a>'; toast('메일 초안 저장'); }
+      else { S.stc = 'warn'; S.st = '⚠ 초안을 만들지 못했어요: ' + esc((d && d.error) || ''); }
+      paint(key);
+    });
+  };
+  window.mlSend = function (key, b) {
+    var S = ML[key]; if (!S.draft || S.dirty) return;
+    if (!S.cf) { S.cf = true; S.st = mails(S.to).map(esc).join(', ') + ' 에게 보내요 · 확인했으면 한 번 더 눌러주세요'; S.stc = 'warn'; paintFoot(key); clearTimeout(S._cft); S._cft = setTimeout(function () { if (S.cf) { S.cf = false; S.st = ''; S.stc = ''; paintFoot(key); } }, 6000); return; }
+    clearTimeout(S._cft); b.disabled = true; b.textContent = '보내는 중…';
+    post('ml_send', { draftId: S.draft.draftId }).then(function (d) {
+      S.cf = false;
+      if (d && d.ok) { var to = S.to; S.draft = null; S.st = '✓ ' + esc(to) + ' 에게 보냈어요 (' + new Date().toTimeString().slice(0, 5) + ') · <a href="https://mail.google.com/mail/?authuser=pitch@pitchpitch.kr#sent" target="_blank">보낸편지함 →</a>'; S.stc = 'ok'; toast('메일을 보냈어요'); }
+      else { S.st = '⚠ 보내지 못했어요: ' + esc((d && d.error) || ''); S.stc = 'warn'; }
+      paint(key);
+    });
+  };
+  window.mlDrop = function (key, b) {
+    var S = ML[key]; if (!S.draft) return; b.disabled = true;
+    post('ml_drop', { draftId: S.draft.draftId }).then(function () { S.draft = null; S.dirty = false; S.st = '초안을 지웠어요'; S.stc = ''; paint(key); });
+  };
+
+  // ── 1) 인보이스: 만든 직후 그 문서로 메일 ──
+  window.invMailPanel = function (res) {
+    var el = document.getElementById('inv-result'); if (!el || !res || !res.url) return;
+    var g = function (id) { var e = document.getElementById(id); return e ? String(e.value || '').trim() : ''; };
+    var id = (String(res.url).match(/\/d\/([\w-]{20,})/) || [])[1] || res.id || ''; if (!id) return;
+    var mg = g('inv-manager'); if (mg === '__direct__') mg = '';
+    var q = (window.INV_DOC || 'bill') === 'quote';
+    var box = document.createElement('div'); box.className = 'im-box'; box.id = 'inv-mail';
+    box.innerHTML = '<div class="inv-sec" style="margin-bottom:8px">메일 보내기</div><div class="ml-host"></div>';
+    var old = document.getElementById('inv-mail'); if (old) old.remove();
+    el.appendChild(box);
+    mlMount(box.querySelector('.ml-host'), { key: 'inv:' + id, kind: q ? 'quote' : 'bill', client: g('inv-client'), artist: g('inv-artist'), project: g('inv-project'), manager: mg,
+      link: g('inv-link'), docs: [{ id: id, title: (q ? '견적서 ' : '청구서 ') + (res.name || '') }] });
+  };
+
+  // ── 2) 프로젝트 카드 펼침: '메일' 토글 ──
+  var OPEN = {};
+  function P(t) { return N(String(t || '').split('·')[0]); }
+  function hit(w, x) { return x.date6 === w.date6 && N(x.clientKey) === N(w.clientKey) && (P(x.title) === P(w.title) || N(x.artist) === N(w.artist)); }
+  function pdocs(w) { var I = (typeof DC !== 'undefined' && DC.invoice && DC.invoice.items) || []; return I.filter(function (x) { return hit(w, x); }).map(function (x) { return { id: x.id, title: x.title || x.name || '' }; }); }
+  window.mlTg = function (el, id) { OPEN[id] = !OPEN[id]; var g = el.parentNode; g.classList.toggle('on', OPEN[id]); if (OPEN[id]) fillOne(g, id); };
+  function ctxOf(id) {
+    var w = (WO.items || []).filter(function (x) { return x.id === id; })[0]; if (!w) return null;
+    var d = WO.xc && WO.xc[id], I = (d && d.info) || {};
+    var docs = pdocs(w);
+    var anyBill = docs.some(function (x) { return !isQ(x.title); }), anyQ = docs.some(function (x) { return isQ(x.title); });
+    return { key: 'wo:' + id, kind: anyBill ? 'bill' : anyQ ? 'quote' : 'done', client: I['거래처'] || w.clientKey, artist: I['아티스트명'] || w.artist,
+      project: String(w.title || '').split('·')[0].trim(), manager: I['담당자'] || String(w.title || '').split('·')[1] || '', link: (d && d.link) || '', docs: docs };
+  }
+  function fillOne(g, id) {
+    var host = g.querySelector('.ml-host'); if (!host) return;
+    var c = ctxOf(id); if (!c) return;
+    var S = ML[c.key]; if (S) { S.docs = c.docs; if (c.link && !S.link) S.link = c.link; }
+    if (host.getAttribute('data-ml') === c.key && host.firstChild) return;
+    mlMount(host, c);
+  }
+  function deco() {
+    document.querySelectorAll('#wo-list .wo-item.xo').forEach(function (e) {
+      var id = e.getAttribute('data-id'), x = e.querySelector('.wo-x'), sum = x && x.querySelector('.wx-sum'); if (!sum) return;
+      var g = x.querySelector('.ml-tg');
+      if (g && g.previousElementSibling === sum) { if (OPEN[id]) fillOne(g, id); return; }
+      if (g) g.remove();
+      sum.insertAdjacentHTML('afterend', '<div class="wx-tg ml-tg' + (OPEN[id] ? ' on' : '') + '" data-k="ml"><div class="sm" onclick="event.stopPropagation();mlTg(this,\'' + esc(id) + '\')">메일 보내기<span>견적서 · 청구서 · 작업완료</span><i></i></div><div class="bd" onclick="event.stopPropagation()"><div class="ml-host"></div></div></div>');
+      if (OPEN[id]) fillOne(x.querySelector('.ml-tg'), id);
+    });
+  }
+  var tm; function sch() { clearTimeout(tm); tm = setTimeout(deco, 120); }
+  (function obs() { var l = document.getElementById('wo-list'); if (!l) { setTimeout(obs, 1000); return; } new MutationObserver(function (m) { if (m.some(function (r) { var t = r.target; return !(t.closest && t.closest('.ml-tg')); })) sch(); }).observe(l, { childList: true, subtree: true }); sch(); })();
 })();
 </script>
 
