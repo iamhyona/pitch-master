@@ -7,7 +7,7 @@
 <meta name="theme-color" content="#f2f4f6">
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=3">
 <link rel="apple-touch-icon" href="apple-touch-icon.png?v=3">
-<meta name="pm-build" content="202611081400">
+<meta name="pm-build" content="202611081410">
 <link rel="manifest" href="manifest.webmanifest?v=3">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -8530,8 +8530,8 @@ var ML_URL = 'https://script.google.com/macros/s/AKfycbx2jTEAyzqei0LjXg6YnMZsoFN
 (function () {
   var ML = window.MLS = window.MLS || {}, INFO = null, INFO_WAIT = [], TABS = {}, CUR = '';
   var KIND = { quote: '사전견적서', bill: '대금청구서', done: '작업전달' };
-  var FROM_LB = { pitch: '핏치', kim: '김현수', tax: '세금계산서' };
-  var FROM_NM = { 'pitch@pitchpitch.kr': '핏치(PITCH)', 'kim@pitchpitch.kr': '김현수', 'tax@pitchpitch.kr': '핏치(PITCH)' }; // 받는 사람에게 보이는 이름 (메일 서버 SENDER_NAMES와 같게)
+  var FROM_LB = { pitch: '핏치', kim: '김현수', park: '박현아', tax: '세금계산서' };
+  var FROM_NM = { 'pitch@pitchpitch.kr': '핏치(PITCH)', 'kim@pitchpitch.kr': '김현수(PITCH)', 'park@pitchpitch.kr': '박현아(PITCH)', 'tax@pitchpitch.kr': '세금계산서(PITCH)' }; // 받는 사람에게 보이는 이름 (메일 서버 SENDER_NAMES와 같게)
   function post(action, data) {
     return fetch(ML_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ action: action, data: data || {}, k: PM_K }) })
       .then(function (r) { return r.json(); }).catch(function () { return { ok: false, error: '메일 서버 연결 실패 — 잠시 후 다시 시도해주세요' }; })
