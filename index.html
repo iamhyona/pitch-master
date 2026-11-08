@@ -7,7 +7,7 @@
 <meta name="theme-color" content="#f2f4f6">
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=3">
 <link rel="apple-touch-icon" href="apple-touch-icon.png?v=3">
-<meta name="pm-build" content="202611081350">
+<meta name="pm-build" content="202611081400">
 <link rel="manifest" href="manifest.webmanifest?v=3">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -8531,6 +8531,7 @@ var ML_URL = 'https://script.google.com/macros/s/AKfycbx2jTEAyzqei0LjXg6YnMZsoFN
   var ML = window.MLS = window.MLS || {}, INFO = null, INFO_WAIT = [], TABS = {}, CUR = '';
   var KIND = { quote: '사전견적서', bill: '대금청구서', done: '작업전달' };
   var FROM_LB = { pitch: '핏치', kim: '김현수', tax: '세금계산서' };
+  var FROM_NM = { 'pitch@pitchpitch.kr': '핏치(PITCH)', 'kim@pitchpitch.kr': '김현수', 'tax@pitchpitch.kr': '핏치(PITCH)' }; // 받는 사람에게 보이는 이름 (메일 서버 SENDER_NAMES와 같게)
   function post(action, data) {
     return fetch(ML_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ action: action, data: data || {}, k: PM_K }) })
       .then(function (r) { return r.json(); }).catch(function () { return { ok: false, error: '메일 서버 연결 실패 — 잠시 후 다시 시도해주세요' }; })
@@ -8622,7 +8623,7 @@ var ML_URL = 'https://script.google.com/macros/s/AKfycbx2jTEAyzqei0LjXg6YnMZsoFN
     var body = esc(S.body).replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" target="_blank">$1</a>').replace(/\n/g, '<br>');
     var at = S.kind === 'done' ? [] : Object.keys(S.att).map(function (id) { var a = S.att[id], T = TABS[id], tb = T && T.tabs ? T.tabs.filter(function (t) { return String(t.gid) === String(a.gid); })[0] : null; return { n: String(a.name || (T && T.name) || '첨부').replace(/\.pdf$/i, '') + '.pdf', t: tb ? tb.name : '' }; });
     var row = function (l, v) { return '<div class="r"><span>' + l + '</span><b>' + v + '</b></div>'; };
-    return '<div class="ml-mp"><div class="hd">' + row('보내는 사람', '핏치(PITCH) &lt;' + esc(from) + '&gt;') + row('받는 사람', esc(mails(S.to).join(', ')) || '<i>없음</i>') + (S.cc.length ? row('참조', esc(S.cc.join(', '))) : '') +
+    return '<div class="ml-mp"><div class="hd">' + row('보내는 사람', esc(FROM_NM[from] || '핏치(PITCH)') + ' &lt;' + esc(from) + '&gt;') + row('받는 사람', esc(mails(S.to).join(', ')) || '<i>없음</i>') + (S.cc.length ? row('참조', esc(S.cc.join(', '))) : '') +
       '<div class="sj">' + (esc(S.subject) || '<i>제목 없음</i>') + '</div></div><div class="bd">' + body + '</div>' +
       (at.length ? '<div class="at">' + at.map(function (x) { return '<span class="f"><em>PDF</em>' + esc(x.n) + (x.t ? '<small>' + esc(x.t) + ' 탭</small>' : '') + '</span>'; }).join('') + '</div>' : '') + '</div>';
   }
