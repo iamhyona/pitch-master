@@ -7,7 +7,7 @@
 <meta name="theme-color" content="#f2f4f6">
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=3">
 <link rel="apple-touch-icon" href="apple-touch-icon.png?v=3">
-<meta name="pm-build" content="202611081410">
+<meta name="pm-build" content="202611091500">
 <link rel="manifest" href="manifest.webmanifest?v=3">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -8750,6 +8750,144 @@ var ML_URL = 'https://script.google.com/macros/s/AKfycbx2jTEAyzqei0LjXg6YnMZsoFN
   }
   var tm; function sch() { clearTimeout(tm); tm = setTimeout(icons, 120); }
   (function obs() { var l = document.getElementById('wo-list'); if (!l) { setTimeout(obs, 1000); return; } new MutationObserver(function (m) { if (m.some(function (r) { return ![].some.call(r.addedNodes, function (n) { return n.nodeType === 1 && n.classList.contains('ml-ic'); }); })) sch(); }).observe(l, { childList: true, subtree: true }); sch(); })();
+})();
+</script>
+
+<style>
+/* 2026-11-09 프로젝트 입금·지급 표시 */
+#wo-list .ps-b{flex:none;display:inline-flex;gap:4px;margin-left:auto}
+#wo-list .ps-b+.wx-ic{margin-left:6px}
+.ps-t{display:inline-flex;align-items:center;height:20px;padding:0 7px;border-radius:6px;font-size:11px;font-weight:700;white-space:nowrap;background:#f2f4f6;color:#8b95a1}
+.ps-t.ok{background:rgba(3,166,104,.1);color:#05a46b}
+.ps-t.ck{background:rgba(247,103,7,.1);color:#e8590c}
+.ps-t.no{background:#f2f4f6;color:#6b7684}
+.ps-t.ld{opacity:.5}
+#ps-flt{display:flex;gap:6px;margin:0 0 10px;flex-wrap:wrap}
+#ps-flt button{height:32px;padding:0 13px;border-radius:16px;border:1px solid var(--bdr,#e5e8eb);background:#fff;font-family:inherit;font-size:13px;font-weight:600;color:var(--txt2,#4e5968);cursor:pointer}
+#ps-flt button.on{background:#191f28;border-color:#191f28;color:#fff}
+#ps-flt button small{font-weight:500;opacity:.7;margin-left:3px}
+#ps-flt .nt{flex-basis:100%;font-size:11px;color:var(--txt3,#8b95a1);margin:2px 2px 0}
+</style>
+<script>
+// 2026-11-09 (현아): 프로젝트 카드에 클라이언트 입금 · 작업자 지급 표시
+//  · 입금: 법인 통장(핏치 가계부) 매출 입금 금액 = 그 프로젝트 청구서 합계(VAT 포함)면 입금으로 봄 (프로젝트명은 안 봄)
+//    같은 금액 청구서가 여럿이면 입금자명이 거래처와 맞는 것 → 입금일 직전(가장 최근) 청구서 순, 그래도 못 고르면 '확인필요'
+//    통장 기록 시작일 전에 청구한 건은 확인 불가 → '확인필요'
+//  · 지급: 지급내역서의 '지급일자' 칸이 채워져 있으면 지급 (전원 지급 = 지급완료, 아니면 지급 n/m)
+//  · 위 필터: 전체 · 미입금 · 미지급
+(function () {
+  var N = function (s) { return String(s || '').replace(/\s|·/g, '').toLowerCase(); };
+  var P = function (t) { return N(String(t || '').split('·')[0]); };
+  var num = function (v) { var n = Number(String(v == null ? '' : v).replace(/[^\d.-]/g, '')); return isNaN(n) ? 0 : n; };
+  function hit(w, x) { return x.date6 === w.date6 && N(x.clientKey) === N(w.clientKey) && (P(x.title) === P(w.title) || N(x.artist) === N(w.artist)); }
+  function isQ(x) { return /견적/.test(x.title || ''); }
+  var D = window.WXD = window.WXD || {};
+  function okd(x) { return x && x !== 'ld' && x !== 'err'; }
+  function tv(d, re) { var t = ((d && d.total) || []).filter(function (i) { return re.test(i.k); }); return t.length ? num(t[t.length - 1].v) : 0; }
+  function iv(d, k) { var x = ((d && d.info) || []).filter(function (i) { return i.k === k; })[0]; return x ? String(x.v || '').trim() : ''; }
+  var ST = window.PSST = { bank: null, bankFrom: '', loading: false, map: {}, flt: '' };
+  // 최근 150일 프로젝트만 계산 (오래된 건 불러오지 않음)
+  function cutoff() { var d = new Date(Date.now() - 150 * 864e5); return String(d.getFullYear()).slice(2) + ('0' + (d.getMonth() + 1)).slice(-2) + ('0' + d.getDate()).slice(-2); }
+  function d6iso(d6) { return '20' + d6.slice(0, 2) + '-' + d6.slice(2, 4) + '-' + d6.slice(4, 6); }
+  function md(iso) { return +iso.slice(5, 7) + '/' + +iso.slice(8, 10); }
+  // 문서 상세(합계·지급일자) — 다른 화면과 같은 저장소(WXD) 사용, 동시에 6개씩
+  var Q = [], run = 0;
+  function need(id) { if (D[id]) return; D[id] = 'ld'; Q.push(id); pump(); }
+  function pump() { while (run < 6 && Q.length) { var id = Q.shift(); run++; (function (id) { woGet('&dv=' + encodeURIComponent(id), function (d) { D[id] = d && d.ok ? d : 'err'; run--; pump(); sch(); }); })(id); } }
+  function bank(force) {
+    if ((ST.bank && !force) || ST.loading) return;
+    var y = String(new Date().getFullYear()), pf = window.PF2 && window.PF2.data && window.PF2.data[y];
+    if (pf && pf.bank && !force) { ST.bank = pf.bank; ST.bankFrom = pf.bankFrom || ''; sch(); return; }
+    ST.loading = true;
+    woPost('pm_wo_profit', { y: y }, function (r) { ST.loading = false; if (r && r.ok) { ST.bank = r.bank || []; ST.bankFrom = r.bankFrom || ''; } else ST.bank = ST.bank || []; sch(); });
+  }
+  // 입금자명 ↔ 거래처
+  function clientNames(ck) {
+    var c = (PM.clients || []).filter(function (c) { return N(c.key) === N(ck) || N(c.disp) === N(ck); })[0], a = [N(ck)];
+    if (c) [c.ko, c.en, c.disp, c.key].forEach(function (x) { if (x) a.push(N(String(x).replace(/\(.*$/, '')).replace(/엔터테인먼트|entertainment|주식회사|\(주\)/g, '')); });
+    return a.filter(function (x) { return x.length >= 2; });
+  }
+  function payerHit(txt, ck) { var t = N(txt).replace(/\(주\)|주식회사|㈜/g, ''); return clientNames(ck).some(function (n) { var k = n.slice(0, 3); return t.indexOf(k) >= 0 || n.indexOf(t.slice(0, 3)) >= 0; }); }
+  function compute() {
+    var W = (typeof WO !== 'undefined' && WO.items) || [], ready = typeof DC !== 'undefined' && DC.invoice && DC.invoice.loaded && DC.pay && DC.pay.loaded;
+    if (!ready || !W.length) return false;
+    var cut = cutoff(), invs = DC.invoice.items.filter(function (x) { return !isQ(x) && x.date6 >= cut; }), pays = DC.pay.items.filter(function (x) { return x.date6 >= cut; });
+    invs.concat(pays).forEach(function (x) { need(x.id); });
+    bank();
+    // 입금 맞추기
+    var tot = {}; invs.forEach(function (x) { var d = D[x.id]; if (okd(d)) tot[x.id] = tv(d, /Total|합계/i); });
+    var paid = {}, amb = {};
+    if (ST.bank) {
+      var ins = ST.bank.filter(function (b) { return (b.grp || b.bucket) === 'in' && !b.void && num(b.amt) > 0; }).sort(function (a, b) { return (a.d + (a.tm || '')).localeCompare(b.d + (b.tm || '')); });
+      ins.forEach(function (b) {
+        var amt = num(b.amt), c = invs.filter(function (x) { return !paid[x.id] && tot[x.id] === amt && d6iso(x.date6) <= b.d; });
+        if (!c.length) return;
+        var cc = c.filter(function (x) { return payerHit(b.txt, x.clientKey); }); if (cc.length) c = cc;
+        c.sort(function (u, v) { return v.date6.localeCompare(u.date6); }); // 입금일 직전(가장 최근) 청구서부터
+        if (c.length > 1 && !cc.length) { c.forEach(function (x) { amb[x.id] = b; }); return; }
+        paid[c[0].id] = b;
+      });
+    }
+    var M = {};
+    W.forEach(function (w) {
+      if (w.date6 < cut) return;
+      var I = invs.filter(function (x) { return hit(w, x); }), Y = pays.filter(function (x) { return hit(w, x); }), s = {};
+      // 입금
+      if (I.length) {
+        var ld = I.some(function (x) { return !(x.id in tot); }) || !ST.bank;
+        if (ld) s.in = { c: 'ld', t: '입금 …' };
+        else if (I.every(function (x) { return paid[x.id]; })) { var last = I.map(function (x) { return paid[x.id].d; }).sort().pop(); s.in = { c: 'ok', t: '입금 ' + md(last), tip: I.map(function (x) { var b = paid[x.id]; return b.d + ' ' + b.txt + ' ' + num(b.amt).toLocaleString('ko-KR') + '원'; }).join('\n') }; }
+        else if (I.some(function (x) { return amb[x.id]; })) s.in = { c: 'ck', t: '확인필요', tip: '금액이 같은 청구서가 여러 개라 어느 입금인지 정할 수 없어요' };
+        else if (ST.bankFrom && I.some(function (x) { return !paid[x.id] && d6iso(x.date6) < ST.bankFrom; })) s.in = { c: 'ck', t: '확인필요', tip: '법인 통장 기록(' + ST.bankFrom + '~) 전에 청구한 건이라 입금을 확인할 수 없어요' };
+        else if (I.some(function (x) { return paid[x.id]; })) s.in = { c: 'ck', t: '일부입금', tip: '청구서 ' + I.length + '개 중 ' + I.filter(function (x) { return paid[x.id]; }).length + '개만 입금 확인' };
+        else s.in = { c: 'no', t: '미입금' };
+      }
+      // 지급
+      if (Y.length) {
+        var yl = Y.some(function (x) { return !okd(D[x.id]); });
+        if (yl) s.pay = { c: 'ld', t: '지급 …' };
+        else {
+          var done = Y.filter(function (x) { return iv(D[x.id], '지급일자'); }), hidden = typeof pmHidden === 'function';
+          var nm = function (x) { return hidden && pmHidden(x.worker) ? '' : (x.worker || ''); };
+          s.pay = done.length === Y.length ? { c: 'ok', t: '지급완료', tip: Y.map(function (x) { return nm(x) + ' ' + iv(D[x.id], '지급일자'); }).join('\n') }
+            : { c: 'no', t: '지급 ' + done.length + '/' + Y.length, tip: '미지급: ' + Y.filter(function (x) { return done.indexOf(x) < 0; }).map(nm).filter(String).join(', ') };
+        }
+      }
+      M[w.id] = s;
+    });
+    ST.map = M; return true;
+  }
+  function badge(s) { return s ? '<span class="ps-t ' + s.c + '"' + (s.tip ? ' title="' + esc(s.tip) + '"' : '') + '>' + esc(s.t) + '</span>' : ''; }
+  function paint() {
+    document.querySelectorAll('#wo-list .wo-item[data-id]').forEach(function (e) {
+      var id = e.getAttribute('data-id'), s = ST.map[id], l3 = e.querySelector('.wx-l3'); if (!l3) return;
+      var h = s ? badge(s.in) + badge(s.pay) : '', b = l3.querySelector('.ps-b');
+      if (!h) { if (b) b.remove(); return; }
+      if (!b) { b = document.createElement('span'); b.className = 'ps-b'; var ic = l3.querySelector('.wx-ic'); l3.insertBefore(b, ic || null); }
+      if (b._h !== h) { b._h = h; b.innerHTML = h; }
+    });
+    bar();
+  }
+  // 필터
+  function bar() {
+    var l = document.getElementById('wo-list'); if (!l) return;
+    var f = document.getElementById('ps-flt');
+    if (!f) { f = document.createElement('div'); f.id = 'ps-flt'; var o = document.getElementById('wo-orph'); l.parentNode.insertBefore(f, o && o.parentNode === l.parentNode ? o : l); }
+    var M = ST.map, ids = Object.keys(M), nIn = ids.filter(function (k) { return M[k].in && M[k].in.c === 'no'; }).length, nPay = ids.filter(function (k) { return M[k].pay && M[k].pay.c === 'no'; }).length;
+    var h = [['', '전체'], ['in', '미입금', nIn], ['pay', '미지급', nPay]].map(function (x) { return '<button type="button" class="' + (ST.flt === x[0] ? 'on' : '') + '" onclick="psFlt(\'' + x[0] + '\')">' + x[1] + (x[2] != null ? '<small>' + x[2] + '</small>' : '') + '</button>'; }).join('') +
+      (ST.bankFrom ? '<div class="nt">입금은 법인 통장 기록(' + md(ST.bankFrom) + '~)과 청구서 합계(VAT 포함) 금액으로 확인 · 지급은 지급내역서 지급일자 기준 · 최근 5개월 프로젝트</div>' : '');
+    if (f._h !== h) { f._h = h; f.innerHTML = h; }
+  }
+  window.psFlt = function (k) { ST.flt = ST.flt === k ? '' : k; if (typeof woRenderList === 'function') woRenderList(); else sch(); };
+  if (typeof WO_VIEW_FILTERS !== 'undefined') WO_VIEW_FILTERS.push(function (v) {
+    if (!ST.flt) return v;
+    return v.filter(function (x) { var s = ST.map[x.id]; return s && (ST.flt === 'in' ? s.in && s.in.c === 'no' : s.pay && s.pay.c === 'no'); });
+  });
+  var tm, busy = false;
+  function sch() { clearTimeout(tm); tm = setTimeout(function () { if (busy) return; busy = true; try { compute(); paint(); } finally { busy = false; } }, 250); }
+  window.psRefresh = function () { bank(true); sch(); };
+  (function obs() { var l = document.getElementById('wo-list'); if (!l) { setTimeout(obs, 1000); return; } new MutationObserver(function (m) { if (m.some(function (r) { var t = r.target; return !(t.closest && t.closest('.ps-b')) && ![].some.call(r.addedNodes, function (n) { return n.nodeType === 1 && (n.classList.contains('ps-b') || n.classList.contains('ps-t')); }); })) sch(); }).observe(l, { childList: true, subtree: true }); sch(); })();
+  setInterval(function () { if (document.getElementById('wo-list') && document.getElementById('wo-list').offsetParent) sch(); }, 4000);
 })();
 </script>
 
