@@ -1603,9 +1603,18 @@ function woLoad(fresh) {
   woGet('&wo=list' + (fresh ? '&fresh=1' : ''), function (d) {
     WO.loading = false;
     if (!d.ok) { WO.err = d.error || '불러오지 못했어요'; woRender(); return; }
-    WO.err = ''; WO.items = d.items || []; WO.folders = d.folders || []; WO.root = d.root || ''; WO.loaded = true; woRender();
+    WO.err = ''; WO.folders = d.folders || []; WO.root = d.root || ''; WO.loaded = true;
+    WO.items = (d.items || []).filter(function (x) { if (!woHiddenId(x.id)) return true; WO.folders.forEach(function (f) { if (f.name === x.folder && f.n > 0) f.n--; }); return false; });
+    woRender();
   });
 }
+// 2026-11-25 (현아 요청, pitch@): 프로젝트 목록에서만 숨길 작업내역서·문서 (드라이브 파일은 그대로 둠). 다시 보이게 하려면 여기서 ID를 지우면 됨
+var WO_HIDE_IDS = [
+  '17uCUhOFHiNrBrlFSg27UhvovPgVMPvPtI0JWyqgDbFk', // 에이엔 추가프로모션 · 김도연 <이유나> 작업내역
+  '1xuZsK5COW4NZxlh1xYzO3oIQ08FknpBK23e8pZSUhqA', //   └ 견적서
+  '14u54UzxKuBGcsPhXq-wtPZhtonlACkh7wBoD3k1AEj8'  //   └ 이유나 지급내역
+];
+function woHiddenId(id) { return WO_HIDE_IDS.indexOf(String(id || '')) >= 0; }
 // 작업내역 목록 (2026-10-22 정리): 거르기는 WO_VIEW_FILTERS, 그리기 앞뒤 작업은 WO_LIST_BEFORE / WO_LIST_AFTER에 순서대로 등록
 var WO_VIEW_FILTERS = [], WO_LIST_BEFORE = [], WO_LIST_AFTER = [];
 function woView() { var v = woViewCore_.apply(this, arguments); WO_VIEW_FILTERS.forEach(function (f) { v = f(v); }); return v; }
@@ -8394,7 +8403,7 @@ td.rate-val{white-space:nowrap}
   }
   function fill() {
     ensure();
-    var W = (typeof WO !== 'undefined' && WO.items) || [], ok = ready(), all = ok ? docs() : [];
+    var W = (typeof WO !== 'undefined' && WO.items) || [], ok = ready(), all = ok ? docs().filter(function (d) { return !(typeof woHiddenId === 'function' && woHiddenId(d.x && d.x.id)); }) : [];
     document.querySelectorAll('#wo-list .wo-item[data-id]').forEach(function (e) {
       var id = e.getAttribute('data-id'), w = W.filter(function (i) { return i.id === id; })[0]; if (!w) return;
       var L = ok ? all.filter(function (d) { return hit(w, d.x); }) : [];
